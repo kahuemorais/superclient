@@ -115,30 +115,69 @@ export default function Home() {
             </h2>
 
             <div className="space-y-6 text-foreground/75 leading-relaxed">
-              <p className="text-lg">
-                I'm a Senior Product Designer with a passion for solving complex problems through user-centered design. My expertise spans end-to-end product delivery, combining research, design systems, interaction design, front-end implementation, and data-informed iteration.
+              <p className="text-lg font-medium text-foreground">
+                Senior Product Designer with 10+ years of experience across fintech, e-commerce, telecom, SaaS, and decision-support platforms.
               </p>
 
               <p className="text-lg">
-                Throughout my career, I've worked with leading companies in fintech, e-commerce, telecom, and SaaS, collaborating closely with product managers, engineers, and stakeholders to deliver high-quality, intuitive digital products.
+                Delivering measurable business outcomes through UX strategy, data-informed design, and scalable systems.
               </p>
 
               <p className="text-lg">
-                My approach focuses on understanding user needs deeply, creating scalable design systems, and validating designs through data. I believe that great design is not just about aesthetics, but about creating seamless experiences that solve real problems and drive business results.
+                End-to-end product designer combining research, design systems, interaction design, and front-end implementation to create impactful digital experiences.
+              </p>
+
+              <p className="text-lg">
+                Strong collaborator with Product, Engineering, Data, and ML teams. Bilingual in English and Portuguese. Background in both UX and front-end accelerates validation, quality, and team alignment.
               </p>
 
               <div className="mt-10 pt-10 border-t border-border">
+                <h3 className="text-xl font-semibold text-foreground mb-8">
+                  Skills
+                </h3>
+                <div className="space-y-5">
+                  <div>
+                    <h4 className="text-sm font-semibold text-accent mb-3">Research</h4>
+                    <p className="text-foreground/70 text-sm">Discovery, user interviews, JTBD, usability testing, heuristic review, journey mapping, analytics</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-accent mb-3">Design & IA</h4>
+                    <p className="text-foreground/70 text-sm">Information architecture, interaction design, UI design, design systems, accessibility (WCAG)</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-accent mb-3">Prototyping & Validation</h4>
+                    <p className="text-foreground/70 text-sm">Wireframes, rapid and high-fidelity prototypes, A/B testing, experiment design</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-accent mb-3">Data & Metrics</h4>
+                    <p className="text-foreground/70 text-sm">Funnel analysis, cohort analysis, conversion, retention, metric storytelling</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-accent mb-3">AI & Automation</h4>
+                    <p className="text-foreground/70 text-sm">AI feature design, copilots, recommendations, prompt UX, fallback flows</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-accent mb-3">Development & Tech</h4>
+                    <p className="text-foreground/70 text-sm">HTML, CSS, JavaScript, React, WordPress, PostgreSQL, Git</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-accent mb-3">Collaboration & Delivery</h4>
+                    <p className="text-foreground/70 text-sm">Stakeholder alignment, OKRs, roadmap prioritization, mentoring</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-10 pt-10 border-t border-border">
                 <h3 className="text-xl font-semibold text-foreground mb-6">
-                  Key Expertise
+                  Top Skills
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
+                    "Figma",
+                    "UI Design",
                     "UX Research",
+                    "User Experience",
                     "Product Design",
-                    "Design Systems",
-                    "Interaction Design",
-                    "Fintech Design",
-                    "E-commerce UX",
                   ].map((skill) => (
                     <div
                       key={skill}
