@@ -3,26 +3,26 @@ import { Link } from "wouter";
 
 export default function Header() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <nav className="container flex items-center justify-between h-16">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-accent">
-          <img src={APP_LOGO} alt="Logo" className="w-8 h-8 rounded-full" />
-          <span>Kahuê</span>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
+      <nav className="container flex items-center justify-between h-16 md:h-20">
+        <Link href="/" className="flex items-center gap-3 font-medium text-lg text-accent hover:opacity-80 transition-opacity">
+          <img src={APP_LOGO} alt="Logo" className="w-10 h-10 rounded-full object-cover" />
+          <span className="hidden sm:inline">Kahuê</span>
         </Link>
         
         <ul className="hidden md:flex items-center gap-8">
           <li>
-            <a href="#about" className="text-foreground/70 hover:text-accent transition-colors">
+            <a href="#about" className="text-foreground/70 hover:text-accent transition-colors text-sm font-medium">
               About
             </a>
           </li>
           <li>
-            <a href="#projects" className="text-foreground/70 hover:text-accent transition-colors">
+            <a href="#projects" className="text-foreground/70 hover:text-accent transition-colors text-sm font-medium">
               Projects
             </a>
           </li>
           <li>
-            <a href="#contact" className="text-foreground/70 hover:text-accent transition-colors">
+            <a href="#contact" className="text-foreground/70 hover:text-accent transition-colors text-sm font-medium">
               Contact
             </a>
           </li>
@@ -32,7 +32,7 @@ export default function Header() {
           href="https://www.linkedin.com/in/ukahue/"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:opacity-90 transition-opacity"
+          className="px-6 py-2.5 bg-accent text-accent-foreground rounded-full font-medium text-sm hover:opacity-90 transition-opacity shadow-sm hover:shadow-md"
         >
           LinkedIn
         </a>

@@ -2,23 +2,23 @@ import { Mail, Linkedin, ExternalLink } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer id="contact" className="bg-card border-t border-border py-12">
+    <footer id="contact" className="bg-card border-t border-border py-16 md:py-20">
       <div className="container">
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
+        <div className="grid md:grid-cols-3 gap-12 md:gap-16 mb-12">
           <div>
-            <h3 className="text-lg font-bold text-foreground mb-4">Kahuê Morais</h3>
-            <p className="text-foreground/70 text-sm">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Kahuê Morais</h3>
+            <p className="text-foreground/70 text-sm leading-relaxed">
               Senior UX Designer & Product Designer with 10+ years of experience in fintech, e-commerce, and SaaS.
             </p>
           </div>
           
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">Quick Links</h4>
-            <ul className="space-y-2">
+            <h4 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">Quick Links</h4>
+            <ul className="space-y-3">
               <li>
                 <a
                   href="#about"
-                  className="text-foreground/70 hover:text-accent transition-colors text-sm"
+                  className="text-foreground/70 hover:text-accent transition-colors text-sm font-medium"
                 >
                   About
                 </a>
@@ -26,7 +26,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#projects"
-                  className="text-foreground/70 hover:text-accent transition-colors text-sm"
+                  className="text-foreground/70 hover:text-accent transition-colors text-sm font-medium"
                 >
                   Projects
                 </a>
@@ -36,7 +36,7 @@ export default function Footer() {
                   href="https://www.behance.net/kahue"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-foreground/70 hover:text-accent transition-colors text-sm flex items-center gap-1"
+                  className="text-foreground/70 hover:text-accent transition-colors text-sm font-medium flex items-center gap-2"
                 >
                   Behance <ExternalLink className="w-3 h-3" />
                 </a>
@@ -45,20 +45,20 @@ export default function Footer() {
           </div>
           
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">Connect</h4>
-            <div className="flex gap-4">
+            <h4 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wider">Connect</h4>
+            <div className="flex gap-3">
               <a
                 href="https://www.linkedin.com/in/ukahue/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-muted hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors"
+                className="p-3 bg-muted hover:bg-accent hover:text-accent-foreground rounded-full transition-colors shadow-sm hover:shadow-md"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="w-5 h-5" />
               </a>
               <a
                 href="mailto:contact@example.com"
-                className="p-2 bg-muted hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors"
+                className="p-3 bg-muted hover:bg-accent hover:text-accent-foreground rounded-full transition-colors shadow-sm hover:shadow-md"
                 aria-label="Email"
               >
                 <Mail className="w-5 h-5" />
@@ -68,7 +68,7 @@ export default function Footer() {
         </div>
         
         <div className="border-t border-border pt-8">
-          <p className="text-center text-foreground/50 text-sm">
+          <p className="text-center text-foreground/50 text-sm font-medium">
             © 2025 Kahuê Morais. All rights reserved.
           </p>
         </div>
