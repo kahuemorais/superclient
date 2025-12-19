@@ -1,67 +1,489 @@
-import express from 'express';
-import cors from 'cors';
+import path from "path";
+import fs from "fs";
+import crypto from "crypto";
+import express, { type Request, type Response, type NextFunction } from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import bcrypt from "bcryptjs";
+import Database from "better-sqlite3";
 
-const app = express();
-const port = 3001;
-
-app.use(cors());
-app.use(express.json());
-
-import express from 'express';
-import cors from 'cors';
-
-const app = express();
-const port = 3001;
-
-app.use(cors());
-app.use(express.json());
-
-// In-memory database
-const db = {
-  clients: [] as { id: number; name: string; email: string }[],
-  notes: [] as { id: number; clientId: number; text: string }[],
+type AuthUser = {
+  id: number;
+  email: string;
+  name: string | null;
 };
-let clientIdCounter = 1;
-let noteIdCounter = 1;
 
-app.get('/api/clients', (req, res) => {
-  res.json(db.clients);
-});
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthUser;
+    }
+  }
+}
 
-app.get('/api/notes', (req, res) => {
-  res.json(db.notes);
-});
+const app = express();
+const port = Number(process.env.PORT || 3001);
 
-app.post('/api/command', (req, res) => {
-  const { command } = req.body;
-  console.log(`Received command: ${command}`);
+const allowlist = (process.env.CORS_ORIGIN || "http://localhost:3000")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 
-  let response = `Unknown command: "${command}"`;
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowlist.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error("Origin not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(cookieParser());
 
-  const addClientMatch = command.match(/add client (.*) email (.*)/i);
-  if (addClientMatch) {
-    const name = addClientMatch[1].trim();
-    const email = addClientMatch[2].trim();
-    const newClient = { id: clientIdCounter++, name, email };
-    db.clients.push(newClient);
-    response = `Added client: ${name} (${email})`;
+const dataDir = path.resolve(process.cwd(), "server", "data");
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+const db = new Database(path.join(dataDir, "app.db"));
+
+db.pragma("journal_mode = WAL");
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  );
+  CREATE TABLE IF NOT EXISTS password_resets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used_at TEXT,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  );
+  CREATE TABLE IF NOT EXISTS roles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+  );
+  CREATE TABLE IF NOT EXISTS user_roles (
+    user_id INTEGER NOT NULL,
+    role_id INTEGER NOT NULL,
+    UNIQUE(user_id, role_id),
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(role_id) REFERENCES roles(id)
+  );
+  CREATE TABLE IF NOT EXISTS modules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1
+  );
+  CREATE TABLE IF NOT EXISTS invites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    role_id INTEGER,
+    status TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(role_id) REFERENCES roles(id)
+  );
+`);
+
+const roleCount = db.prepare("SELECT COUNT(*) as count FROM roles").get() as {
+  count: number;
+};
+if (roleCount.count === 0) {
+  const insertRole = db.prepare("INSERT INTO roles (name) VALUES (?)");
+  ["Administrador", "Gestor", "Analista", "Leitor"].forEach((role) =>
+    insertRole.run(role)
+  );
+}
+
+const moduleCount = db.prepare("SELECT COUNT(*) as count FROM modules").get() as {
+  count: number;
+};
+if (moduleCount.count === 0) {
+  const insertModule = db.prepare(
+    "INSERT INTO modules (name, description, enabled) VALUES (?, ?, ?)"
+  );
+  [
+    ["Dashboard executivo", "KPIs e indicadores de acesso.", 1],
+    ["Gestao de usuarios", "Perfis, roles e permissao.", 1],
+    ["Convites e onboarding", "Fluxos de entrada.", 1],
+    ["Relatorios", "Exportacao e auditoria.", 1],
+  ].forEach((module) => insertModule.run(...module));
+}
+
+const hashToken = (token: string) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
+const issueSession = (userId: number) => {
+  const token = crypto.randomBytes(32).toString("hex");
+  const tokenHash = hashToken(token);
+  const now = new Date();
+  const expires = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7);
+  db.prepare(
+    "INSERT INTO sessions (user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?)"
+  ).run(userId, tokenHash, now.toISOString(), expires.toISOString());
+  return { token, expires };
+};
+
+const setSessionCookie = (res: Response, token: string, expires: Date) => {
+  const isProd = process.env.NODE_ENV === "production";
+  res.cookie("sc_session", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProd,
+    expires,
+  });
+};
+
+const clearSessionCookie = (res: Response) => {
+  res.clearCookie("sc_session");
+};
+
+const getUserFromRequest = (req: Request): AuthUser | null => {
+  const token = req.cookies.sc_session;
+  if (!token) {
+    return null;
+  }
+  const tokenHash = hashToken(token);
+  const session = db
+    .prepare(
+      "SELECT sessions.id, sessions.user_id, sessions.expires_at, users.email, users.name FROM sessions JOIN users ON users.id = sessions.user_id WHERE token_hash = ?"
+    )
+    .get(tokenHash) as
+    | { id: number; user_id: number; expires_at: string; email: string; name: string | null }
+    | undefined;
+  if (!session) {
+    return null;
+  }
+  if (new Date(session.expires_at) < new Date()) {
+    db.prepare("DELETE FROM sessions WHERE id = ?").run(session.id);
+    return null;
+  }
+  return { id: session.user_id, email: session.email, name: session.name };
+};
+
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  const user = getUserFromRequest(req);
+  if (!user) {
+    res.status(401).json({ error: "unauthorized" });
+    return;
+  }
+  req.user = user;
+  next();
+};
+
+app.post("/api/auth/signup", (req, res) => {
+  const name = typeof req.body.name === "string" ? req.body.name.trim() : null;
+  const email =
+    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const password = typeof req.body.password === "string" ? req.body.password : "";
+
+  if (!email || !password) {
+    res.status(400).json({ error: "email_and_password_required" });
+    return;
   }
 
-  const addNoteMatch = command.match(/add note for (.*): (.*)/i);
-  if (addNoteMatch) {
-    const clientName = addNoteMatch[1].trim();
-    const noteText = addNoteMatch[2].trim();
-    const client = db.clients.find(c => c.name.toLowerCase() === clientName.toLowerCase());
-    if (client) {
-      const newNote = { id: noteIdCounter++, clientId: client.id, text: noteText };
-      db.notes.push(newNote);
-      response = `Added note for ${client.name}`;
-    } else {
-      response = `Client not found: ${clientName}`;
+  const existing = db
+    .prepare("SELECT id FROM users WHERE email = ?")
+    .get(email) as { id: number } | undefined;
+  if (existing) {
+    res.status(409).json({ error: "email_in_use" });
+    return;
+  }
+
+  const passwordHash = bcrypt.hashSync(password, 12);
+  const now = new Date().toISOString();
+  const result = db
+    .prepare(
+      "INSERT INTO users (name, email, password_hash, created_at) VALUES (?, ?, ?, ?)"
+    )
+    .run(name, email, passwordHash, now);
+  const userId = Number(result.lastInsertRowid);
+
+  const defaultRole = db
+    .prepare("SELECT id FROM roles WHERE name = ?")
+    .get("Administrador") as { id: number } | undefined;
+  if (defaultRole) {
+    db.prepare("INSERT OR IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)").run(
+      userId,
+      defaultRole.id
+    );
+  }
+
+  const session = issueSession(userId);
+  setSessionCookie(res, session.token, session.expires);
+  res.json({ user: { id: userId, email, name } });
+});
+
+app.post("/api/auth/login", (req, res) => {
+  const email =
+    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const password = typeof req.body.password === "string" ? req.body.password : "";
+
+  if (!email || !password) {
+    res.status(400).json({ error: "email_and_password_required" });
+    return;
+  }
+
+  const user = db
+    .prepare("SELECT id, email, name, password_hash FROM users WHERE email = ?")
+    .get(email) as
+    | { id: number; email: string; name: string | null; password_hash: string }
+    | undefined;
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    res.status(401).json({ error: "invalid_credentials" });
+    return;
+  }
+
+  const session = issueSession(user.id);
+  setSessionCookie(res, session.token, session.expires);
+  res.json({ user: { id: user.id, email: user.email, name: user.name } });
+});
+
+app.post("/api/auth/logout", (req, res) => {
+  const token = req.cookies.sc_session;
+  if (token) {
+    db.prepare("DELETE FROM sessions WHERE token_hash = ?").run(hashToken(token));
+  }
+  clearSessionCookie(res);
+  res.json({ ok: true });
+});
+
+app.get("/api/auth/me", requireAuth, (req, res) => {
+  res.json({ user: req.user });
+});
+
+app.patch("/api/auth/me", requireAuth, (req, res) => {
+  const name = typeof req.body.name === "string" ? req.body.name.trim() : null;
+  const email =
+    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+
+  if (email) {
+    const existing = db
+      .prepare("SELECT id FROM users WHERE email = ? AND id != ?")
+      .get(email, req.user?.id) as { id: number } | undefined;
+    if (existing) {
+      res.status(409).json({ error: "email_in_use" });
+      return;
     }
   }
 
-  res.json({ response });
+  db.prepare("UPDATE users SET name = ?, email = COALESCE(?, email) WHERE id = ?").run(
+    name,
+    email || null,
+    req.user?.id
+  );
+
+  const updated = db
+    .prepare("SELECT id, email, name FROM users WHERE id = ?")
+    .get(req.user?.id) as AuthUser;
+  res.json({ user: updated });
+});
+
+app.post("/api/auth/forgot-password", (req, res) => {
+  const email =
+    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+
+  const user = db
+    .prepare("SELECT id FROM users WHERE email = ?")
+    .get(email) as { id: number } | undefined;
+
+  if (!user) {
+    res.json({ ok: true });
+    return;
+  }
+
+  const token = crypto.randomBytes(24).toString("hex");
+  const tokenHash = hashToken(token);
+  const expires = new Date(Date.now() + 1000 * 60 * 30).toISOString();
+
+  db.prepare(
+    "INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, ?)"
+  ).run(user.id, tokenHash, expires);
+
+  res.json({ ok: true, resetToken: token });
+});
+
+app.post("/api/auth/reset-password", (req, res) => {
+  const token = typeof req.body.token === "string" ? req.body.token.trim() : "";
+  const password = typeof req.body.password === "string" ? req.body.password : "";
+
+  if (!token || !password) {
+    res.status(400).json({ error: "token_and_password_required" });
+    return;
+  }
+
+  const tokenHash = hashToken(token);
+  const reset = db
+    .prepare(
+      "SELECT id, user_id, expires_at, used_at FROM password_resets WHERE token_hash = ?"
+    )
+    .get(tokenHash) as
+    | { id: number; user_id: number; expires_at: string; used_at: string | null }
+    | undefined;
+
+  if (!reset || reset.used_at || new Date(reset.expires_at) < new Date()) {
+    res.status(400).json({ error: "invalid_token" });
+    return;
+  }
+
+  const passwordHash = bcrypt.hashSync(password, 12);
+  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(
+    passwordHash,
+    reset.user_id
+  );
+  db.prepare("UPDATE password_resets SET used_at = ? WHERE id = ?").run(
+    new Date().toISOString(),
+    reset.id
+  );
+  db.prepare("DELETE FROM sessions WHERE user_id = ?").run(reset.user_id);
+
+  res.json({ ok: true });
+});
+
+app.get("/api/access/roles", requireAuth, (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT roles.id, roles.name, COUNT(user_roles.user_id) as members
+       FROM roles
+       LEFT JOIN user_roles ON roles.id = user_roles.role_id
+       GROUP BY roles.id
+       ORDER BY roles.id`
+    )
+    .all() as { id: number; name: string; members: number }[];
+  res.json({ roles: rows });
+});
+
+app.post("/api/access/roles", requireAuth, (req, res) => {
+  const name = typeof req.body.name === "string" ? req.body.name.trim() : "";
+  if (!name) {
+    res.status(400).json({ error: "name_required" });
+    return;
+  }
+  const result = db.prepare("INSERT INTO roles (name) VALUES (?)").run(name);
+  res.json({ id: Number(result.lastInsertRowid), name, members: 0 });
+});
+
+app.patch("/api/access/roles/:id", requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const name = typeof req.body.name === "string" ? req.body.name.trim() : "";
+  if (!id || !name) {
+    res.status(400).json({ error: "invalid_request" });
+    return;
+  }
+  db.prepare("UPDATE roles SET name = ? WHERE id = ?").run(name, id);
+  res.json({ id, name });
+});
+
+app.delete("/api/access/roles/:id", requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "invalid_request" });
+    return;
+  }
+  db.prepare("DELETE FROM user_roles WHERE role_id = ?").run(id);
+  db.prepare("DELETE FROM roles WHERE id = ?").run(id);
+  res.json({ ok: true });
+});
+
+app.get("/api/access/modules", requireAuth, (req, res) => {
+  const rows = db
+    .prepare("SELECT id, name, description, enabled FROM modules ORDER BY id")
+    .all() as { id: number; name: string; description: string; enabled: number }[];
+  res.json({
+    modules: rows.map((module) => ({
+      ...module,
+      enabled: Boolean(module.enabled),
+    })),
+  });
+});
+
+app.patch("/api/access/modules/:id", requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const enabled = Boolean(req.body.enabled);
+  if (!id) {
+    res.status(400).json({ error: "invalid_request" });
+    return;
+  }
+  db.prepare("UPDATE modules SET enabled = ? WHERE id = ?").run(enabled ? 1 : 0, id);
+  const updated = db
+    .prepare("SELECT id, name, description, enabled FROM modules WHERE id = ?")
+    .get(id) as { id: number; name: string; description: string; enabled: number };
+  res.json({ module: { ...updated, enabled: Boolean(updated.enabled) } });
+});
+
+app.get("/api/access/invites", requireAuth, (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT invites.id, invites.email, invites.status, invites.created_at,
+        roles.id as role_id, roles.name as role_name
+       FROM invites
+       LEFT JOIN roles ON roles.id = invites.role_id
+       ORDER BY invites.id DESC`
+    )
+    .all() as {
+    id: number;
+    email: string;
+    status: string;
+    created_at: string;
+    role_id: number | null;
+    role_name: string | null;
+  }[];
+  res.json({ invites: rows });
+});
+
+app.post("/api/access/invites", requireAuth, (req, res) => {
+  const email =
+    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const roleId = Number(req.body.roleId) || null;
+  if (!email) {
+    res.status(400).json({ error: "email_required" });
+    return;
+  }
+  const createdAt = new Date().toISOString();
+  const result = db
+    .prepare("INSERT INTO invites (email, role_id, status, created_at) VALUES (?, ?, ?, ?)")
+    .run(email, roleId, "Pendente", createdAt);
+  res.json({
+    invite: {
+      id: Number(result.lastInsertRowid),
+      email,
+      roleId,
+      status: "Pendente",
+      createdAt,
+    },
+  });
+});
+
+app.patch("/api/access/invites/:id", requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const status = typeof req.body.status === "string" ? req.body.status.trim() : "";
+  if (!id || !status) {
+    res.status(400).json({ error: "invalid_request" });
+    return;
+  }
+  db.prepare("UPDATE invites SET status = ? WHERE id = ?").run(status, id);
+  res.json({ ok: true });
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true });
 });
 
 app.listen(port, () => {
