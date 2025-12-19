@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import {
   Box,
@@ -6,24 +7,48 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { Link as RouterLink, Route, Switch } from "wouter";
+import { Link as RouterLink, Route, Switch, useLocation } from "wouter";
 import theme from "./theme";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import AccessManagement from "./pages/AccessManagement";
-import Invitations from "./pages/Invitations";
 import NotFound from "./pages/NotFound";
 
 const navItems = [
-  { label: "Login", href: "/login" },
-  { label: "Criacao de conta", href: "/signup" },
+  { label: "Home", href: "/login" },
+  { label: "Gestao", href: "/access" },
   { label: "Perfil", href: "/profile" },
-  { label: "Gestao de acessos", href: "/access" },
-  { label: "Convites", href: "/invites" },
 ];
 
 function App() {
+  const [location, setLocation] = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const syncAuth = () => {
+      setIsLoggedIn(window.localStorage.getItem("isLoggedIn") === "true");
+    };
+
+    syncAuth();
+    window.addEventListener("storage", syncAuth);
+    window.addEventListener("auth-change", syncAuth);
+
+    return () => {
+      window.removeEventListener("storage", syncAuth);
+      window.removeEventListener("auth-change", syncAuth);
+    };
+  }, []);
+  const isActive = (href: string) => {
+    if (href === "/login") {
+      return location === "/" || location === "/login" || location === "/signup";
+    }
+    return location === href;
+  };
+
+  const visibleNavItems = isLoggedIn
+    ? navItems.filter((item) => item.href !== "/login")
+    : navItems;
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -80,16 +105,13 @@ function App() {
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
                   Superclient
                 </Typography>
-                <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                  Acesso e operacoes em um so lugar
-                </Typography>
               </Stack>
               <Stack
                 direction="row"
                 spacing={1}
                 sx={{ display: { xs: "none", md: "flex" }, flexWrap: "wrap" }}
               >
-                {navItems.map((item) => (
+                {visibleNavItems.map((item) => (
                   <Button
                     key={item.href}
                     component={RouterLink}
@@ -99,22 +121,38 @@ function App() {
                     sx={{
                       textTransform: "none",
                       fontWeight: 600,
-                      color: "text.secondary",
+                      color: isActive(item.href) ? "primary.main" : "text.secondary",
+                      backgroundColor: isActive(item.href)
+                        ? "rgba(34, 201, 166, 0.12)"
+                        : "transparent",
+                      "&:hover": {
+                        color: "primary.main",
+                        backgroundColor: "rgba(34, 201, 166, 0.08)",
+                      },
                     }}
                   >
                     {item.label}
                   </Button>
                 ))}
+                {isLoggedIn ? (
+                  <Button
+                    variant="text"
+                    color="inherit"
+                    onClick={() => {
+                      window.localStorage.removeItem("isLoggedIn");
+                      window.dispatchEvent(new Event("auth-change"));
+                      setLocation("/login");
+                    }}
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: 600,
+                      color: "text.secondary",
+                    }}
+                  >
+                    Sair
+                  </Button>
+                ) : null}
               </Stack>
-              <Button
-                component={RouterLink}
-                href="/signup"
-                variant="contained"
-                color="primary"
-                sx={{ textTransform: "none", fontWeight: 700 }}
-              >
-                Criar conta
-              </Button>
             </Box>
           </Box>
 
@@ -122,10 +160,9 @@ function App() {
             <Switch>
               <Route path="/" component={Login} />
               <Route path="/login" component={Login} />
-              <Route path="/signup" component={Signup} />
+              <Route path="/signup" component={Login} />
               <Route path="/profile" component={Profile} />
               <Route path="/access" component={AccessManagement} />
-              <Route path="/invites" component={Invitations} />
               <Route>
                 <NotFound />
               </Route>

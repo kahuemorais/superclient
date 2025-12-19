@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -10,6 +11,11 @@ import {
 } from "@mui/material";
 
 export default function Profile() {
+  const [preferences, setPreferences] = useState({
+    email: true,
+    singleSession: false,
+  });
+
   return (
     <Box sx={{ maxWidth: 980, mx: "auto" }}>
       <Stack spacing={3}>
@@ -44,7 +50,7 @@ export default function Profile() {
               <TextField label="Cargo" fullWidth defaultValue="Gerente de Conta" />
               <TextField label="Fuso horario" fullWidth defaultValue="America/Sao_Paulo" />
             </Box>
-            <Button variant="contained" size="large" sx={{ alignSelf: "flex-start" }}>
+            <Button variant="outlined" size="large" sx={{ alignSelf: "flex-start" }}>
               Salvar alteracoes
             </Button>
           </Stack>
@@ -86,45 +92,99 @@ export default function Profile() {
         >
           <Stack spacing={2.5}>
             <Typography variant="h6">Preferencias</Typography>
-            <Stack spacing={2}>
-              <Box
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: 2,
+              }}
+            >
+              <Paper
+                elevation={0}
+                onClick={() =>
+                  setPreferences((prev) => ({ ...prev, email: !prev.email }))
+                }
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 2,
+                  p: 2.5,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background:
+                    "linear-gradient(135deg, rgba(15, 23, 32, 0.9), rgba(34, 201, 166, 0.08))",
+                  cursor: "pointer",
                 }}
               >
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Notificacoes por email
-                  </Typography>
+                <Stack spacing={1.5}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Notificacoes por email
+                    </Typography>
+                    <Switch
+                      checked={preferences.email}
+                      onChange={(event) =>
+                        setPreferences((prev) => ({
+                          ...prev,
+                          email: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
                   <Typography variant="caption" sx={{ color: "text.secondary" }}>
                     Receba alertas sobre acessos e convites.
                   </Typography>
-                </Box>
-                <Switch defaultChecked />
-              </Box>
-              <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
-              <Box
+                </Stack>
+              </Paper>
+              <Paper
+                elevation={0}
+                onClick={() =>
+                  setPreferences((prev) => ({
+                    ...prev,
+                    singleSession: !prev.singleSession,
+                  }))
+                }
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 2,
+                  p: 2.5,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background:
+                    "linear-gradient(135deg, rgba(15, 23, 32, 0.9), rgba(34, 201, 166, 0.08))",
+                  cursor: "pointer",
                 }}
               >
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Sessao unica
-                  </Typography>
+                <Stack spacing={1.5}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Sessao unica
+                    </Typography>
+                    <Switch
+                      checked={preferences.singleSession}
+                      onChange={(event) =>
+                        setPreferences((prev) => ({
+                          ...prev,
+                          singleSession: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
                   <Typography variant="caption" sx={{ color: "text.secondary" }}>
                     Desconecte outras sessoes ao entrar novamente.
                   </Typography>
-                </Box>
-                <Switch />
-              </Box>
-            </Stack>
+                </Stack>
+              </Paper>
+            </Box>
           </Stack>
         </Paper>
       </Stack>
