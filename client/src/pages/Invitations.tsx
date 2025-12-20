@@ -22,9 +22,6 @@ export default function Invitations() {
       <Stack spacing={3}>
         <Stack spacing={1}>
           <Typography variant="h4">Convites</Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Traga novos usuarios com permissoes claras desde o inicio.
-          </Typography>
         </Stack>
 
         <Paper

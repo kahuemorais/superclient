@@ -189,9 +189,6 @@ export default function Dashboard() {
           <Typography variant="h4" sx={{ fontWeight: 700 }}>
             Home
           </Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Visao geral do pipeline, financas e gestao em um unico lugar.
-          </Typography>
         </Stack>
 
         <Paper

@@ -65,6 +65,20 @@ export default function Login() {
       "sc_user",
       JSON.stringify({ name: user.name || "", email: user.email })
     );
+    const stored = window.localStorage.getItem("sc_accounts");
+    const nextAccount = {
+      name: user.name || "",
+      email: user.email,
+      lastUsed: Date.now(),
+    };
+    try {
+      const parsed = stored ? (JSON.parse(stored) as typeof nextAccount[]) : [];
+      const deduped = parsed.filter((account) => account.email !== user.email);
+      const nextAccounts = [nextAccount, ...deduped].slice(0, 3);
+      window.localStorage.setItem("sc_accounts", JSON.stringify(nextAccounts));
+    } catch {
+      window.localStorage.setItem("sc_accounts", JSON.stringify([nextAccount]));
+    }
   };
 
   const getErrorDetails = (

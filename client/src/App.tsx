@@ -143,6 +143,15 @@ function App() {
   }, [isLoggedIn, location, setLocation]);
 
   useEffect(() => {
+    if (isLoggedIn) {
+      return;
+    }
+    if (!["/", "/login", "/signup"].includes(location)) {
+      setLocation("/login");
+    }
+  }, [isLoggedIn, location, setLocation]);
+
+  useEffect(() => {
     if (!isLoggedIn) {
       return;
     }

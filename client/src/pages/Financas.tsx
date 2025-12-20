@@ -461,7 +461,6 @@ export default function Financas() {
     setAmount(String(expense.amount));
     setCategoryId(expense.categoryId);
     setComment(expense.comment);
-    setExpanded("expense");
     setOpen(true);
   };
 
@@ -528,9 +527,6 @@ export default function Financas() {
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
               Financas
             </Typography>
-            <Typography variant="body1" sx={{ color: "text.secondary" }}>
-              Entenda para onde estao indo os gastos e ajuste o orcamento.
-            </Typography>
           </Box>
           <Stack direction="row" spacing={2}>
             <Button
@@ -551,7 +547,6 @@ export default function Financas() {
                 setAmount("");
                 setComment("");
                 setCategoryId(categories[0]?.id || "");
-                setExpanded("expense");
                 setOpen(true);
               }}
               sx={{ textTransform: "none", fontWeight: 600 }}

@@ -91,9 +91,6 @@ export default function AccessManagement() {
       <Stack spacing={3}>
         <Stack spacing={1}>
           <Typography variant="h4">Gestao de acessos e convites</Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Defina papeis, niveis, modulos e convites por time.
-          </Typography>
         </Stack>
 
         <Paper

@@ -241,7 +241,14 @@ export default function Contacts() {
     try {
       const parsed = JSON.parse(stored) as Contact[];
       if (Array.isArray(parsed)) {
-        setContacts(parsed);
+        const existingIds = new Set(parsed.map((contact) => contact.id));
+        const merged = [...parsed];
+        sampleContacts.forEach((contact) => {
+          if (!existingIds.has(contact.id)) {
+            merged.push(contact);
+          }
+        });
+        setContacts(merged);
       }
     } catch {
       window.localStorage.removeItem(STORAGE_KEY);
@@ -497,9 +504,6 @@ export default function Contacts() {
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
               Contatos
             </Typography>
-            <Typography variant="body1" sx={{ color: "text.secondary" }}>
-              Organize pessoas, telefones, emails e enderecos em um unico lugar.
-            </Typography>
           </Box>
           <Stack direction="row" spacing={2}>
             <Button
@@ -536,7 +540,13 @@ export default function Contacts() {
             </Typography>
           </Paper>
         ) : (
-          <Stack direction={{ xs: "column", md: "row" }} spacing={2} flexWrap="wrap" useFlexGap>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: 2,
+            }}
+          >
             {contacts.map((contact) => (
               <Paper
                 key={contact.id}
@@ -544,8 +554,7 @@ export default function Contacts() {
                 onClick={() => openContact(contact)}
                 sx={{
                   p: 2.5,
-                  minWidth: 260,
-                  flex: 1,
+                  minHeight: 160,
                   border: "1px solid rgba(255,255,255,0.08)",
                   backgroundColor: "rgba(15, 23, 32, 0.9)",
                   cursor: "pointer",
@@ -556,21 +565,21 @@ export default function Contacts() {
                     {contact.name || "Sem nome"}
                   </Typography>
                   <Typography variant="caption" sx={{ color: "text.secondary" }}>
-        {contact.phones.filter(Boolean).length} telefones
-      </Typography>
-      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-        {contact.emails.filter(Boolean).length} emails
-      </Typography>
-      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-        {contact.addresses.filter(Boolean).length} enderecos
-      </Typography>
-      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-        {contact.categoryIds?.length ? `${contact.categoryIds.length} categorias` : "Sem categoria"}
-      </Typography>
-    </Stack>
-  </Paper>
-))}
-          </Stack>
+                    {contact.phones.filter(Boolean).length} telefones
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                    {contact.emails.filter(Boolean).length} emails
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                    {contact.addresses.filter(Boolean).length} enderecos
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                    {contact.categoryIds?.length ? `${contact.categoryIds.length} categorias` : "Sem categoria"}
+                  </Typography>
+                </Stack>
+              </Paper>
+            ))}
+          </Box>
         )}
       </Stack>
 

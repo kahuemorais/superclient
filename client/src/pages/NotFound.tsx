@@ -19,10 +19,6 @@ export default function NotFound() {
           <Typography variant="h4" sx={{ fontWeight: 700 }}>
             Pagina nao encontrada
           </Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            O link acessado nao existe ou foi movido. Volte para a pagina de
-            login ou escolha outra secao.
-          </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
             <Button
               component={RouterLink}

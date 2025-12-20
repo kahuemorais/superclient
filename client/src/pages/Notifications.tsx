@@ -66,9 +66,6 @@ export default function Notifications() {
           <Typography variant="h4" sx={{ fontWeight: 700 }}>
             Notificacoes
           </Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Alertas importantes do seu workspace.
-          </Typography>
         </Stack>
 
         <Paper

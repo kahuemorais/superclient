@@ -59,9 +59,6 @@ export default function Support() {
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
             Suporte
           </Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Encontre respostas rapidas ou fale com o time de suporte.
-          </Typography>
         </Box>
 
         <Paper

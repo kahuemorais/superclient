@@ -268,9 +268,6 @@ export default function PipelineData() {
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
               Dados
             </Typography>
-            <Typography variant="body1" sx={{ color: "text.secondary" }}>
-              Acompanhe pipeline, tarefas e oportunidades em um painel unico.
-            </Typography>
           </Box>
           <Button
             component={RouterLink}

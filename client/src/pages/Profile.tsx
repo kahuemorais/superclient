@@ -15,6 +15,14 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useLocation } from "wouter";
 import api from "../api";
 
+type StoredAccount = {
+  name: string;
+  email: string;
+  lastUsed: number;
+};
+
+const ACCOUNT_STORAGE_KEY = "sc_accounts";
+
 export default function Profile() {
   const [, setLocation] = useLocation();
   const [name, setName] = useState("");
@@ -30,8 +38,43 @@ export default function Profile() {
     key: "modulePipeline" | "moduleFinance";
     nextValue: boolean;
   } | null>(null);
+  const [switchDialogOpen, setSwitchDialogOpen] = useState(false);
+  const [switchAccounts, setSwitchAccounts] = useState<StoredAccount[]>([]);
+  const [switchEmail, setSwitchEmail] = useState("");
+  const [switchPassword, setSwitchPassword] = useState("");
+  const [switchError, setSwitchError] = useState("");
+  const [switchLoading, setSwitchLoading] = useState(false);
   const isLoadedRef = useRef(false);
   const saveTimeoutRef = useRef<number | null>(null);
+
+  const loadAccounts = () => {
+    const stored = window.localStorage.getItem(ACCOUNT_STORAGE_KEY);
+    if (!stored) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(stored) as StoredAccount[];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      window.localStorage.removeItem(ACCOUNT_STORAGE_KEY);
+      return [];
+    }
+  };
+
+  const persistAccount = (user?: { name?: string | null; email?: string }) => {
+    if (!user?.email) {
+      return;
+    }
+    const nextAccount = {
+      name: user.name || "",
+      email: user.email,
+      lastUsed: Date.now(),
+    };
+    const deduped = loadAccounts().filter((account) => account.email !== user.email);
+    const nextAccounts = [nextAccount, ...deduped].slice(0, 3);
+    window.localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(nextAccounts));
+    setSwitchAccounts(nextAccounts);
+  };
 
   useEffect(() => {
     const stored = window.localStorage.getItem("sc_user");
@@ -76,6 +119,7 @@ export default function Profile() {
             "sc_user",
             JSON.stringify({ name: user.name || "", email: user.email })
           );
+          persistAccount(user);
         }
       } catch {
         // Keep local values if the session is unavailable.
@@ -95,11 +139,52 @@ export default function Profile() {
   };
 
   const handleSwitchAccount = () => {
-    void api.post("/api/auth/logout").finally(() => {
-      window.localStorage.removeItem("sc_user");
+    setSwitchAccounts(loadAccounts());
+    setSwitchEmail("");
+    setSwitchPassword("");
+    setSwitchError("");
+    setSwitchDialogOpen(true);
+  };
+
+  const handleSwitchLogin = async () => {
+    setSwitchError("");
+    if (!switchEmail.trim() || !switchPassword) {
+      setSwitchError("Informe email e senha.");
+      return;
+    }
+    setSwitchLoading(true);
+    try {
+      const response = await api.post("/api/auth/login", {
+        email: switchEmail.trim().toLowerCase(),
+        password: switchPassword,
+      });
+      const user = response?.data?.user;
+      if (user?.email) {
+        window.localStorage.setItem(
+          "sc_user",
+          JSON.stringify({ name: user.name || "", email: user.email })
+        );
+      }
+      persistAccount(user);
       window.dispatchEvent(new Event("auth-change"));
-      setLocation("/login");
-    });
+      setSwitchDialogOpen(false);
+      setSwitchPassword("");
+      setSwitchEmail("");
+      setLocation("/home");
+    } catch (error) {
+      const response = (error as { response?: { status?: number; data?: { error?: string } } })
+        ?.response;
+      const code = response?.data?.error;
+      if (code === "session_conflict") {
+        setSwitchError(
+          "Sua conta foi usada em outro lugar. Todas as sessoes foram encerradas. Entre novamente."
+        );
+      } else {
+        setSwitchError("Email ou senha invalidos.");
+      }
+    } finally {
+      setSwitchLoading(false);
+    }
   };
 
   const saveProfile = () => {
@@ -187,9 +272,6 @@ export default function Profile() {
       <Stack spacing={3}>
         <Stack spacing={1}>
           <Typography variant="h4">Perfil</Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Atualize seus dados e preferencias pessoais.
-          </Typography>
         </Stack>
 
         <Paper
@@ -513,6 +595,87 @@ export default function Profile() {
               </Button>
               <Button variant="contained" onClick={confirmModuleToggle}>
                 Confirmar
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={switchDialogOpen}
+        onClose={() => setSwitchDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogContent>
+          <Stack spacing={2.5}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Typography variant="h6">Trocar de conta</Typography>
+              <IconButton onClick={() => setSwitchDialogOpen(false)} sx={{ color: "text.secondary" }}>
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            {switchAccounts.length ? (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                  Contas recentes
+                </Typography>
+                <Stack spacing={1}>
+                  {switchAccounts.map((account) => (
+                    <Paper
+                      key={account.email}
+                      elevation={0}
+                      onClick={() => {
+                        setSwitchEmail(account.email);
+                        setSwitchError("");
+                      }}
+                      sx={{
+                        p: 1.5,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        backgroundColor: "rgba(15, 23, 32, 0.9)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Stack spacing={0.5}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {account.name || "Conta"}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                          {account.email}
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Stack>
+            ) : null}
+            <Stack spacing={2}>
+              <Typography variant="subtitle2">Entrar em outra conta</Typography>
+              <TextField
+                label="Email"
+                fullWidth
+                value={switchEmail}
+                onChange={(event) => setSwitchEmail(event.target.value)}
+              />
+              <TextField
+                label="Senha"
+                type="password"
+                fullWidth
+                value={switchPassword}
+                onChange={(event) => setSwitchPassword(event.target.value)}
+              />
+              {switchError ? (
+                <Typography variant="body2" sx={{ color: "error.main" }}>
+                  {switchError}
+                </Typography>
+              ) : null}
+            </Stack>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button variant="outlined" onClick={() => setSwitchDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button variant="contained" onClick={handleSwitchLogin} disabled={switchLoading}>
+                Entrar
               </Button>
             </Stack>
           </Stack>

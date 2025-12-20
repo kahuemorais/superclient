@@ -80,10 +80,6 @@ export default function Signup() {
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
             Escolha um ritmo de crescimento
           </Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Configure seu ambiente com os recursos de acesso e convites certos
-            para o momento do seu time.
-          </Typography>
         </Box>
 
         <Stack spacing={2}>

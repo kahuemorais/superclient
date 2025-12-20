@@ -26,8 +26,6 @@ import { Link as RouterLink } from "wouter";
 import { nanoid } from "nanoid";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import DragIndicatorRoundedIcon from "@mui/icons-material/DragIndicatorRounded";
 import FormatBoldRoundedIcon from "@mui/icons-material/FormatBoldRounded";
 import FormatItalicRoundedIcon from "@mui/icons-material/FormatItalicRounded";
@@ -39,6 +37,8 @@ import LooksTwoRoundedIcon from "@mui/icons-material/LooksTwoRounded";
 import Looks3RoundedIcon from "@mui/icons-material/Looks3Rounded";
 import BackspaceRoundedIcon from "@mui/icons-material/BackspaceRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import api from "../api";
 import {
   DndContext,
@@ -168,6 +168,10 @@ const defaultColumns: Column[] = [
         value: "R$ 18k",
         owner: "Ana C.",
         categoryId: defaultCategories[0]?.id,
+        categoryIds: [defaultCategories[0]?.id || ""],
+        link: "https://orbitmedia.example.com",
+        comments: "Prioridade alta para onboarding.",
+        descriptionHtml: "<p>Alinhamento inicial e checklist de kickoff.</p>",
       },
       {
         id: "silo",
@@ -175,6 +179,21 @@ const defaultColumns: Column[] = [
         value: "R$ 22k",
         owner: "Lucas M.",
         categoryId: defaultCategories[0]?.id,
+        categoryIds: [defaultCategories[0]?.id || ""],
+        link: "https://siloretail.example.com",
+        comments: "Aguardando envio de documentos.",
+        descriptionHtml: "<p>Revisar proposta e confirmar escopo.</p>",
+      },
+      {
+        id: "pulse",
+        name: "Pulse Energy",
+        value: "R$ 14k",
+        owner: "Marina R.",
+        categoryId: defaultCategories[0]?.id,
+        categoryIds: [defaultCategories[0]?.id || ""],
+        link: "https://pulseenergy.example.com",
+        comments: "Contato reativado.",
+        descriptionHtml: "<p>Agendar reuniao de descoberta.</p>",
       },
     ],
   },
@@ -188,6 +207,10 @@ const defaultColumns: Column[] = [
         value: "R$ 92k",
         owner: "Lucas M.",
         categoryId: defaultCategories[1]?.id,
+        categoryIds: [defaultCategories[1]?.id || ""],
+        link: "https://argohealth.example.com",
+        comments: "Sprints semanais aprovados.",
+        descriptionHtml: "<p>Implementacao em andamento com time tecnico.</p>",
       },
       {
         id: "nova",
@@ -195,6 +218,21 @@ const defaultColumns: Column[] = [
         value: "R$ 36k",
         owner: "Sofia L.",
         categoryId: defaultCategories[1]?.id,
+        categoryIds: [defaultCategories[1]?.id || ""],
+        link: "https://novaterra.example.com",
+        comments: "Revisao de integracoes.",
+        descriptionHtml: "<p>Validar integracao com CRM.</p>",
+      },
+      {
+        id: "delta",
+        name: "Delta Group",
+        value: "R$ 58k",
+        owner: "Pedro G.",
+        categoryId: defaultCategories[1]?.id,
+        categoryIds: [defaultCategories[1]?.id || ""],
+        link: "https://deltagroup.example.com",
+        comments: "Equipe alocada.",
+        descriptionHtml: "<p>Checklist de entregas intermediarias.</p>",
       },
     ],
   },
@@ -208,6 +246,10 @@ const defaultColumns: Column[] = [
         value: "R$ 68k",
         owner: "Rafael P.",
         categoryId: defaultCategories[2]?.id,
+        categoryIds: [defaultCategories[2]?.id || ""],
+        link: "https://prismabank.example.com",
+        comments: "QA final em andamento.",
+        descriptionHtml: "<p>Executar testes de regressao.</p>",
       },
       {
         id: "bluebay",
@@ -215,6 +257,21 @@ const defaultColumns: Column[] = [
         value: "R$ 41k",
         owner: "Joana S.",
         categoryId: defaultCategories[2]?.id,
+        categoryIds: [defaultCategories[2]?.id || ""],
+        link: "https://bluebay.example.com",
+        comments: "Aguardando feedback do cliente.",
+        descriptionHtml: "<p>Validar performance e corrigir ajustes.</p>",
+      },
+      {
+        id: "atlas",
+        name: "Atlas Labs",
+        value: "R$ 27k",
+        owner: "Diego M.",
+        categoryId: defaultCategories[2]?.id,
+        categoryIds: [defaultCategories[2]?.id || ""],
+        link: "https://atlaslabs.example.com",
+        comments: "Homologacao marcada.",
+        descriptionHtml: "<p>Checklist final de aprovacao.</p>",
       },
     ],
   },
@@ -228,6 +285,10 @@ const defaultColumns: Column[] = [
         value: "R$ 48k",
         owner: "Ana C.",
         categoryId: defaultCategories[3]?.id,
+        categoryIds: [defaultCategories[3]?.id || ""],
+        link: "https://caravelstudio.example.com",
+        comments: "Entrega concluida com sucesso.",
+        descriptionHtml: "<p>Encerramento e documentacao final.</p>",
       },
       {
         id: "gema",
@@ -235,13 +296,62 @@ const defaultColumns: Column[] = [
         value: "R$ 31k",
         owner: "Diego M.",
         categoryId: defaultCategories[3]?.id,
+        categoryIds: [defaultCategories[3]?.id || ""],
+        link: "https://gemalabs.example.com",
+        comments: "Feedback positivo.",
+        descriptionHtml: "<p>Preparar case de sucesso.</p>",
+      },
+      {
+        id: "aurora",
+        name: "Aurora Tech",
+        value: "R$ 74k",
+        owner: "Sofia L.",
+        categoryId: defaultCategories[3]?.id,
+        categoryIds: [defaultCategories[3]?.id || ""],
+        link: "https://auroratech.example.com",
+        comments: "Contrato renovado.",
+        descriptionHtml: "<p>Planejar expandir escopo em Q4.</p>",
       },
     ],
   },
   {
     id: "arquivado",
     title: "Arquivado",
-    deals: [],
+    deals: [
+      {
+        id: "nord",
+        name: "Nord Logistics",
+        value: "R$ 19k",
+        owner: "Bruno A.",
+        categoryId: defaultCategories[4]?.id,
+        categoryIds: [defaultCategories[4]?.id || ""],
+        link: "https://nordlogistics.example.com",
+        comments: "Projeto encerrado.",
+        descriptionHtml: "<p>Sem continuidade no momento.</p>",
+      },
+      {
+        id: "helios",
+        name: "Helios Foods",
+        value: "R$ 26k",
+        owner: "Carla F.",
+        categoryId: defaultCategories[4]?.id,
+        categoryIds: [defaultCategories[4]?.id || ""],
+        link: "https://heliosfoods.example.com",
+        comments: "Sem budget aprovado.",
+        descriptionHtml: "<p>Revisitar no proximo semestre.</p>",
+      },
+      {
+        id: "vento",
+        name: "Vento Digital",
+        value: "R$ 12k",
+        owner: "Igor T.",
+        categoryId: defaultCategories[4]?.id,
+        categoryIds: [defaultCategories[4]?.id || ""],
+        link: "https://ventodigital.example.com",
+        comments: "Encerrado por ajuste de prioridade.",
+        descriptionHtml: "<p>Manter no radar para retorno.</p>",
+      },
+    ],
   },
 ];
 
@@ -319,6 +429,7 @@ export default function Pipeline() {
   const [taskQuery, setTaskQuery] = useState("");
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [columnManagerOpen, setColumnManagerOpen] = useState(false);
+  const [newDealId, setNewDealId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
@@ -420,10 +531,6 @@ export default function Pipeline() {
     };
   }, [columns, categories]);
 
-  const columnItems = useMemo(
-    () => columns.map((column) => columnDragId(column.id)),
-    [columns]
-  );
   const normalizedQuery = taskQuery.trim().toLowerCase();
 
   const categoryMap = useMemo(() => {
@@ -505,6 +612,29 @@ export default function Pipeline() {
     return deal.owner;
   };
 
+  const filterDealsByQuery = (column: Column, query: string) => {
+    if (!query) {
+      return column.deals;
+    }
+    return column.deals.filter((deal) => {
+      const description = stripHtml(deal.descriptionHtml || deal.comments || "");
+      const haystack = `${deal.name} ${getDealOwnerLabel(deal)} ${deal.value} ${description}`.toLowerCase();
+      return haystack.includes(query);
+    });
+  };
+
+  const visibleColumns = useMemo(() => {
+    if (!normalizedQuery) {
+      return columns;
+    }
+    return columns.filter((column) => filterDealsByQuery(column, normalizedQuery).length > 0);
+  }, [columns, normalizedQuery, getDealOwnerLabel, stripHtml]);
+
+  const columnItems = useMemo(
+    () => visibleColumns.map((column) => columnDragId(column.id)),
+    [visibleColumns]
+  );
+
   const selectUsersByIds = (ids: number[]) =>
     users.filter((user) => ids.includes(user.id));
 
@@ -522,10 +652,34 @@ export default function Pipeline() {
     setEditOwnerFallback(deal.owner);
     setEditCategoryIds(deal.categoryIds || (deal.categoryId ? [deal.categoryId] : []));
     setEditingCategoryId(null);
+    setNewDealId(null);
   };
 
   const handleEditClose = () => {
+    if (editingDeal && newDealId && editingDeal.id === newDealId) {
+      const trimmedName = editName.trim();
+      const trimmedValue = editValue.trim();
+      const trimmedLink = editLink.trim();
+      const trimmedDescription = stripHtml(editDescription).trim();
+      const isEmpty =
+        (!trimmedName || trimmedName === "Nova tarefa") &&
+        (!trimmedValue || trimmedValue === "R$ 0") &&
+        !trimmedLink &&
+        !trimmedDescription &&
+        editResponsibleIds.length === 0 &&
+        editWorkerIds.length === 0 &&
+        editCategoryIds.length === 0;
+      if (isEmpty) {
+        setColumns((prev) =>
+          prev.map((column) => ({
+            ...column,
+            deals: column.deals.filter((deal) => deal.id !== newDealId),
+          }))
+        );
+      }
+    }
     setEditingDeal(null);
+    setNewDealId(null);
   };
 
   const handleViewOpen = (deal: Deal) => {
@@ -565,6 +719,7 @@ export default function Pipeline() {
       }))
     );
     setEditingDeal(null);
+    setNewDealId(null);
   };
 
   const handleDealRemove = () => {
@@ -934,29 +1089,29 @@ export default function Pipeline() {
 
   const handleAddDeal = (columnId: string) => {
     const nextId = nanoid(6);
+    const newDeal: Deal = {
+      id: `deal-${nextId}`,
+      name: "Nova tarefa",
+      value: "R$ 0",
+      owner: "Responsavel",
+      responsibleIds: [],
+      workerIds: [],
+      descriptionHtml: "",
+      categoryIds: [],
+      categoryId: "",
+    };
     setColumns((prev) =>
       prev.map((column) =>
         column.id === columnId
           ? {
               ...column,
-              deals: [
-                  ...column.deals,
-                  {
-                    id: `deal-${nextId}`,
-                    name: "Nova tarefa",
-                    value: "R$ 0",
-                    owner: "Responsavel",
-                    responsibleIds: [],
-                    workerIds: [],
-                    descriptionHtml: "",
-                    categoryIds: [],
-                    categoryId: "",
-                  },
-              ],
+              deals: [...column.deals, newDeal],
             }
           : column
       )
     );
+    setNewDealId(newDeal.id);
+    handleEditOpen(newDeal);
   };
 
   const handleScrollPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1014,9 +1169,6 @@ export default function Pipeline() {
           <Box sx={{ flex: 1 }}>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
               Pipeline
-            </Typography>
-            <Typography variant="body1" sx={{ color: "text.secondary" }}>
-              Visualize oportunidades por estagio e acompanhe o responsavel.
             </Typography>
           </Box>
           <Button
@@ -1091,16 +1243,18 @@ export default function Pipeline() {
                   left: 0,
                   transform: "translate(-35%, -50%)",
                   zIndex: 2,
-                  width: 56,
-                  height: 56,
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(7, 9, 13, 0.85)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  "&:hover": { backgroundColor: "rgba(7, 9, 13, 0.95)" },
+                  width: 48,
+                  height: 48,
+                  borderRadius: 0,
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "text.primary",
+                  "&:hover": { backgroundColor: "transparent", color: "primary.main" },
+                  "&:active": { backgroundColor: "transparent" },
                 }}
                 aria-label="Voltar colunas"
               >
-                <ArrowBackRoundedIcon fontSize="large" />
+                <ChevronLeftRoundedIcon fontSize="large" />
               </IconButton>
               <IconButton
                 onClick={() => scrollColumnsBy("right")}
@@ -1110,16 +1264,18 @@ export default function Pipeline() {
                   right: 0,
                   transform: "translate(35%, -50%)",
                   zIndex: 2,
-                  width: 56,
-                  height: 56,
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(7, 9, 13, 0.85)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  "&:hover": { backgroundColor: "rgba(7, 9, 13, 0.95)" },
+                  width: 48,
+                  height: 48,
+                  borderRadius: 0,
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "text.primary",
+                  "&:hover": { backgroundColor: "transparent", color: "primary.main" },
+                  "&:active": { backgroundColor: "transparent" },
                 }}
                 aria-label="Avancar colunas"
               >
-                <ArrowForwardRoundedIcon fontSize="large" />
+                <ChevronRightRoundedIcon fontSize="large" />
               </IconButton>
               <Box
                 ref={scrollRef}
@@ -1139,17 +1295,16 @@ export default function Pipeline() {
                   spacing={2}
                   sx={{ width: "max-content", minWidth: "100%" }}
                 >
-                {columns.map((column) => (
+                {visibleColumns.map((column) => (
                   <SortableColumn
                     key={column.id}
                     column={column}
                     onEdit={handleViewOpen}
                     onEditColumn={handleColumnEditOpen}
                     onAddDeal={handleAddDeal}
+                    filteredDeals={filterDealsByQuery(column, normalizedQuery)}
                     categoryMap={categoryMap}
-                    taskQuery={normalizedQuery}
                     getDealOwnerLabel={getDealOwnerLabel}
-                    stripHtml={stripHtml}
                     showValue={taskFieldSettings.value}
                   />
                 ))}
@@ -1192,20 +1347,48 @@ export default function Pipeline() {
                       elevation={0}
                       sx={{
                         p: 2.5,
-                        width: 260,
-                        borderRadius: 2,
+                        minWidth: 280,
+                        borderRadius: "var(--radius-card)",
                         border: "1px solid rgba(255,255,255,0.08)",
                         backgroundColor: "rgba(15, 23, 32, 0.95)",
                         boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
                       }}
                     >
-                      <Stack spacing={1}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                          {column.title}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                          {column.deals.length} tasks
-                        </Typography>
+                      <Stack spacing={2}>
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                            {column.title}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600 }}>
+                            {column.deals.length}
+                          </Typography>
+                        </Box>
+                        <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+                        <Stack spacing={1.5}>
+                          {column.deals.slice(0, 3).map((deal) => (
+                            <Box
+                              key={deal.id}
+                              sx={{
+                                p: 2,
+                                borderRadius: "var(--radius-card)",
+                                border: "1px solid rgba(255,255,255,0.08)",
+                                backgroundColor: "rgba(10, 16, 23, 0.85)",
+                              }}
+                            >
+                              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                {deal.name}
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                                {getDealOwnerLabel(deal)}
+                              </Typography>
+                            </Box>
+                          ))}
+                          {column.deals.length > 3 ? (
+                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                              +{column.deals.length - 3} tasks
+                            </Typography>
+                          ) : null}
+                        </Stack>
                       </Stack>
                     </Paper>
                   );
@@ -1220,7 +1403,7 @@ export default function Pipeline() {
                     <Box
                       sx={{
                         p: 2,
-                        borderRadius: 2,
+                        borderRadius: "var(--radius-card)",
                         border: "1px solid rgba(255,255,255,0.08)",
                         backgroundColor: "rgba(10, 16, 23, 0.95)",
                         boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
@@ -1847,30 +2030,21 @@ function SortableColumn({
   onEdit,
   onEditColumn,
   onAddDeal,
+  filteredDeals,
   categoryMap,
-  taskQuery,
   getDealOwnerLabel,
-  stripHtml,
   showValue,
 }: {
   column: Column;
   onEdit: (deal: Deal) => void;
   onEditColumn: (column: Column) => void;
   onAddDeal: (columnId: string) => void;
+  filteredDeals: Deal[];
   categoryMap: Map<string, Category>;
-  taskQuery: string;
   getDealOwnerLabel: (deal: Deal) => string;
-  stripHtml: (value: string) => string;
   showValue: boolean;
 }) {
-  const filteredDeals = taskQuery
-    ? column.deals.filter((deal) => {
-        const description = stripHtml(deal.descriptionHtml || deal.comments || "");
-        const haystack = `${deal.name} ${getDealOwnerLabel(deal)} ${deal.value} ${description}`.toLowerCase();
-        return haystack.includes(taskQuery);
-      })
-    : column.deals;
-  const displayCount = taskQuery ? filteredDeals.length : column.deals.length;
+  const displayCount = filteredDeals.length;
   const dragId = columnDragId(column.id);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
