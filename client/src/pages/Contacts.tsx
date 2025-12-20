@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  Autocomplete,
   Box,
   Button,
+  Checkbox,
+  Chip,
   Dialog,
   DialogContent,
   IconButton,
@@ -22,9 +25,76 @@ type Contact = {
   emails: string[];
   addresses: string[];
   comments: string[];
+  categoryIds: string[];
+};
+
+type Category = {
+  id: string;
+  name: string;
+  color: string;
 };
 
 const STORAGE_KEY = "contacts_v1";
+const CATEGORY_STORAGE_KEY = "contact_categories_v1";
+
+const DEFAULT_COLORS = [
+  "#0f766e",
+  "#1d4ed8",
+  "#6d28d9",
+  "#7c2d12",
+  "#7c4a03",
+  "#0f172a",
+  "#334155",
+  "#166534",
+  "#9d174d",
+  "#312e81",
+  "#1f2937",
+  "#0f3d3e",
+];
+
+const defaultCategories: Category[] = [
+  { id: "cat-moradia", name: "Moradia", color: DEFAULT_COLORS[0] },
+  { id: "cat-alimentacao", name: "Alimentacao", color: DEFAULT_COLORS[1] },
+  { id: "cat-transporte", name: "Transporte", color: DEFAULT_COLORS[2] },
+  { id: "cat-saude", name: "Saude", color: DEFAULT_COLORS[3] },
+  { id: "cat-lazer", name: "Lazer", color: DEFAULT_COLORS[4] },
+  { id: "cat-educacao", name: "Educacao", color: DEFAULT_COLORS[5] },
+  { id: "cat-assinaturas", name: "Assinaturas", color: DEFAULT_COLORS[6] },
+  { id: "cat-impostos", name: "Impostos", color: DEFAULT_COLORS[7] },
+  { id: "cat-investimentos", name: "Investimentos", color: DEFAULT_COLORS[8] },
+  { id: "cat-viagem", name: "Viagem", color: DEFAULT_COLORS[9] },
+  { id: "cat-compras", name: "Compras", color: DEFAULT_COLORS[10] },
+  { id: "cat-outros", name: "Outros", color: DEFAULT_COLORS[11] },
+];
+
+const darkenColor = (value: string, factor: number) => {
+  const trimmed = value.trim();
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (/^#([0-9a-fA-F]{3})$/.test(trimmed)) {
+    const hex = trimmed.slice(1);
+    r = parseInt(hex[0] + hex[0], 16);
+    g = parseInt(hex[1] + hex[1], 16);
+    b = parseInt(hex[2] + hex[2], 16);
+  } else if (/^#([0-9a-fA-F]{6})$/.test(trimmed)) {
+    const hex = trimmed.slice(1);
+    r = parseInt(hex.slice(0, 2), 16);
+    g = parseInt(hex.slice(2, 4), 16);
+    b = parseInt(hex.slice(4, 6), 16);
+  } else {
+    const match = trimmed.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
+    if (match) {
+      r = Math.min(255, Number(match[1]));
+      g = Math.min(255, Number(match[2]));
+      b = Math.min(255, Number(match[3]));
+    }
+  }
+
+  const next = (channel: number) => Math.max(0, Math.round(channel * factor));
+  return `rgb(${next(r)}, ${next(g)}, ${next(b)})`;
+};
 
 const emptyContact = (): Contact => ({
   id: `contact-${Date.now()}`,
@@ -34,6 +104,7 @@ const emptyContact = (): Contact => ({
   emails: [""],
   addresses: [""],
   comments: [""],
+  categoryIds: [],
 });
 
 export default function Contacts() {
@@ -41,6 +112,13 @@ export default function Contacts() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [contactForm, setContactForm] = useState<Contact | null>(null);
+  const [categories, setCategories] = useState<Category[]>(defaultCategories);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState("");
+  const [editingCategoryColor, setEditingCategoryColor] = useState(DEFAULT_COLORS[0]);
   const isLoadedRef = useRef(false);
   const saveTimeoutRef = useRef<number | null>(null);
 
@@ -60,6 +138,19 @@ export default function Contacts() {
     } finally {
       isLoadedRef.current = true;
     }
+
+    const storedCategories = window.localStorage.getItem(CATEGORY_STORAGE_KEY);
+    if (!storedCategories) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(storedCategories) as Category[];
+      if (Array.isArray(parsed) && parsed.length) {
+        setCategories(parsed);
+      }
+    } catch {
+      window.localStorage.removeItem(CATEGORY_STORAGE_KEY);
+    }
   }, []);
 
   useEffect(() => {
@@ -71,6 +162,7 @@ export default function Contacts() {
     }
     saveTimeoutRef.current = window.setTimeout(() => {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
+      window.localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categories));
       window.dispatchEvent(new Event("contacts-change"));
     }, 300);
     return () => {
@@ -78,7 +170,9 @@ export default function Contacts() {
         window.clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [contacts]);
+  }, [contacts, categories]);
+
+  const categoryMap = new Map(categories.map((cat) => [cat.id, cat]));
 
   const openNewContact = () => {
     const next = emptyContact();
@@ -107,6 +201,67 @@ export default function Contacts() {
   };
 
   const sanitizePhone = (value: string) => value.replace(/\D/g, "");
+
+  const handleAddCategory = () => {
+    const name = newCategoryName.trim();
+    if (!name) {
+      return;
+    }
+    const id = `cat-${Date.now()}`;
+    setCategories((prev) => [...prev, { id, name, color: newCategoryColor }]);
+    setNewCategoryName("");
+  };
+
+  const handleRemoveCategory = (id: string) => {
+    let nextCategories = categories.filter((cat) => cat.id !== id);
+    if (nextCategories.length === 0) {
+      nextCategories = [
+        { id: `cat-${Date.now()}`, name: "Sem categoria", color: DEFAULT_COLORS[0] },
+      ];
+    }
+    setCategories(nextCategories);
+    setEditingCategoryId((prev) => (prev === id ? null : prev));
+    setContacts((prev) =>
+      prev.map((contact) => ({
+        ...contact,
+        categoryIds: (contact.categoryIds || []).filter((catId) => catId !== id),
+      }))
+    );
+    setContactForm((prev) =>
+      prev
+        ? {
+            ...prev,
+            categoryIds: (prev.categoryIds || []).filter((catId) => catId !== id),
+          }
+        : prev
+    );
+  };
+
+  const startEditCategory = (cat: Category) => {
+    setEditingCategoryId(cat.id);
+    setEditingCategoryName(cat.name);
+    setEditingCategoryColor(cat.color);
+  };
+
+  const cancelEditCategory = () => {
+    setEditingCategoryId(null);
+  };
+
+  const saveCategory = () => {
+    if (!editingCategoryId) {
+      return;
+    }
+    const name = editingCategoryName.trim();
+    if (!name) {
+      return;
+    }
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === editingCategoryId ? { ...cat, name, color: editingCategoryColor } : cat
+      )
+    );
+    setEditingCategoryId(null);
+  };
 
   const addListField = (key: "phones" | "emails" | "addresses" | "comments") => {
     setContactForm((prev) => {
@@ -143,6 +298,9 @@ export default function Contacts() {
     if (contact.comments.some((comment) => comment.trim())) {
       return true;
     }
+    if (contact.categoryIds && contact.categoryIds.length) {
+      return true;
+    }
     return false;
   };
 
@@ -159,13 +317,17 @@ export default function Contacts() {
     if (!contactForm) {
       return;
     }
+    const nextContact = {
+      ...contactForm,
+      categoryIds: contactForm.categoryIds || [],
+    };
     setContacts((prev) => {
-      const existingIndex = prev.findIndex((item) => item.id === contactForm.id);
+      const existingIndex = prev.findIndex((item) => item.id === nextContact.id);
       if (existingIndex === -1) {
-        return [contactForm, ...prev];
+        return [nextContact, ...prev];
       }
       const next = [...prev];
-      next[existingIndex] = contactForm;
+      next[existingIndex] = nextContact;
       return next;
     });
     setEditingContact(null);
@@ -202,13 +364,25 @@ export default function Contacts() {
               Organize pessoas, telefones, emails e enderecos em um unico lugar.
             </Typography>
           </Box>
-          <Button
-            variant="contained"
-            onClick={openNewContact}
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            Adicionar contato
-          </Button>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setEditingCategoryId(null);
+                setCategoryDialogOpen(true);
+              }}
+              sx={{ textTransform: "none", fontWeight: 600 }}
+            >
+              Categorias
+            </Button>
+            <Button
+              variant="contained"
+              onClick={openNewContact}
+              sx={{ textTransform: "none", fontWeight: 600 }}
+            >
+              Adicionar contato
+            </Button>
+          </Stack>
         </Box>
 
         {contacts.length === 0 ? (
@@ -245,17 +419,20 @@ export default function Contacts() {
                     {contact.name || "Sem nome"}
                   </Typography>
                   <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                    {contact.phones.filter(Boolean).length} telefones
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                    {contact.emails.filter(Boolean).length} emails
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                    {contact.addresses.filter(Boolean).length} enderecos
-                  </Typography>
-                </Stack>
-              </Paper>
-            ))}
+        {contact.phones.filter(Boolean).length} telefones
+      </Typography>
+      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+        {contact.emails.filter(Boolean).length} emails
+      </Typography>
+      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+        {contact.addresses.filter(Boolean).length} enderecos
+      </Typography>
+      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+        {contact.categoryIds?.length ? `${contact.categoryIds.length} categorias` : "Sem categoria"}
+      </Typography>
+    </Stack>
+  </Paper>
+))}
           </Stack>
         )}
       </Stack>
@@ -285,17 +462,30 @@ export default function Contacts() {
                 </Typography>
               )}
             </Stack>
-            <Stack spacing={0.5}>
+            <Stack spacing={1.5}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                Aniversario
+                Categorias
               </Typography>
-              {selectedContact?.birthday ? (
-                <Typography variant="body2">
-                  {new Date(selectedContact.birthday).toLocaleDateString("pt-BR")}
-                </Typography>
+              {selectedContact?.categoryIds?.length ? (
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {selectedContact.categoryIds
+                    .map((catId) => categoryMap.get(catId))
+                    .filter(Boolean)
+                    .map((cat) => (
+                      <Chip
+                        key={cat?.id}
+                        label={cat?.name}
+                        size="small"
+                        sx={{
+                          color: "#e6edf3",
+                          backgroundColor: darkenColor(cat?.color || "#0f172a", 0.5),
+                        }}
+                      />
+                    ))}
+                </Stack>
               ) : (
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Nao informado.
+                  Sem categoria.
                 </Typography>
               )}
             </Stack>
@@ -382,7 +572,10 @@ export default function Contacts() {
                     return;
                   }
                   setEditingContact(selectedContact);
-                  setContactForm({ ...selectedContact });
+                  setContactForm({
+                    ...selectedContact,
+                    categoryIds: selectedContact.categoryIds || [],
+                  });
                   setSelectedContact(null);
                 }}
               >
@@ -426,6 +619,43 @@ export default function Contacts() {
                 )
               }
               InputLabelProps={{ shrink: true }}
+            />
+            <Autocomplete
+              multiple
+              options={categories}
+              value={categories.filter((cat) =>
+                (contactForm?.categoryIds || []).includes(cat.id)
+              )}
+              onChange={(_, value) =>
+                setContactForm((prev) =>
+                  prev ? { ...prev, categoryIds: value.map((cat) => cat.id) } : prev
+                )
+              }
+              getOptionLabel={(option) => option.name}
+              disableCloseOnSelect
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
+                  {option.name}
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField {...params} label="Categorias" fullWidth />
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    {...getTagProps({ index })}
+                    key={option.id}
+                    label={option.name}
+                    size="small"
+                    sx={{
+                      color: "#e6edf3",
+                      backgroundColor: darkenColor(option.color, 0.5),
+                    }}
+                  />
+                ))
+              }
             />
 
             <Stack spacing={1.5}>
@@ -563,6 +793,150 @@ export default function Contacts() {
               </Button>
               <Button variant="contained" onClick={saveContact}>
                 Salvar
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={categoryDialogOpen}
+        onClose={() => {
+          setCategoryDialogOpen(false);
+          cancelEditCategory();
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogContent>
+          <Stack spacing={2.5}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Typography variant="h6">Categorias</Typography>
+              <IconButton
+                onClick={() => {
+                  setCategoryDialogOpen(false);
+                  cancelEditCategory();
+                }}
+                sx={{ color: "text.secondary" }}
+              >
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            {editingCategoryId ? (
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  backgroundColor: "rgba(10, 16, 23, 0.7)",
+                }}
+              >
+                <Stack spacing={1.5}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Editar categoria
+                  </Typography>
+                  <TextField
+                    label="Nome"
+                    fullWidth
+                    value={editingCategoryName}
+                    onChange={(event) => setEditingCategoryName(event.target.value)}
+                  />
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {DEFAULT_COLORS.map((color) => (
+                      <Box
+                        key={color}
+                        onClick={() => setEditingCategoryColor(color)}
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 1,
+                          backgroundColor: color,
+                          border:
+                            editingCategoryColor === color
+                              ? "2px solid rgba(255,255,255,0.8)"
+                              : "1px solid rgba(255,255,255,0.2)",
+                          cursor: "pointer",
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                  <Stack direction="row" spacing={2} justifyContent="flex-end">
+                    <Button variant="outlined" onClick={cancelEditCategory}>
+                      Cancelar
+                    </Button>
+                    <Button variant="contained" onClick={saveCategory}>
+                      Salvar
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Box>
+            ) : null}
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {categories.map((cat) => (
+                <Chip
+                  key={cat.id}
+                  label={cat.name}
+                  onClick={() => startEditCategory(cat)}
+                  onDelete={() => handleRemoveCategory(cat.id)}
+                  sx={{
+                    color: "#e6edf3",
+                    backgroundColor: darkenColor(cat.color, 0.5),
+                  }}
+                />
+              ))}
+            </Stack>
+            {editingCategoryId ? null : (
+              <Box>
+                <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+                  Nova categoria
+                </Typography>
+                <Stack spacing={1.5}>
+                  <TextField
+                    label="Nome"
+                    fullWidth
+                    value={newCategoryName}
+                    onChange={(event) => setNewCategoryName(event.target.value)}
+                  />
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {DEFAULT_COLORS.map((color) => (
+                      <Box
+                        key={color}
+                        onClick={() => setNewCategoryColor(color)}
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 1,
+                          backgroundColor: color,
+                          border:
+                            newCategoryColor === color
+                              ? "2px solid rgba(255,255,255,0.8)"
+                              : "1px solid rgba(255,255,255,0.2)",
+                          cursor: "pointer",
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                  <Button
+                    variant="outlined"
+                    onClick={handleAddCategory}
+                    startIcon={<AddRoundedIcon />}
+                    sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                  >
+                    Criar categoria
+                  </Button>
+                </Stack>
+              </Box>
+            )}
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setCategoryDialogOpen(false);
+                  cancelEditCategory();
+                }}
+              >
+                Fechar
               </Button>
             </Stack>
           </Stack>

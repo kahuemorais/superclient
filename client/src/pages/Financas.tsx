@@ -211,6 +211,7 @@ export default function Financas() {
   const [editingCategoryColor, setEditingCategoryColor] = useState(DEFAULT_COLORS[0]);
   const [expanded, setExpanded] = useState<"expense" | false>("expense");
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const isLoadedRef = useRef(false);
   const saveTimeoutRef = useRef<number | null>(null);
 
@@ -377,6 +378,24 @@ export default function Financas() {
     setComment("");
     setEditingExpenseId(null);
     setOpen(false);
+  };
+
+  const handleViewOpen = (expense: Expense) => {
+    setViewingExpense(expense);
+  };
+
+  const handleViewClose = () => {
+    setViewingExpense(null);
+  };
+
+  const handleEditOpen = (expense: Expense) => {
+    setEditingExpenseId(expense.id);
+    setTitle(expense.title);
+    setAmount(String(expense.amount));
+    setCategoryId(expense.categoryId);
+    setComment(expense.comment);
+    setExpanded("expense");
+    setOpen(true);
   };
 
   const handleAddCategory = () => {
@@ -664,15 +683,7 @@ export default function Financas() {
                       <TableRow
                         key={expense.id}
                         hover
-                        onClick={() => {
-                          setEditingExpenseId(expense.id);
-                          setTitle(expense.title);
-                          setAmount(String(expense.amount));
-                          setCategoryId(expense.categoryId);
-                          setComment(expense.comment);
-                          setExpanded("expense");
-                          setOpen(true);
-                        }}
+                        onClick={() => handleViewOpen(expense)}
                         sx={{ cursor: "pointer" }}
                       >
                         <TableCell>{expense.title}</TableCell>
@@ -944,6 +955,78 @@ export default function Financas() {
                   cancelEditCategory();
                 }}
               >
+                Fechar
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(viewingExpense)}
+        onClose={handleViewClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogContent>
+          <Stack spacing={2.5}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Typography variant="h6">
+                {viewingExpense?.title || "Detalhes do gasto"}
+              </Typography>
+              <IconButton onClick={handleViewClose} sx={{ color: "text.secondary" }}>
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Categoria
+              </Typography>
+              <Typography variant="body1">
+                {viewingExpense
+                  ? categoryMap.get(viewingExpense.categoryId)?.name || "-"
+                  : "-"}
+              </Typography>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Valor
+              </Typography>
+              <Typography variant="body1">
+                {viewingExpense?.amount.toLocaleString("pt-BR") || "-"}
+              </Typography>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Data
+              </Typography>
+              <Typography variant="body1">
+                {viewingExpense
+                  ? new Date(viewingExpense.createdAt).toLocaleDateString("pt-BR")
+                  : "-"}
+              </Typography>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Comentario
+              </Typography>
+              <Typography variant="body1">
+                {viewingExpense?.comment || "-"}
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  if (viewingExpense) {
+                    handleEditOpen(viewingExpense);
+                    setViewingExpense(null);
+                  }
+                }}
+              >
+                Editar
+              </Button>
+              <Button variant="contained" onClick={handleViewClose}>
                 Fechar
               </Button>
             </Stack>
