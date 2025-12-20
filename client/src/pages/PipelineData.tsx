@@ -76,6 +76,7 @@ const formatValue = (value: number) => {
 export default function PipelineData() {
   const [columns, setColumns] = useState<Column[]>([]);
   const [categories, setCategories] = useState<Category[] | null>(null);
+  const [showValueFields, setShowValueFields] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [dealForm, setDealForm] = useState<DealForm | null>(null);
   const boardLoadedRef = useRef(false);
@@ -101,6 +102,29 @@ export default function PipelineData() {
       }
     };
     void loadBoard();
+  }, []);
+
+  useEffect(() => {
+    const applySettings = () => {
+      const stored = window.localStorage.getItem("sc_task_fields");
+      if (!stored) {
+        setShowValueFields(false);
+        return;
+      }
+      try {
+        const parsed = JSON.parse(stored) as { value?: boolean };
+        setShowValueFields(Boolean(parsed.value));
+      } catch {
+        window.localStorage.removeItem("sc_task_fields");
+        setShowValueFields(false);
+      }
+    };
+    applySettings();
+    const handleSettingsChange = () => applySettings();
+    window.addEventListener("task-fields-change", handleSettingsChange);
+    return () => {
+      window.removeEventListener("task-fields-change", handleSettingsChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -163,6 +187,30 @@ export default function PipelineData() {
       topStage,
     };
   }, [pipeline]);
+
+  const taskStatusTotals = useMemo(() => {
+    const normalized = (title: string) => title.trim().toLowerCase();
+    const pending = columns.reduce((sum, column) => {
+      return normalized(column.title).includes("pendente")
+        ? sum + column.deals.length
+        : sum;
+    }, 0);
+    const inProgress = columns.reduce((sum, column) => {
+      const name = normalized(column.title);
+      if (name.includes("execucao") || name.includes("teste")) {
+        return sum + column.deals.length;
+      }
+      return sum;
+    }, 0);
+    const completed = columns.reduce((sum, column) => {
+      const name = normalized(column.title);
+      if (name.includes("finalizado") || name.includes("arquivado")) {
+        return sum + column.deals.length;
+      }
+      return sum;
+    }, 0);
+    return { pending, inProgress, completed };
+  }, [columns]);
 
   const deals = useMemo(
     () =>
@@ -252,9 +300,11 @@ export default function PipelineData() {
               <Typography variant="h5" sx={{ fontWeight: 700 }}>
                 {item.count}
               </Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {item.value}
-              </Typography>
+              {showValueFields ? (
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  {item.value}
+                </Typography>
+              ) : null}
             </Paper>
           ))}
         </Stack>
@@ -270,10 +320,10 @@ export default function PipelineData() {
             }}
           >
             <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-              Total de cards
+              Tarefas pendentes
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {pipelineTotals.totalCount}
+              {taskStatusTotals.pending}
             </Typography>
           </Paper>
           <Paper
@@ -286,10 +336,10 @@ export default function PipelineData() {
             }}
           >
             <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-              Valor total
+              Tarefas em andamento
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {formatValue(pipelineTotals.totalValue)}
+              {taskStatusTotals.inProgress}
             </Typography>
           </Paper>
           <Paper
@@ -302,18 +352,55 @@ export default function PipelineData() {
             }}
           >
             <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-              Ticket medio
+              Tarefas concluidas
             </Typography>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {formatValue(pipelineTotals.avgTicket)}
-            </Typography>
-            <Typography variant="caption" sx={{ color: "text.secondary" }}>
-              {pipelineTotals.topStage
-                ? `Maior etapa: ${pipelineTotals.topStage.stage}`
-                : "Sem dados"}
+              {taskStatusTotals.completed}
             </Typography>
           </Paper>
         </Stack>
+
+        {showValueFields ? (
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.5,
+                flex: 1,
+                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "rgba(15, 23, 32, 0.9)",
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Valor total
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                {formatValue(pipelineTotals.totalValue)}
+              </Typography>
+            </Paper>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.5,
+                flex: 1,
+                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "rgba(15, 23, 32, 0.9)",
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Ticket medio
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                {formatValue(pipelineTotals.avgTicket)}
+              </Typography>
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                {pipelineTotals.topStage
+                  ? `Maior etapa: ${pipelineTotals.topStage.stage}`
+                  : "Sem dados"}
+              </Typography>
+            </Paper>
+          </Stack>
+        ) : null}
 
         <Paper
           elevation={0}
@@ -338,7 +425,9 @@ export default function PipelineData() {
                         return [value, "Cards"];
                       }
                       if (name === "valueTotal") {
-                        return [formatValue(Number(value)), "Valor total"];
+                        return showValueFields
+                          ? [formatValue(Number(value)), "Valor total"]
+                          : null;
                       }
                       return [value, name];
                     }}
@@ -351,7 +440,9 @@ export default function PipelineData() {
                     itemStyle={{ color: "#e6edf3" }}
                   />
                   <Bar dataKey="count" fill="#22c9a6" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="valueTotal" fill="#1d4ed8" radius={[8, 8, 0, 0]} />
+                  {showValueFields ? (
+                    <Bar dataKey="valueTotal" fill="#1d4ed8" radius={[8, 8, 0, 0]} />
+                  ) : null}
                 </BarChart>
               </ResponsiveContainer>
             </Box>

@@ -12,8 +12,10 @@ import {
   MenuItem,
   Stack,
   Typography,
+  Badge,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import { Link as RouterLink, Route, Switch, useLocation } from "wouter";
 import theme from "./theme";
 import api from "./api";
@@ -26,12 +28,15 @@ import PipelineData from "./pages/PipelineData";
 import Pipeline from "./pages/Pipeline";
 import Financas from "./pages/Financas";
 import Dashboard from "./pages/Dashboard";
+import Contacts from "./pages/Contacts";
+import Notifications from "./pages/Notifications";
 
 const navItems = [
   { label: "Home", href: "/home" },
   { label: "Pipeline", href: "/pipeline" },
   { label: "Financas", href: "/financas" },
   { label: "Gestao", href: "/access" },
+  { label: "Contatos", href: "/contatos" },
 ];
 
 function App() {
@@ -43,6 +48,7 @@ function App() {
     pipeline: true,
     finance: true,
   });
+  const [hasNotifications, setHasNotifications] = useState(false);
 
   useEffect(() => {
     const syncAuth = async () => {
@@ -118,10 +124,14 @@ function App() {
     };
     window.addEventListener("prefs-change", handlePrefsChange);
     handlePrefsChange();
+    const handleContactsChange = () => computeNotifications();
+    window.addEventListener("contacts-change", handleContactsChange);
+    computeNotifications();
 
     return () => {
       window.removeEventListener("auth-change", handleAuthChange);
       window.removeEventListener("prefs-change", handlePrefsChange);
+      window.removeEventListener("contacts-change", handleContactsChange);
     };
   }, []);
 
@@ -180,6 +190,8 @@ function App() {
     "/pipeline": "Pipeline",
     "/pipeline/dados": "Dados",
     "/financas": "Financas",
+    "/contatos": "Contatos",
+    "/notifications": "Notificacoes",
   };
   const showBreadcrumbs = !["/", "/login", "/signup"].includes(location);
   const currentLabel = breadcrumbMap[location] ?? "Pagina";
@@ -222,6 +234,45 @@ function App() {
 
   const handleMobileMenuClose = () => {
     setMobileAnchorEl(null);
+  };
+
+  const computeNotifications = () => {
+    const stored = window.localStorage.getItem("contacts_v1");
+    if (!stored) {
+      setHasNotifications(false);
+      return;
+    }
+    try {
+      const contacts = JSON.parse(stored) as Array<{ birthday?: string }>;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const upcoming = contacts.filter((contact) => {
+        if (!contact.birthday) {
+          return false;
+        }
+        const parts = contact.birthday.split("-").map(Number);
+        if (parts.length < 3) {
+          return false;
+        }
+        const [, month, day] = parts;
+        if (!month || !day) {
+          return false;
+        }
+        const target = new Date(today.getFullYear(), month - 1, day);
+        if (target < today) {
+          target.setFullYear(today.getFullYear() + 1);
+        }
+        const diffDays = (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+        return diffDays >= 0 && diffDays <= 7;
+      });
+      const seenAtRaw = window.localStorage.getItem("notifications_seen_at");
+      const seenAt = seenAtRaw ? new Date(seenAtRaw) : null;
+      const hasNew = upcoming.length > 0 && (!seenAt || seenAt < today);
+      setHasNotifications(hasNew);
+    } catch {
+      window.localStorage.removeItem("contacts_v1");
+      setHasNotifications(false);
+    }
   };
 
   return (
@@ -276,40 +327,62 @@ function App() {
                 gap: 2,
               }}
             >
-              <Stack spacing={0.2}>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Superclient
-                </Typography>
-              </Stack>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Superclient
+              </Typography>
+              <Box sx={{ flex: 1, display: { xs: "none", md: "flex" }, justifyContent: "center" }}>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+                  {visibleNavItems.map((item) => (
+                    <Box key={item.href} sx={{ display: "flex", alignItems: "center" }}>
+                      <Button
+                        component={RouterLink}
+                        href={item.href}
+                        variant="text"
+                        color="inherit"
+                        sx={{
+                          textTransform: "none",
+                          fontWeight: 600,
+                          color: isActive(item.href) ? "primary.main" : "text.secondary",
+                          backgroundColor: isActive(item.href)
+                            ? "rgba(34, 201, 166, 0.12)"
+                            : "transparent",
+                          "&:hover": {
+                            color: "primary.main",
+                            backgroundColor: "rgba(34, 201, 166, 0.08)",
+                          },
+                        }}
+                      >
+                        {item.label}
+                      </Button>
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
               <Stack
                 direction="row"
                 spacing={1}
-                sx={{ display: { xs: "none", md: "flex" }, flexWrap: "wrap" }}
+                alignItems="center"
+                sx={{ display: { xs: "none", md: "flex" } }}
               >
-                {visibleNavItems.map((item) => (
-                  <Box key={item.href} sx={{ display: "flex", alignItems: "center" }}>
-                    <Button
-                      component={RouterLink}
-                      href={item.href}
-                      variant="text"
-                      color="inherit"
-                      sx={{
-                        textTransform: "none",
-                        fontWeight: 600,
-                        color: isActive(item.href) ? "primary.main" : "text.secondary",
-                        backgroundColor: isActive(item.href)
-                          ? "rgba(34, 201, 166, 0.12)"
-                          : "transparent",
-                        "&:hover": {
-                          color: "primary.main",
-                          backgroundColor: "rgba(34, 201, 166, 0.08)",
-                        },
-                      }}
-                    >
-                      {item.label}
-                    </Button>
-                  </Box>
-                ))}
+                {isLoggedIn ? (
+                  <IconButton
+                    component={RouterLink}
+                    href="/notifications"
+                    sx={{
+                      color: "primary.main",
+                      "&:hover": {
+                        backgroundColor: "rgba(34, 201, 166, 0.12)",
+                      },
+                      "&:active": {
+                        backgroundColor: "rgba(34, 201, 166, 0.2)",
+                      },
+                    }}
+                  >
+                    <Badge variant="dot" color="error" invisible={!hasNotifications}>
+                      <NotificationsNoneRoundedIcon />
+                    </Badge>
+                  </IconButton>
+                ) : null}
                 {isLoggedIn ? (
                   <Button
                     component={RouterLink}
@@ -343,6 +416,26 @@ function App() {
                 ) : null}
               </Stack>
               <Box sx={{ display: { xs: "flex", md: "none" } }}>
+                {isLoggedIn ? (
+                  <IconButton
+                    component={RouterLink}
+                    href="/notifications"
+                    sx={{
+                      color: "primary.main",
+                      mr: 1,
+                      "&:hover": {
+                        backgroundColor: "rgba(34, 201, 166, 0.12)",
+                      },
+                      "&:active": {
+                        backgroundColor: "rgba(34, 201, 166, 0.2)",
+                      },
+                    }}
+                  >
+                    <Badge variant="dot" color="error" invisible={!hasNotifications}>
+                      <NotificationsNoneRoundedIcon />
+                    </Badge>
+                  </IconButton>
+                ) : null}
                 <IconButton
                   aria-label="Abrir menu"
                   onClick={handleMobileMenuOpen}
@@ -437,6 +530,8 @@ function App() {
               <Route path="/pipeline/dados" component={PipelineData} />
               <Route path="/pipeline" component={Pipeline} />
               <Route path="/financas" component={Financas} />
+              <Route path="/contatos" component={Contacts} />
+              <Route path="/notifications" component={Notifications} />
               <Route>
                 <NotFound />
               </Route>

@@ -336,6 +336,27 @@ export default function Pipeline() {
   }, []);
 
   useEffect(() => {
+    const stored = window.localStorage.getItem("sc_task_fields");
+    if (!stored) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(stored) as { value?: boolean; link?: boolean };
+      setTaskFieldSettings({
+        value: Boolean(parsed.value),
+        link: Boolean(parsed.link),
+      });
+    } catch {
+      window.localStorage.removeItem("sc_task_fields");
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("sc_task_fields", JSON.stringify(taskFieldSettings));
+    window.dispatchEvent(new Event("task-fields-change"));
+  }, [taskFieldSettings]);
+
+  useEffect(() => {
     if (!isLoadedRef.current) {
       return;
     }
@@ -1434,7 +1455,11 @@ export default function Pipeline() {
                   borderRadius: 2,
                   border: "1px solid rgba(255,255,255,0.08)",
                   backgroundColor: "rgba(15, 23, 32, 0.9)",
+                  cursor: "pointer",
                 }}
+                onClick={() =>
+                  setTaskFieldSettings((prev) => ({ ...prev, value: !prev.value }))
+                }
               >
                 <Typography variant="subtitle2">Mostrar valor</Typography>
                 <Switch
@@ -1442,6 +1467,7 @@ export default function Pipeline() {
                   onChange={(event) =>
                     setTaskFieldSettings((prev) => ({ ...prev, value: event.target.checked }))
                   }
+                  onClick={(event) => event.stopPropagation()}
                 />
               </Box>
               <Box
@@ -1453,7 +1479,11 @@ export default function Pipeline() {
                   borderRadius: 2,
                   border: "1px solid rgba(255,255,255,0.08)",
                   backgroundColor: "rgba(15, 23, 32, 0.9)",
+                  cursor: "pointer",
                 }}
+                onClick={() =>
+                  setTaskFieldSettings((prev) => ({ ...prev, link: !prev.link }))
+                }
               >
                 <Typography variant="subtitle2">Mostrar link</Typography>
                 <Switch
@@ -1461,6 +1491,7 @@ export default function Pipeline() {
                   onChange={(event) =>
                     setTaskFieldSettings((prev) => ({ ...prev, link: event.target.checked }))
                   }
+                  onClick={(event) => event.stopPropagation()}
                 />
               </Box>
             </Stack>
