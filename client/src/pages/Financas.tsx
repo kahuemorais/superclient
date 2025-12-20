@@ -66,19 +66,55 @@ const DEFAULT_COLORS = [
 ];
 
 const defaultCategories: Category[] = [
-  { id: "cat-moradia", name: "Moradia", color: DEFAULT_COLORS[0] },
-  { id: "cat-alimentacao", name: "Alimentacao", color: DEFAULT_COLORS[1] },
-  { id: "cat-transporte", name: "Transporte", color: DEFAULT_COLORS[2] },
-  { id: "cat-saude", name: "Saude", color: DEFAULT_COLORS[3] },
-  { id: "cat-lazer", name: "Lazer", color: DEFAULT_COLORS[4] },
-  { id: "cat-educacao", name: "Educacao", color: DEFAULT_COLORS[5] },
-  { id: "cat-assinaturas", name: "Assinaturas", color: DEFAULT_COLORS[6] },
+  { id: "cat-moradia", name: "Pessoal", color: DEFAULT_COLORS[0] },
+  { id: "cat-alimentacao", name: "Operacional", color: DEFAULT_COLORS[1] },
+  { id: "cat-transporte", name: "Marketing", color: DEFAULT_COLORS[2] },
+  { id: "cat-saude", name: "Vendas", color: DEFAULT_COLORS[3] },
+  { id: "cat-lazer", name: "Tecnologia", color: DEFAULT_COLORS[4] },
+  { id: "cat-educacao", name: "Infraestrutura", color: DEFAULT_COLORS[5] },
+  { id: "cat-assinaturas", name: "Servicos", color: DEFAULT_COLORS[6] },
   { id: "cat-impostos", name: "Impostos", color: DEFAULT_COLORS[7] },
-  { id: "cat-investimentos", name: "Investimentos", color: DEFAULT_COLORS[8] },
-  { id: "cat-viagem", name: "Viagem", color: DEFAULT_COLORS[9] },
-  { id: "cat-compras", name: "Compras", color: DEFAULT_COLORS[10] },
+  { id: "cat-investimentos", name: "Viagens", color: DEFAULT_COLORS[8] },
+  { id: "cat-viagem", name: "Treinamento", color: DEFAULT_COLORS[9] },
+  { id: "cat-compras", name: "Fornecedores", color: DEFAULT_COLORS[10] },
   { id: "cat-outros", name: "Outros", color: DEFAULT_COLORS[11] },
 ];
+
+const LEGACY_FINANCE_NAMES = new Set([
+  "Moradia",
+  "Alimentacao",
+  "Transporte",
+  "Saude",
+  "Lazer",
+  "Educacao",
+  "Assinaturas",
+  "Impostos",
+  "Investimentos",
+  "Viagem",
+  "Compras",
+  "Outros",
+]);
+
+const NEW_FINANCE_NAMES = new Set([
+  "Pessoal",
+  "Operacional",
+  "Marketing",
+  "Vendas",
+  "Tecnologia",
+  "Infraestrutura",
+  "Servicos",
+  "Viagens",
+  "Treinamento",
+  "Fornecedores",
+]);
+
+const shouldResetFinanceCategories = (cats: Category[]) => {
+  if (!cats.length) {
+    return true;
+  }
+  const hasNew = cats.some((cat) => NEW_FINANCE_NAMES.has(cat.name));
+  return !hasNew;
+};
 
 const defaultExpenses: Expense[] = [
   {
@@ -220,11 +256,21 @@ export default function Financas() {
       try {
         const response = await api.get("/api/finance/data");
         const data = response?.data?.data;
-        if (data?.categories) {
-          setCategories(data.categories);
-        }
-        if (data?.expenses) {
+        const incomingCategories = Array.isArray(data?.categories)
+          ? data.categories
+          : defaultCategories;
+        const nextCategories = shouldResetFinanceCategories(incomingCategories)
+          ? defaultCategories
+          : incomingCategories;
+        setCategories(nextCategories);
+        if (Array.isArray(data?.expenses)) {
           setExpenses(data.expenses);
+        }
+        if (nextCategories !== incomingCategories) {
+          void api.put("/api/finance/data", {
+            categories: nextCategories,
+            expenses: Array.isArray(data?.expenses) ? data.expenses : expenses,
+          });
         }
       } catch {
         const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -234,11 +280,24 @@ export default function Financas() {
               categories?: Category[];
               expenses?: Expense[];
             };
-            if (parsed.categories) {
-              setCategories(parsed.categories);
-            }
-            if (parsed.expenses) {
+            const incomingCategories = Array.isArray(parsed.categories)
+              ? parsed.categories
+              : defaultCategories;
+            const nextCategories = shouldResetFinanceCategories(incomingCategories)
+              ? defaultCategories
+              : incomingCategories;
+            setCategories(nextCategories);
+            if (Array.isArray(parsed.expenses)) {
               setExpenses(parsed.expenses);
+            }
+            if (nextCategories !== incomingCategories) {
+              window.localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({
+                  categories: nextCategories,
+                  expenses: Array.isArray(parsed.expenses) ? parsed.expenses : expenses,
+                })
+              );
             }
           } catch {
             window.localStorage.removeItem(STORAGE_KEY);
@@ -269,6 +328,19 @@ export default function Financas() {
       }
     };
   }, [categories, expenses]);
+
+  useEffect(() => {
+    if (!isLoadedRef.current) {
+      return;
+    }
+    if (!categories.length) {
+      setCategories(defaultCategories);
+      return;
+    }
+    if (shouldResetFinanceCategories(categories)) {
+      setCategories(defaultCategories);
+    }
+  }, [categories]);
 
   const categoryMap = useMemo(() => {
     const map = new Map<string, Category>();

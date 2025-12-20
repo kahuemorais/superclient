@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Autocomplete,
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -9,13 +10,16 @@ import {
   DialogContent,
   IconButton,
   Paper,
+  Snackbar,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 
 type Contact = {
   id: string;
@@ -53,17 +57,17 @@ const DEFAULT_COLORS = [
 ];
 
 const defaultCategories: Category[] = [
-  { id: "cat-moradia", name: "Moradia", color: DEFAULT_COLORS[0] },
-  { id: "cat-alimentacao", name: "Alimentacao", color: DEFAULT_COLORS[1] },
-  { id: "cat-transporte", name: "Transporte", color: DEFAULT_COLORS[2] },
-  { id: "cat-saude", name: "Saude", color: DEFAULT_COLORS[3] },
-  { id: "cat-lazer", name: "Lazer", color: DEFAULT_COLORS[4] },
-  { id: "cat-educacao", name: "Educacao", color: DEFAULT_COLORS[5] },
-  { id: "cat-assinaturas", name: "Assinaturas", color: DEFAULT_COLORS[6] },
-  { id: "cat-impostos", name: "Impostos", color: DEFAULT_COLORS[7] },
-  { id: "cat-investimentos", name: "Investimentos", color: DEFAULT_COLORS[8] },
-  { id: "cat-viagem", name: "Viagem", color: DEFAULT_COLORS[9] },
-  { id: "cat-compras", name: "Compras", color: DEFAULT_COLORS[10] },
+  { id: "cat-familia", name: "Familia", color: DEFAULT_COLORS[0] },
+  { id: "cat-amigos", name: "Amigos", color: DEFAULT_COLORS[1] },
+  { id: "cat-trabalho", name: "Trabalho", color: DEFAULT_COLORS[2] },
+  { id: "cat-cliente", name: "Cliente", color: DEFAULT_COLORS[3] },
+  { id: "cat-parceiro", name: "Parceiro", color: DEFAULT_COLORS[4] },
+  { id: "cat-fornecedor", name: "Fornecedor", color: DEFAULT_COLORS[5] },
+  { id: "cat-prospect", name: "Prospect", color: DEFAULT_COLORS[6] },
+  { id: "cat-vip", name: "VIP", color: DEFAULT_COLORS[7] },
+  { id: "cat-suporte", name: "Suporte", color: DEFAULT_COLORS[8] },
+  { id: "cat-financeiro", name: "Financeiro", color: DEFAULT_COLORS[9] },
+  { id: "cat-equipe", name: "Equipe", color: DEFAULT_COLORS[10] },
   { id: "cat-outros", name: "Outros", color: DEFAULT_COLORS[11] },
 ];
 
@@ -119,6 +123,8 @@ export default function Contacts() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState("");
   const [editingCategoryColor, setEditingCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [copyMessage, setCopyMessage] = useState("");
+  const [copySnackbarOpen, setCopySnackbarOpen] = useState(false);
   const isLoadedRef = useRef(false);
   const saveTimeoutRef = useRef<number | null>(null);
 
@@ -146,7 +152,13 @@ export default function Contacts() {
     try {
       const parsed = JSON.parse(storedCategories) as Category[];
       if (Array.isArray(parsed) && parsed.length) {
-        setCategories(parsed);
+        const hasContactDefaults = parsed.some((cat) =>
+          ["Familia", "Amigos", "Cliente", "Fornecedor", "Prospect", "Equipe"].includes(cat.name)
+        );
+        setCategories(hasContactDefaults ? parsed : defaultCategories);
+        if (!hasContactDefaults) {
+          window.localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(defaultCategories));
+        }
       }
     } catch {
       window.localStorage.removeItem(CATEGORY_STORAGE_KEY);
@@ -201,6 +213,27 @@ export default function Contacts() {
   };
 
   const sanitizePhone = (value: string) => value.replace(/\D/g, "");
+
+  const copyText = async (value: string) => {
+    const text = value.trim();
+    if (!text) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyMessage("Copiado.");
+      setCopySnackbarOpen(true);
+    } catch {
+      const fallback = document.createElement("textarea");
+      fallback.value = text;
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand("copy");
+      document.body.removeChild(fallback);
+      setCopyMessage("Copiado.");
+      setCopySnackbarOpen(true);
+    }
+  };
 
   const handleAddCategory = () => {
     const name = newCategoryName.trim();
@@ -495,9 +528,23 @@ export default function Contacts() {
               </Typography>
               {selectedContact?.phones.filter(Boolean).length ? (
                 selectedContact?.phones.filter(Boolean).map((phone, index) => (
-                  <Typography key={`view-phone-${index}`} variant="body2">
-                    {phone}
-                  </Typography>
+                  <Stack
+                    key={`view-phone-${index}`}
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                  >
+                    <Typography variant="body2">{phone}</Typography>
+                    <Tooltip title="Copiar telefone" placement="top">
+                      <IconButton
+                        size="small"
+                        onClick={() => copyText(phone)}
+                        aria-label="Copiar telefone"
+                      >
+                        <ContentCopyRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                 ))
               ) : (
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -511,9 +558,23 @@ export default function Contacts() {
               </Typography>
               {selectedContact?.emails.filter(Boolean).length ? (
                 selectedContact?.emails.filter(Boolean).map((email, index) => (
-                  <Typography key={`view-email-${index}`} variant="body2">
-                    {email}
-                  </Typography>
+                  <Stack
+                    key={`view-email-${index}`}
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                  >
+                    <Typography variant="body2">{email}</Typography>
+                    <Tooltip title="Copiar email" placement="top">
+                      <IconButton
+                        size="small"
+                        onClick={() => copyText(email)}
+                        aria-label="Copiar email"
+                      >
+                        <ContentCopyRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                 ))
               ) : (
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -529,17 +590,29 @@ export default function Contacts() {
                 selectedContact?.addresses.filter(Boolean).map((address, index) => (
                   <Stack key={`view-address-${index}`} direction="row" spacing={1} alignItems="center">
                     <Typography variant="body2">{address}</Typography>
-                    <IconButton
-                      component="a"
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                        address
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      size="small"
-                    >
-                      <LinkRoundedIcon fontSize="small" />
-                    </IconButton>
+                    <Tooltip title="Copiar endereco" placement="top">
+                      <IconButton
+                        size="small"
+                        onClick={() => copyText(address)}
+                        aria-label="Copiar endereco"
+                      >
+                        <ContentCopyRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Abrir no Maps" placement="top">
+                      <IconButton
+                        component="a"
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          address
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        size="small"
+                        aria-label="Abrir no Maps"
+                      >
+                        <LinkRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Stack>
                 ))
               ) : (
@@ -942,6 +1015,21 @@ export default function Contacts() {
           </Stack>
         </DialogContent>
       </Dialog>
+
+      <Snackbar
+        open={copySnackbarOpen}
+        autoHideDuration={2000}
+        onClose={() => setCopySnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity="success"
+          onClose={() => setCopySnackbarOpen(false)}
+          sx={{ width: "100%" }}
+        >
+          {copyMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

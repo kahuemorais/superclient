@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
+import AutoGraphRoundedIcon from "@mui/icons-material/AutoGraphRounded";
 import { Link as RouterLink, Route, Switch, useLocation } from "wouter";
 import theme from "./theme";
 import api from "./api";
@@ -341,7 +342,10 @@ function App() {
                   "&:hover": { backgroundColor: "transparent", color: "primary.main" },
                 }}
               >
-                Superclient
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <AutoGraphRoundedIcon fontSize="small" />
+                  <Box component="span">Superclient</Box>
+                </Stack>
               </Button>
               <Box sx={{ flex: 1, display: { xs: "none", md: "flex" }, justifyContent: "center" }}>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>

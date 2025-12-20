@@ -107,19 +107,55 @@ const DEFAULT_COLORS = [
 ];
 
 const defaultCategories: Category[] = [
-  { id: "cat-moradia", name: "Moradia", color: DEFAULT_COLORS[0] },
-  { id: "cat-alimentacao", name: "Alimentacao", color: DEFAULT_COLORS[1] },
-  { id: "cat-transporte", name: "Transporte", color: DEFAULT_COLORS[2] },
-  { id: "cat-saude", name: "Saude", color: DEFAULT_COLORS[3] },
-  { id: "cat-lazer", name: "Lazer", color: DEFAULT_COLORS[4] },
-  { id: "cat-educacao", name: "Educacao", color: DEFAULT_COLORS[5] },
-  { id: "cat-assinaturas", name: "Assinaturas", color: DEFAULT_COLORS[6] },
-  { id: "cat-impostos", name: "Impostos", color: DEFAULT_COLORS[7] },
-  { id: "cat-investimentos", name: "Investimentos", color: DEFAULT_COLORS[8] },
-  { id: "cat-viagem", name: "Viagem", color: DEFAULT_COLORS[9] },
-  { id: "cat-compras", name: "Compras", color: DEFAULT_COLORS[10] },
-  { id: "cat-outros", name: "Outros", color: DEFAULT_COLORS[11] },
+  { id: "cat-moradia", name: "Bug", color: DEFAULT_COLORS[0] },
+  { id: "cat-alimentacao", name: "Feature", color: DEFAULT_COLORS[1] },
+  { id: "cat-transporte", name: "Melhoria", color: DEFAULT_COLORS[2] },
+  { id: "cat-saude", name: "Suporte", color: DEFAULT_COLORS[3] },
+  { id: "cat-lazer", name: "Pesquisa", color: DEFAULT_COLORS[4] },
+  { id: "cat-educacao", name: "Onboarding", color: DEFAULT_COLORS[5] },
+  { id: "cat-assinaturas", name: "Design", color: DEFAULT_COLORS[6] },
+  { id: "cat-impostos", name: "QA", color: DEFAULT_COLORS[7] },
+  { id: "cat-investimentos", name: "DevOps", color: DEFAULT_COLORS[8] },
+  { id: "cat-viagem", name: "Cliente", color: DEFAULT_COLORS[9] },
+  { id: "cat-compras", name: "Interno", color: DEFAULT_COLORS[10] },
+  { id: "cat-outros", name: "Backlog", color: DEFAULT_COLORS[11] },
 ];
+
+const LEGACY_PIPELINE_NAMES = new Set([
+  "Moradia",
+  "Alimentacao",
+  "Transporte",
+  "Saude",
+  "Lazer",
+  "Educacao",
+  "Assinaturas",
+  "Impostos",
+  "Investimentos",
+  "Viagem",
+  "Compras",
+  "Outros",
+]);
+
+const NEW_PIPELINE_NAMES = new Set([
+  "Bug",
+  "Feature",
+  "Melhoria",
+  "Suporte",
+  "Pesquisa",
+  "Onboarding",
+  "Design",
+  "QA",
+  "DevOps",
+  "Cliente",
+  "Interno",
+  "Backlog",
+]);
+
+const isLegacyPipelineCategories = (cats: Category[]) => {
+  const hasLegacy = cats.some((cat) => LEGACY_PIPELINE_NAMES.has(cat.name));
+  const hasNew = cats.some((cat) => NEW_PIPELINE_NAMES.has(cat.name));
+  return hasLegacy && !hasNew;
+};
 
 const defaultColumns: Column[] = [
   {
@@ -305,8 +341,16 @@ export default function Pipeline() {
           const incomingCategories = Array.isArray(pipeline.categories)
             ? pipeline.categories
             : defaultCategories;
-          if (incomingCategories.length) {
-            setCategories(incomingCategories);
+          const nextCategories = isLegacyPipelineCategories(incomingCategories)
+            ? defaultCategories
+            : incomingCategories;
+          if (nextCategories.length) {
+            setCategories(nextCategories);
+          }
+          if (nextCategories !== incomingCategories) {
+            await api.put("/api/pipeline/board", {
+              data: { columns: pipeline.columns, categories: nextCategories },
+            });
           }
           setColumns(normalizeColumns(pipeline.columns));
         } else {
