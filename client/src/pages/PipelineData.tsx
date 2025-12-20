@@ -42,6 +42,8 @@ type Deal = {
   name: string;
   value: string;
   owner: string;
+  stage?: string;
+  columnId?: string;
 };
 
 type DealForm = Deal & { columnId: string };

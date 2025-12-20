@@ -25,9 +25,10 @@ import Support from "./pages/Support";
 import PipelineData from "./pages/PipelineData";
 import Pipeline from "./pages/Pipeline";
 import Financas from "./pages/Financas";
+import Dashboard from "./pages/Dashboard";
 
 const navItems = [
-  { label: "Home", href: "/login" },
+  { label: "Home", href: "/home" },
   { label: "Pipeline", href: "/pipeline" },
   { label: "Financas", href: "/financas" },
   { label: "Gestao", href: "/access" },
@@ -126,7 +127,7 @@ function App() {
 
   useEffect(() => {
     if (isLoggedIn && ["/", "/login", "/signup"].includes(location)) {
-      setLocation("/pipeline");
+      setLocation("/home");
     }
   }, [isLoggedIn, location, setLocation]);
 
@@ -150,6 +151,9 @@ function App() {
     if (href === "/login") {
       return location === "/" || location === "/login" || location === "/signup";
     }
+    if (href === "/home") {
+      return location === "/home";
+    }
     if (href === "/pipeline") {
       return location === "/pipeline" || location === "/pipeline/dados";
     }
@@ -157,20 +161,19 @@ function App() {
   };
 
   const visibleNavItems = isLoggedIn
-    ? navItems
-        .filter((item) => item.href !== "/login")
-        .filter((item) => {
-          if (item.href === "/pipeline") {
-            return moduleAccess.pipeline;
-          }
-          if (item.href === "/financas") {
-            return moduleAccess.finance;
-          }
-          return true;
-        })
-    : navItems.filter((item) => item.href === "/login");
+    ? navItems.filter((item) => {
+        if (item.href === "/pipeline") {
+          return moduleAccess.pipeline;
+        }
+        if (item.href === "/financas") {
+          return moduleAccess.finance;
+        }
+        return true;
+      })
+    : [{ label: "Home", href: "/login" }];
 
   const breadcrumbMap: Record<string, string> = {
+    "/home": "Home",
     "/profile": "Perfil",
     "/access": "Gestao",
     "/support": "Suporte",
@@ -369,7 +372,14 @@ function App() {
             {showBreadcrumbs ? (
               <Breadcrumbs
                 aria-label="breadcrumb"
-                sx={{ mb: 3, color: "text.secondary" }}
+                sx={{
+                  mb: 3,
+                  color: "text.secondary",
+                  display: "flex",
+                  alignItems: "center",
+                  flexWrap: "nowrap",
+                  whiteSpace: "nowrap",
+                }}
               >
                 {location === "/pipeline/dados" ? (
                   <>
@@ -387,7 +397,7 @@ function App() {
                   <>
                     <Link
                       component={RouterLink}
-                      href="/login"
+                      href="/home"
                       underline="hover"
                       color="inherit"
                     >
@@ -402,6 +412,7 @@ function App() {
               <Route path="/" component={Login} />
               <Route path="/login" component={Login} />
               <Route path="/signup" component={Login} />
+              <Route path="/home" component={Dashboard} />
               <Route path="/profile" component={Profile} />
               <Route path="/access" component={AccessManagement} />
               <Route path="/support" component={Support} />
