@@ -42,6 +42,7 @@ import {
 import { useLocation } from "wouter";
 import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
+import { interactiveCardSx } from "../styles/interactiveCard";
 
 type Category = {
   id: string;
@@ -124,6 +125,34 @@ const NEW_FINANCE_NAMES = new Set([
   "Treinamento",
   "Fornecedores",
 ]);
+
+const normalizeCategory = (cat: Partial<Category> | null | undefined, index: number): Category | null => {
+  if (!cat || typeof cat.name !== "string") {
+    return null;
+  }
+  const name = cat.name.trim();
+  if (!name) {
+    return null;
+  }
+  const id =
+    typeof cat.id === "string" && cat.id.trim()
+      ? cat.id.trim()
+      : `cat-${Date.now()}-${index}`;
+  const color =
+    typeof cat.color === "string" && cat.color.trim()
+      ? cat.color.trim()
+      : DEFAULT_COLORS[index % DEFAULT_COLORS.length];
+  return { id, name, color };
+};
+
+const sanitizeCategories = (input: unknown): Category[] => {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+  return input
+    .map((cat, index) => normalizeCategory(cat as Partial<Category>, index))
+    .filter((cat): cat is Category => Boolean(cat));
+};
 
 const shouldResetFinanceCategories = (cats: Category[]) => {
   if (!cats.length) {
@@ -312,9 +341,7 @@ export default function Financas() {
       try {
         const response = await api.get("/api/finance/data");
         const data = response?.data?.data;
-        const incomingCategories = Array.isArray(data?.categories)
-          ? data.categories
-          : defaultCategories;
+        const incomingCategories = sanitizeCategories(data?.categories);
         const nextCategories = shouldResetFinanceCategories(incomingCategories)
           ? defaultCategories
           : incomingCategories;
@@ -336,9 +363,7 @@ export default function Financas() {
               categories?: Category[];
               expenses?: Expense[];
             };
-            const incomingCategories = Array.isArray(parsed.categories)
-              ? parsed.categories
-              : defaultCategories;
+            const incomingCategories = sanitizeCategories(parsed.categories);
             const nextCategories = shouldResetFinanceCategories(incomingCategories)
               ? defaultCategories
               : incomingCategories;
@@ -376,7 +401,8 @@ export default function Financas() {
       try {
         const parsed = JSON.parse(stored) as Contact[];
         if (Array.isArray(parsed)) {
-          setContacts(parsed);
+          const sanitized = parsed.filter((item) => item && typeof item.id === "string");
+          setContacts(sanitized);
         }
       } catch {
         window.localStorage.removeItem("contacts_v1");
@@ -688,7 +714,8 @@ export default function Financas() {
                 <IconButton
                   onClick={() => setSettingsOpen(true)}
                   sx={{
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    border: 1,
+                      borderColor: "divider",
                     borderRadius: 2,
                     color: "text.primary",
                   }}
@@ -743,7 +770,8 @@ export default function Financas() {
                   <RechartsTooltip
                     contentStyle={{
                       background: "rgba(12, 18, 26, 0.98)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      border: 1,
+                      borderColor: "divider",
                       color: "#e6edf3",
                     }}
                     labelStyle={{ color: "#e6edf3" }}
@@ -770,7 +798,8 @@ export default function Financas() {
                   <RechartsTooltip
                     contentStyle={{
                       background: "rgba(12, 18, 26, 0.98)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      border: 1,
+                      borderColor: "divider",
                       color: "#e6edf3",
                     }}
                     labelStyle={{ color: "#e6edf3" }}
@@ -853,7 +882,8 @@ export default function Financas() {
                           size="small"
                           sx={{
                             color: "text.secondary",
-                            border: "1px solid rgba(255,255,255,0.16)",
+                            border: 1,
+                      borderColor: "divider",
                           }}
                         />
                       ) : null}
@@ -903,7 +933,7 @@ export default function Financas() {
                   <TableRow>
                     <TableCell colSpan={tableColumnCount} sx={{ color: "text.secondary" }}>
                       <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                         Nao ha resultados para a sua pesquisa.
+                        Nenhum gasto encontrado.
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -1028,7 +1058,7 @@ export default function Financas() {
                 options={contacts}
                 value={contacts.filter((contact) => contactIds.includes(contact.id))}
                 onChange={(_, value) => setContactIds(value.map((contact) => contact.id))}
-                getOptionLabel={(option) => option.name || option.emails?.[0] || "Contato"}
+                getOptionLabel={(option) => option?.name || option?.emails?.[0] || "Contato"}
                 noOptionsText="Nenhum contato"
                 disabled={!permissions.finance_edit}
                 renderInput={(params) => (
@@ -1126,10 +1156,9 @@ export default function Financas() {
                                 height: 28,
                                 borderRadius: 1,
                                 backgroundColor: color,
-                                border:
-                                  editingCategoryColor === color
-                                    ? "2px solid rgba(255,255,255,0.8)"
-                                    : "1px solid rgba(255,255,255,0.2)",
+                                borderStyle: "solid",
+                                borderWidth: editingCategoryColor === color ? 2 : 1,
+                                borderColor: "divider",
                                 cursor: "pointer",
                               }}
                             />
@@ -1185,10 +1214,9 @@ export default function Financas() {
                                 height: 28,
                                 borderRadius: 1,
                                 backgroundColor: color,
-                                border:
-                                  newCategoryColor === color
-                                    ? "2px solid rgba(255,255,255,0.8)"
-                                    : "1px solid rgba(255,255,255,0.2)",
+                                borderStyle: "solid",
+                                borderWidth: newCategoryColor === color ? 2 : 1,
+                                borderColor: "divider",
                                 cursor: "pointer",
                               }}
                             />

@@ -237,8 +237,9 @@ export default function AccessManagement() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2.5}>
@@ -255,7 +256,8 @@ export default function AccessManagement() {
                   elevation={0}
                   sx={{
                     p: 2.5,
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    border: 1,
+                      borderColor: "divider",
                     minWidth: 200,
                   }}
                 >
@@ -287,8 +289,9 @@ export default function AccessManagement() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2.5}>
@@ -301,7 +304,7 @@ export default function AccessManagement() {
             />
             {filteredUsers.length === 0 ? (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                😕 Nao ha resultados para a sua pesquisa.
+                Nenhum usuario encontrado.
               </Typography>
             ) : (
               <Stack spacing={1.5} sx={{ maxHeight: 360, overflowY: "auto", pr: 1 }}>
@@ -311,8 +314,9 @@ export default function AccessManagement() {
                     elevation={0}
                     sx={{
                       p: 2,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                     }}
                   >
                     <Stack
@@ -359,8 +363,9 @@ export default function AccessManagement() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2.5}>
@@ -379,8 +384,9 @@ export default function AccessManagement() {
                   onClick={() => requestModuleToggle(index)}
                   sx={(theme) => ({
                     p: 2.5,
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    backgroundColor: "rgba(15, 23, 32, 0.9)",
+                    border: 1,
+                      borderColor: "divider",
+                    backgroundColor: "background.paper",
                     cursor: "pointer",
                     ...interactiveCardSx(theme),
                   })}
@@ -423,8 +429,9 @@ export default function AccessManagement() {
           fullWidth
           PaperProps={{
             sx: {
-              backgroundColor: "rgba(15, 23, 32, 0.95)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              backgroundColor: "background.paper",
+              border: 1,
+                      borderColor: "divider",
             },
           }}
         >
@@ -436,7 +443,13 @@ export default function AccessManagement() {
                   {activeRole ? `Papel: ${activeRole}` : "Selecione um papel."}
                 </Typography>
               </Box>
-              <Stack spacing={1.5}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 2,
+                }}
+              >
                 {rolePermissionItems.map((permission, index) => (
                   <Paper
                     key={permission.key}
@@ -444,8 +457,9 @@ export default function AccessManagement() {
                     onClick={() => toggleRolePermission(index)}
                     sx={(theme) => ({
                       p: 2.5,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(15, 23, 32, 0.9)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -479,7 +493,7 @@ export default function AccessManagement() {
                     </Stack>
                   </Paper>
                 ))}
-              </Stack>
+              </Box>
               <Stack direction="row" spacing={2} justifyContent="flex-end">
                 <Button
                   variant="outlined"
@@ -499,8 +513,9 @@ export default function AccessManagement() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2.5}>
@@ -565,8 +580,9 @@ export default function AccessManagement() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2}>
@@ -602,7 +618,7 @@ export default function AccessManagement() {
                   </Stack>
                 </Box>
                 {index !== invites.length - 1 && (
-                  <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", my: 2 }} />
+                  <Divider sx={{ my: 2 }} />
                 )}
               </Box>
             ))}

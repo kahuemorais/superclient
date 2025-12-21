@@ -734,8 +734,9 @@ export default function Contacts() {
             elevation={0}
             sx={{
               p: 3,
-              border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(15, 23, 32, 0.85)",
+              border: 1,
+                      borderColor: "divider",
+              backgroundColor: "background.paper",
             }}
           >
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -803,7 +804,8 @@ export default function Contacts() {
                           size="small"
                           sx={{
                             color: "text.secondary",
-                            border: "1px solid rgba(255,255,255,0.16)",
+                            border: 1,
+                      borderColor: "divider",
                           }}
                         />
                       ) : null}
@@ -822,7 +824,8 @@ export default function Contacts() {
                   <IconButton
                     onClick={() => setSettingsOpen(true)}
                     sx={{
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      border: 1,
+                      borderColor: "divider",
                       borderRadius: 2,
                       color: "text.primary",
                       alignSelf: { xs: "flex-start", sm: "center" },
@@ -835,7 +838,7 @@ export default function Contacts() {
             </Stack>
             {filteredContacts.length === 0 ? (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                😕 Nao ha resultados para a sua pesquisa.
+                 Nenhum contato encontrado.
               </Typography>
             ) : (
               <Box
@@ -869,8 +872,9 @@ export default function Contacts() {
                     sx={(theme) => ({
                       p: 2.5,
                       minHeight,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(15, 23, 32, 0.9)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -1198,8 +1202,9 @@ export default function Contacts() {
                   mt: 1,
                   p: 2,
                   borderRadius: 2,
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  backgroundColor: "rgba(15, 23, 32, 0.95)",
+                  border: 1,
+                      borderColor: "divider",
+                  backgroundColor: "background.paper",
                   minWidth: 280,
                 },
               }}
@@ -1540,9 +1545,10 @@ export default function Contacts() {
               }
               elevation={0}
               sx={{
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: 1,
+                      borderColor: "divider",
                 borderRadius: "var(--radius-card)",
-                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                backgroundColor: "background.paper",
                 "&:before": { display: "none" },
               }}
             >
@@ -1558,8 +1564,9 @@ export default function Contacts() {
                       sx={{
                         p: 2,
                         borderRadius: "var(--radius-card)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        backgroundColor: "rgba(10, 16, 23, 0.7)",
+                        border: 1,
+                      borderColor: "divider",
+                        backgroundColor: "background.paper",
                       }}
                     >
                       <Stack spacing={1.5}>
@@ -1582,10 +1589,9 @@ export default function Contacts() {
                                 height: 28,
                                 borderRadius: 1,
                                 backgroundColor: color,
-                                border:
-                                  editingCategoryColor === color
-                                    ? "2px solid rgba(255,255,255,0.8)"
-                                    : "1px solid rgba(255,255,255,0.2)",
+                                borderStyle: "solid",
+                                borderWidth: editingCategoryColor === color ? 2 : 1,
+                                borderColor: "divider",
                                 cursor: "pointer",
                               }}
                             />
@@ -1638,10 +1644,9 @@ export default function Contacts() {
                                 height: 28,
                                 borderRadius: 1,
                                 backgroundColor: color,
-                                border:
-                                  newCategoryColor === color
-                                    ? "2px solid rgba(255,255,255,0.8)"
-                                    : "1px solid rgba(255,255,255,0.2)",
+                                borderStyle: "solid",
+                                borderWidth: newCategoryColor === color ? 2 : 1,
+                                borderColor: "divider",
                                 cursor: "pointer",
                               }}
                             />
@@ -1669,9 +1674,10 @@ export default function Contacts() {
               }
               elevation={0}
               sx={{
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: 1,
+                      borderColor: "divider",
                 borderRadius: "var(--radius-card)",
-                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                backgroundColor: "background.paper",
                 "&:before": { display: "none" },
               }}
             >
@@ -1695,8 +1701,9 @@ export default function Contacts() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -1723,8 +1730,9 @@ export default function Contacts() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -1751,8 +1759,9 @@ export default function Contacts() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -1779,8 +1788,9 @@ export default function Contacts() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}

@@ -146,7 +146,7 @@ export default function Support() {
                 ))
               ) : (
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Nao ha resultados para a sua pesquisa.
+                  Nenhum artigo encontrado.
                 </Typography>
               )}
             </Stack>

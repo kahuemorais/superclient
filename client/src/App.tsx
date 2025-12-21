@@ -50,6 +50,7 @@ function App() {
   const [moduleAccess, setModuleAccess] = useState({
     pipeline: true,
     finance: true,
+    contacts: true,
   });
   const [language, setLanguage] = useState("pt-BR");
   const [hasNotifications, setHasNotifications] = useState(false);
@@ -83,12 +84,14 @@ function App() {
             const nextPrefs = {
               modulePipeline: Boolean(prefs.modulePipeline ?? true),
               moduleFinance: Boolean(prefs.moduleFinance ?? true),
+              moduleContacts: Boolean(prefs.moduleContacts ?? true),
               language: typeof prefs.language === "string" ? prefs.language : "pt-BR",
             };
             window.localStorage.setItem("sc_prefs", JSON.stringify(nextPrefs));
             setModuleAccess({
               pipeline: nextPrefs.modulePipeline,
               finance: nextPrefs.moduleFinance,
+              contacts: nextPrefs.moduleContacts,
             });
             setLanguage(nextPrefs.language);
             document.documentElement.lang = nextPrefs.language;
@@ -110,7 +113,7 @@ function App() {
         }
         setIsLoggedIn(false);
         setUserName("");
-        setModuleAccess({ pipeline: true, finance: true });
+        setModuleAccess({ pipeline: true, finance: true, contacts: true });
       }
     };
 
@@ -126,11 +129,13 @@ function App() {
         const parsed = JSON.parse(storedPrefs) as {
           modulePipeline?: boolean;
           moduleFinance?: boolean;
+          moduleContacts?: boolean;
           language?: string;
         };
         setModuleAccess({
           pipeline: Boolean(parsed.modulePipeline ?? true),
           finance: Boolean(parsed.moduleFinance ?? true),
+          contacts: Boolean(parsed.moduleContacts ?? true),
         });
         const nextLanguage = typeof parsed.language === "string" ? parsed.language : "pt-BR";
         setLanguage(nextLanguage);
@@ -192,6 +197,9 @@ function App() {
     if (!moduleAccess.finance && location === "/financas") {
       setLocation("/profile");
     }
+    if (!moduleAccess.contacts && location === "/contatos") {
+      setLocation("/profile");
+    }
   }, [isLoggedIn, location, moduleAccess, setLocation]);
 
   const isActive = (href: string) => {
@@ -214,6 +222,9 @@ function App() {
         }
         if (item.href === "/financas") {
           return moduleAccess.finance;
+        }
+        if (item.href === "/contatos") {
+          return moduleAccess.contacts;
         }
         return true;
       })

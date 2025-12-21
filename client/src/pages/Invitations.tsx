@@ -28,8 +28,9 @@ export default function Invitations() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2.5}>
@@ -67,8 +68,9 @@ export default function Invitations() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2}>
@@ -104,7 +106,7 @@ export default function Invitations() {
                   </Stack>
                 </Box>
                 {index !== invites.length - 1 && (
-                  <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", my: 2 }} />
+                  <Divider sx={{ my: 2 }} />
                 )}
               </Box>
             ))}

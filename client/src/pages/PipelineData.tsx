@@ -288,8 +288,9 @@ export default function PipelineData() {
               sx={{
                 p: 2.5,
                 flex: 1,
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(15, 23, 32, 0.9)",
+                border: 1,
+                      borderColor: "divider",
+                backgroundColor: "background.paper",
               }}
             >
               <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -313,8 +314,9 @@ export default function PipelineData() {
             sx={{
               p: 2.5,
               flex: 1,
-              border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(15, 23, 32, 0.9)",
+              border: 1,
+                      borderColor: "divider",
+              backgroundColor: "background.paper",
             }}
           >
             <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -329,8 +331,9 @@ export default function PipelineData() {
             sx={{
               p: 2.5,
               flex: 1,
-              border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(15, 23, 32, 0.9)",
+              border: 1,
+                      borderColor: "divider",
+              backgroundColor: "background.paper",
             }}
           >
             <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -345,8 +348,9 @@ export default function PipelineData() {
             sx={{
               p: 2.5,
               flex: 1,
-              border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(15, 23, 32, 0.9)",
+              border: 1,
+                      borderColor: "divider",
+              backgroundColor: "background.paper",
             }}
           >
             <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -365,8 +369,9 @@ export default function PipelineData() {
               sx={{
                 p: 2.5,
                 flex: 1,
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(15, 23, 32, 0.9)",
+                border: 1,
+                      borderColor: "divider",
+                backgroundColor: "background.paper",
               }}
             >
               <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -381,8 +386,9 @@ export default function PipelineData() {
               sx={{
                 p: 2.5,
                 flex: 1,
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(15, 23, 32, 0.9)",
+                border: 1,
+                      borderColor: "divider",
+                backgroundColor: "background.paper",
               }}
             >
               <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -404,8 +410,9 @@ export default function PipelineData() {
           elevation={0}
           sx={{
             p: 3,
-            border: "1px solid rgba(255,255,255,0.08)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2}>
@@ -432,7 +439,8 @@ export default function PipelineData() {
                     labelFormatter={(label) => String(label)}
                     contentStyle={{
                       background: "rgba(12, 18, 26, 0.98)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      border: 1,
+                      borderColor: "divider",
                       color: "#e6edf3",
                     }}
                     itemStyle={{ color: "#e6edf3" }}
@@ -453,15 +461,16 @@ export default function PipelineData() {
             sx={{
               p: 3,
               flex: 1,
-              border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(15, 23, 32, 0.9)",
+              border: 1,
+                      borderColor: "divider",
+              backgroundColor: "background.paper",
             }}
           >
             <Stack spacing={2.5}>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
                 Oportunidades chave
               </Typography>
-              <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+              <Divider />
               <Stack spacing={2}>
                 {deals.map((deal) => (
                   <Box
@@ -470,8 +479,9 @@ export default function PipelineData() {
                     sx={(theme) => ({
                       p: 2,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.85)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}

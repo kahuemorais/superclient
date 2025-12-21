@@ -35,10 +35,10 @@ export default function Signup() {
     >
       <Paper
         elevation={0}
+        variant="outlined"
         sx={{
           p: { xs: 3, md: 4 },
-          border: "1px solid rgba(255,255,255,0.1)",
-          backgroundColor: "rgba(15, 23, 32, 0.9)",
+          backgroundColor: "background.paper",
         }}
       >
         <Stack spacing={3}>
@@ -60,7 +60,7 @@ export default function Signup() {
             Criar conta
           </Button>
 
-          <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+          <Divider />
 
           <Button
             component={RouterLink}
@@ -87,11 +87,10 @@ export default function Signup() {
             <Paper
               key={plan.title}
               elevation={0}
+              variant="outlined"
               sx={{
                 p: 3,
-                border: "1px solid rgba(255,255,255,0.08)",
-                background:
-                  "linear-gradient(135deg, rgba(34, 201, 166, 0.14), rgba(15, 23, 32, 0.9))",
+                backgroundColor: "background.paper",
               }}
             >
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
@@ -109,10 +108,10 @@ export default function Signup() {
 
         <Paper
           elevation={0}
+          variant="outlined"
           sx={{
             p: 3,
-            border: "1px solid rgba(255,255,255,0.08)",
-            backgroundColor: "rgba(15, 23, 32, 0.85)",
+            backgroundColor: "background.paper",
           }}
         >
           <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>

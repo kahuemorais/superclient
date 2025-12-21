@@ -42,7 +42,7 @@ type AccessModule = {
 type ModuleDialog =
   | {
       kind: "core";
-      key: "modulePipeline" | "moduleFinance";
+      key: "modulePipeline" | "moduleFinance" | "moduleContacts";
       nextValue: boolean;
     }
   | {
@@ -75,6 +75,17 @@ const coreModuleLabels = {
       "Graficos por categoria e periodo",
       "Filtros avancados e busca rapida",
       "Associacao de contatos aos gastos",
+    ],
+  },
+  moduleContacts: {
+    title: "Contatos",
+    price: "R$ 39/mes",
+    description: "Gestao de contatos e categorias.",
+    features: [
+      "Campos e categorias personalizadas",
+      "Filtros por tags e pesquisa rapida",
+      "Copiar dados e abrir enderecos",
+      "Historico com notas e observacoes",
     ],
   },
 };
@@ -126,7 +137,7 @@ const languageOptions = [
 export default function Profile() {
   const [, setLocation] = useLocation();
   const [expanded, setExpanded] = useState<
-    "main" | "security" | "preferences" | "notifications" | "modules" | "account" | false
+    "main" | "security" | "notifications" | "modules" | "account" | false
   >(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -147,6 +158,7 @@ export default function Profile() {
     singleSession: false,
     modulePipeline: true,
     moduleFinance: true,
+    moduleContacts: true,
     language: "pt-BR",
   });
   const [languageDraft, setLanguageDraft] = useState("pt-BR");
@@ -220,6 +232,7 @@ export default function Profile() {
         singleSession?: boolean;
         modulePipeline?: boolean;
         moduleFinance?: boolean;
+        moduleContacts?: boolean;
         language?: string;
       };
     };
@@ -252,6 +265,7 @@ export default function Profile() {
       singleSession: Boolean(prefs?.singleSession),
       modulePipeline: Boolean(prefs?.modulePipeline ?? true),
       moduleFinance: Boolean(prefs?.moduleFinance ?? true),
+      moduleContacts: Boolean(prefs?.moduleContacts ?? true),
       language: prefs?.language || "pt-BR",
     });
     setLanguageDraft(prefs?.language || "pt-BR");
@@ -260,6 +274,7 @@ export default function Profile() {
       JSON.stringify({
         modulePipeline: Boolean(prefs?.modulePipeline ?? true),
         moduleFinance: Boolean(prefs?.moduleFinance ?? true),
+        moduleContacts: Boolean(prefs?.moduleContacts ?? true),
         language: prefs?.language || "pt-BR",
       })
     );
@@ -407,6 +422,7 @@ export default function Profile() {
           singleSession: preferences.singleSession,
           modulePipeline: preferences.modulePipeline,
           moduleFinance: preferences.moduleFinance,
+          moduleContacts: preferences.moduleContacts,
           language: preferences.language,
           notifyMentions: preferences.notifyMentions,
           notifyPipelineUpdates: preferences.notifyPipelineUpdates,
@@ -442,6 +458,7 @@ export default function Profile() {
         JSON.stringify({
           modulePipeline: preferences.modulePipeline,
           moduleFinance: preferences.moduleFinance,
+          moduleContacts: preferences.moduleContacts,
           language: preferences.language,
         })
       );
@@ -471,7 +488,7 @@ export default function Profile() {
   }, [preferences.language]);
 
   const requestModuleToggle = (
-    key: "modulePipeline" | "moduleFinance",
+    key: "modulePipeline" | "moduleFinance" | "moduleContacts",
     nextValue: boolean
   ) => {
     setModuleDialog({ kind: "core", key, nextValue });
@@ -592,8 +609,26 @@ export default function Profile() {
   return (
     <Box sx={{ maxWidth: 980, mx: "auto" }}>
       <Stack spacing={3}>
-        <Stack spacing={1}>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
+          alignItems={{ xs: "flex-start", md: "center" }}
+          justifyContent="space-between"
+        >
           <Typography variant="h4">Perfil</Typography>
+          <TextField
+            select
+            label="Idioma"
+            value={languageDraft}
+            onChange={(event) => handleLanguageSelect(event.target.value)}
+            sx={{ minWidth: 260 }}
+          >
+            {languageOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
         </Stack>
 
         <Accordion
@@ -1063,75 +1098,6 @@ export default function Profile() {
         </Accordion>
 
         <Accordion
-          expanded={expanded === "preferences"}
-          onChange={(_, isExpanded) => setExpanded(isExpanded ? "preferences" : false)}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-            <Typography variant="h6">Preferencias</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2.5}>
-              <Paper
-                variant="outlined"
-                onClick={() =>
-                  setPreferences((prev) => ({
-                    ...prev,
-                    singleSession: !prev.singleSession,
-                  }))
-                }
-                sx={(theme) => ({
-                  p: 2.5,
-                  cursor: "pointer",
-                  maxWidth: 420,
-                  ...interactiveCardSx(theme),
-                })}
-              >
-                <Stack spacing={1.5}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 2,
-                    }}
-                  >
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                      Sessao unica
-                    </Typography>
-                    <ToggleCheckbox
-                      checked={preferences.singleSession}
-                      onChange={(event) =>
-                        setPreferences((prev) => ({
-                          ...prev,
-                          singleSession: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                    Desconecte outras sessoes ao entrar novamente.
-                  </Typography>
-                </Stack>
-              </Paper>
-              <TextField
-                select
-                label="Idioma"
-                value={languageDraft}
-                onChange={(event) => handleLanguageSelect(event.target.value)}
-                sx={{ maxWidth: 360 }}
-              >
-                {languageOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion
           expanded={expanded === "modules"}
           onChange={(_, isExpanded) => setExpanded(isExpanded ? "modules" : false)}
         >
@@ -1147,7 +1113,9 @@ export default function Profile() {
                   gap: 2,
                 }}
               >
-                {(Object.keys(coreModuleLabels) as Array<"modulePipeline" | "moduleFinance">).map(
+                {(Object.keys(coreModuleLabels) as Array<
+                  "modulePipeline" | "moduleFinance" | "moduleContacts"
+                >).map(
                   (key) => (
                     <Paper
                       key={key}
@@ -1287,7 +1255,50 @@ export default function Profile() {
             <Typography variant="h6">Conta</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Stack spacing={2}>
+            <Stack spacing={2.5}>
+              <Paper
+                variant="outlined"
+                onClick={() =>
+                  setPreferences((prev) => ({
+                    ...prev,
+                    singleSession: !prev.singleSession,
+                  }))
+                }
+                sx={(theme) => ({
+                  p: 2.5,
+                  cursor: "pointer",
+                  maxWidth: 420,
+                  ...interactiveCardSx(theme),
+                })}
+              >
+                <Stack spacing={1.5}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Sessao unica
+                    </Typography>
+                    <ToggleCheckbox
+                      checked={preferences.singleSession}
+                      onChange={(event) =>
+                        setPreferences((prev) => ({
+                          ...prev,
+                          singleSession: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                    Desconecte outras sessoes ao entrar novamente.
+                  </Typography>
+                </Stack>
+              </Paper>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <Button
                   color="error"

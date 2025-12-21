@@ -109,6 +109,7 @@ db.exec(`
     single_session INTEGER NOT NULL DEFAULT 0,
     module_pipeline INTEGER NOT NULL DEFAULT 1,
     module_finance INTEGER NOT NULL DEFAULT 1,
+    module_contacts INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY(user_id) REFERENCES users(id)
@@ -175,6 +176,9 @@ const ensureUserPreferencesColumns = () => {
   }
   if (!names.has("module_finance")) {
     db.prepare("ALTER TABLE user_preferences ADD COLUMN module_finance INTEGER NOT NULL DEFAULT 1").run();
+  }
+  if (!names.has("module_contacts")) {
+    db.prepare("ALTER TABLE user_preferences ADD COLUMN module_contacts INTEGER NOT NULL DEFAULT 1").run();
   }
   if (!names.has("language")) {
     db.prepare("ALTER TABLE user_preferences ADD COLUMN language TEXT NOT NULL DEFAULT 'pt-BR'").run();
@@ -498,6 +502,7 @@ app.get("/api/profile", requireAuth, (req, res) => {
       singleSession: preferences ? Boolean(preferences.single_session) : false,
       modulePipeline: preferences ? Boolean(preferences.module_pipeline) : true,
       moduleFinance: preferences ? Boolean(preferences.module_finance) : true,
+      moduleContacts: preferences ? Boolean(preferences.module_contacts) : true,
       language: preferences?.language || "pt-BR",
       notifyMentions: preferences ? Boolean(preferences.notify_mentions) : true,
       notifyPipelineUpdates: preferences ? Boolean(preferences.notify_pipeline_updates) : true,
@@ -557,6 +562,7 @@ app.put("/api/profile", requireAuth, (req, res) => {
   const singleSession = Boolean(req.body.preferences?.singleSession);
   const modulePipeline = Boolean(req.body.preferences?.modulePipeline);
   const moduleFinance = Boolean(req.body.preferences?.moduleFinance);
+  const moduleContacts = Boolean(req.body.preferences?.moduleContacts);
   const language =
     typeof req.body.preferences?.language === "string"
       ? req.body.preferences.language.trim()
@@ -602,6 +608,7 @@ app.put("/api/profile", requireAuth, (req, res) => {
       single_session,
       module_pipeline,
       module_finance,
+      module_contacts,
       language,
       notify_mentions,
       notify_pipeline_updates,
@@ -617,6 +624,7 @@ app.put("/api/profile", requireAuth, (req, res) => {
        single_session = excluded.single_session,
        module_pipeline = excluded.module_pipeline,
        module_finance = excluded.module_finance,
+       module_contacts = excluded.module_contacts,
        language = excluded.language,
        notify_mentions = excluded.notify_mentions,
        notify_pipeline_updates = excluded.notify_pipeline_updates,
@@ -630,6 +638,7 @@ app.put("/api/profile", requireAuth, (req, res) => {
     singleSession ? 1 : 0,
     modulePipeline ? 1 : 0,
     moduleFinance ? 1 : 0,
+    moduleContacts ? 1 : 0,
     language || "pt-BR",
     notifyMentions ? 1 : 0,
     notifyPipelineUpdates ? 1 : 0,
@@ -652,6 +661,7 @@ app.put("/api/profile", requireAuth, (req, res) => {
       singleSession,
       modulePipeline,
       moduleFinance,
+      moduleContacts,
       language: language || "pt-BR",
       notifyMentions,
       notifyPipelineUpdates,

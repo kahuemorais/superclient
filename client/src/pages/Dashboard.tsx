@@ -195,8 +195,9 @@ export default function Dashboard() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2.5}>
@@ -217,8 +218,9 @@ export default function Dashboard() {
                 sx={{
                   p: 2.5,
                   flex: 1,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(15, 23, 32, 0.9)",
+                  border: 1,
+                      borderColor: "divider",
+                  backgroundColor: "background.paper",
                 }}
               >
                 <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -233,8 +235,9 @@ export default function Dashboard() {
                 sx={{
                   p: 2.5,
                   flex: 1,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(15, 23, 32, 0.9)",
+                  border: 1,
+                      borderColor: "divider",
+                  backgroundColor: "background.paper",
                 }}
               >
                 <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -249,8 +252,9 @@ export default function Dashboard() {
                 sx={{
                   p: 2.5,
                   flex: 1,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(15, 23, 32, 0.9)",
+                  border: 1,
+                      borderColor: "divider",
+                  backgroundColor: "background.paper",
                 }}
               >
                 <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -273,8 +277,9 @@ export default function Dashboard() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2.5}>
@@ -295,8 +300,9 @@ export default function Dashboard() {
                 sx={{
                   p: 2.5,
                   flex: 1,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(15, 23, 32, 0.9)",
+                  border: 1,
+                      borderColor: "divider",
+                  backgroundColor: "background.paper",
                 }}
               >
                 <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -311,8 +317,9 @@ export default function Dashboard() {
                 sx={{
                   p: 2.5,
                   flex: 1,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(15, 23, 32, 0.9)",
+                  border: 1,
+                      borderColor: "divider",
+                  backgroundColor: "background.paper",
                 }}
               >
                 <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -335,8 +342,9 @@ export default function Dashboard() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2.5}>
@@ -357,8 +365,9 @@ export default function Dashboard() {
                 sx={{
                   p: 2.5,
                   flex: 1,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(15, 23, 32, 0.9)",
+                  border: 1,
+                      borderColor: "divider",
+                  backgroundColor: "background.paper",
                 }}
               >
                 <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -376,8 +385,9 @@ export default function Dashboard() {
                 sx={{
                   p: 2.5,
                   flex: 1,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(15, 23, 32, 0.9)",
+                  border: 1,
+                      borderColor: "divider",
+                  backgroundColor: "background.paper",
                 }}
               >
                 <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>

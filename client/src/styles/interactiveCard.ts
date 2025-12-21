@@ -1,19 +1,16 @@
-import type { Theme } from "@mui/material/styles";
+import { alpha, type Theme } from "@mui/material/styles";
 
 export const interactiveCardSx = (theme: Theme) => ({
+  backgroundColor: theme.palette.background.paper,
+  border: `1px solid ${theme.palette.divider}`,
   transition: theme.transitions.create(
-    ["background-color", "border-color", "box-shadow", "transform"],
+    ["background-color", "border-color"],
     { duration: theme.transitions.duration.short }
   ),
   "&:hover": {
-    backgroundColor: theme.palette.action.hover,
-    borderColor: theme.palette.divider,
-    boxShadow: theme.shadows[3],
+    backgroundColor: alpha(theme.palette.text.primary, 0.08),
   },
   "&:active": {
-    backgroundColor: theme.palette.action.selected,
-    borderColor: theme.palette.divider,
-    boxShadow: theme.shadows[1],
-    transform: "translateY(1px)",
+    backgroundColor: alpha(theme.palette.text.primary, 0.12),
   },
 });

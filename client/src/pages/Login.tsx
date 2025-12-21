@@ -265,10 +265,10 @@ export default function Login() {
               <Paper
                 key={item}
                 elevation={0}
+                variant="outlined"
                 sx={{
                   p: 2.5,
-                  background: "linear-gradient(140deg, #0f1b24 0%, #101720 100%)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  backgroundColor: "background.paper",
                 }}
               >
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -281,10 +281,9 @@ export default function Login() {
             sx={{
               mt: 3,
               p: 3,
-              background:
-                "linear-gradient(120deg, rgba(34, 201, 166, 0.16), rgba(245, 158, 11, 0.12))",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "var(--radius-card)",
+              backgroundColor: "background.paper",
+              border: 1,
+              borderColor: "divider",
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
@@ -311,11 +310,10 @@ export default function Login() {
                 <Paper
                   key={plan.title}
                   elevation={0}
+                  variant="outlined"
                   sx={{
                     p: 2.5,
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background:
-                      "linear-gradient(135deg, rgba(34, 201, 166, 0.14), rgba(15, 23, 32, 0.9))",
+                    backgroundColor: "background.paper",
                   }}
                 >
                   <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
@@ -336,11 +334,10 @@ export default function Login() {
 
       <Paper
         elevation={0}
+        variant="outlined"
         sx={{
           p: { xs: 3, md: 4 },
-          border: "1px solid rgba(255,255,255,0.1)",
-          backgroundColor: "rgba(15, 23, 32, 0.9)",
-          backdropFilter: "blur(18px)",
+          backgroundColor: "background.paper",
         }}
       >
         <Stack
@@ -504,7 +501,7 @@ export default function Login() {
                 </Typography>
               ) : null}
 
-              <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+              <Divider />
 
               <Button
                 type="button"

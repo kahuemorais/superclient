@@ -1872,7 +1872,8 @@ export default function Pipeline() {
                         size="small"
                         sx={{
                           color: "text.secondary",
-                          border: "1px solid rgba(255,255,255,0.16)",
+                          border: 1,
+                      borderColor: "divider",
                         }}
                       />
                     ) : null}
@@ -1889,7 +1890,8 @@ export default function Pipeline() {
                   onClick={() => setTaskFieldSettingsOpen(true)}
                   disabled={!permissions.pipeline_edit_tasks}
                   sx={{
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    border: 1,
+                      borderColor: "divider",
                     borderRadius: 2,
                     color: "text.primary",
                   }}
@@ -1900,124 +1902,6 @@ export default function Pipeline() {
             </Tooltip>
           </Stack>
         </Box>
-
-        {sprintState.enabled ? (
-          <Stack spacing={2}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2.5,
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(15, 23, 32, 0.85)",
-              }}
-            >
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                spacing={2}
-                alignItems={{ xs: "stretch", sm: "center" }}
-                justifyContent="space-between"
-              >
-                <Stack spacing={0.5}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                    Sprint ativa
-                  </Typography>
-                  {sprintState.activeSprint ? (
-                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                      {sprintState.activeSprint.name} •{" "}
-                      {new Date(sprintState.activeSprint.startDate).toLocaleDateString("pt-BR")} -{" "}
-                      {new Date(sprintState.activeSprint.endDate).toLocaleDateString("pt-BR")}
-                    </Typography>
-                  ) : (
-                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                      Nenhuma sprint ativa.
-                    </Typography>
-                  )}
-                </Stack>
-                <Stack direction="row" spacing={2}>
-                  {sprintState.activeSprint ? (
-                    <Button
-                      variant="outlined"
-                      onClick={handleFinishSprint}
-                      disabled={!permissions.pipeline_edit_tasks}
-                      sx={{ textTransform: "none", fontWeight: 600 }}
-                    >
-                      Finalizar sprint
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      onClick={handleCreateSprint}
-                      disabled={!permissions.pipeline_edit_tasks}
-                      sx={{ textTransform: "none", fontWeight: 600 }}
-                    >
-                      Criar sprint
-                    </Button>
-                  )}
-                </Stack>
-              </Stack>
-            </Paper>
-
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2.5,
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(15, 23, 32, 0.85)",
-              }}
-            >
-              <Stack spacing={2}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  Backlog
-                </Typography>
-                {filteredBacklog.length === 0 ? (
-                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Nenhuma tarefa no backlog.
-                  </Typography>
-                ) : (
-                  <Stack spacing={1.5}>
-                    {filteredBacklog.map((deal) => (
-                      <Paper
-                        key={deal.id}
-                        elevation={0}
-                        onClick={() => handleViewOpen(deal)}
-                        sx={(theme) => ({
-                          p: 2,
-                          borderRadius: "var(--radius-card)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          backgroundColor: "rgba(10, 16, 23, 0.8)",
-                          cursor: "pointer",
-                          ...interactiveCardSx(theme),
-                        })}
-                      >
-                        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                              {deal.name}
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                              {getDealOwnerLabel(deal)}
-                            </Typography>
-                          </Box>
-                          <Button
-                            variant="outlined"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleMoveToSprint(deal.id);
-                            }}
-                            disabled={!sprintState.activeSprint || !permissions.pipeline_edit_tasks}
-                            sx={{ textTransform: "none", fontWeight: 600 }}
-                          >
-                            Adicionar a sprint
-                          </Button>
-                        </Stack>
-                      </Paper>
-                    ))}
-                  </Stack>
-                )}
-              </Stack>
-            </Paper>
-          </Stack>
-        ) : null}
 
         <DndContext
           sensors={sensors}
@@ -2033,13 +1917,14 @@ export default function Pipeline() {
               elevation={0}
               sx={{
                 p: 3,
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(15, 23, 32, 0.85)",
+                border: 1,
+                      borderColor: "divider",
+                backgroundColor: "background.paper",
                 mb: 2,
               }}
             >
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                ðŸ˜• Nao ha resultados para a sua pesquisa.
+                Nenhuma tarefa encontrada.
               </Typography>
             </Paper>
           ) : null}
@@ -2128,8 +2013,9 @@ export default function Pipeline() {
                     sx={(theme) => ({
                       p: 2.5,
                       minWidth: 280,
-                      border: "1px dashed rgba(255,255,255,0.2)",
-                      backgroundColor: "rgba(15, 23, 32, 0.6)",
+                      border: "1px dashed",
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
@@ -2164,9 +2050,10 @@ export default function Pipeline() {
                         p: 2.5,
                         minWidth: 280,
                         borderRadius: "var(--radius-card)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        backgroundColor: "rgba(15, 23, 32, 0.95)",
-                        boxShadow: theme.shadows[6],
+                        border: 1,
+                      borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        boxShadow: theme.shadows[2],
                       })}
                     >
                       <Stack spacing={2}>
@@ -2178,7 +2065,7 @@ export default function Pipeline() {
                             {column.deals.length}
                           </Typography>
                         </Box>
-                        <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+                        <Divider />
                         <Stack spacing={1.5}>
                           {column.deals.slice(0, 3).map((deal) => (
                             <Box
@@ -2186,8 +2073,9 @@ export default function Pipeline() {
                               sx={{
                                 p: 2,
                                 borderRadius: "var(--radius-card)",
-                                border: "1px solid rgba(255,255,255,0.08)",
-                                backgroundColor: "rgba(10, 16, 23, 0.85)",
+                                border: 1,
+                      borderColor: "divider",
+                                backgroundColor: "background.paper",
                               }}
                             >
                               <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -2219,9 +2107,10 @@ export default function Pipeline() {
                       sx={(theme) => ({
                         p: 2,
                         borderRadius: "var(--radius-card)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        backgroundColor: "rgba(10, 16, 23, 0.95)",
-                        boxShadow: theme.shadows[6],
+                        border: 1,
+                      borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        boxShadow: theme.shadows[2],
                       })}
                     >
                       <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -2242,6 +2131,129 @@ export default function Pipeline() {
             ) : null}
           </DragOverlay>
         </DndContext>
+        {sprintState.enabled ? (
+          <Stack spacing={2}>
+            <Paper
+              elevation={0}
+              variant="outlined"
+              sx={{
+                p: 2.5,
+              }}
+            >
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="space-between"
+              >
+                <Stack spacing={0.5}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                    Sprint ativa
+                  </Typography>
+                  {sprintState.activeSprint ? (
+                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                      {sprintState.activeSprint.name} -{" "}
+                      {new Date(sprintState.activeSprint.startDate).toLocaleDateString("pt-BR")} -{" "}
+                      {new Date(sprintState.activeSprint.endDate).toLocaleDateString("pt-BR")}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                      Nenhuma sprint ativa.
+                    </Typography>
+                  )}
+                </Stack>
+                <Stack direction="row" spacing={2}>
+                  {sprintState.activeSprint ? (
+                    <Button
+                      variant="outlined"
+                      onClick={handleFinishSprint}
+                      disabled={!permissions.pipeline_edit_tasks}
+                      sx={{ textTransform: "none", fontWeight: 600 }}
+                    >
+                      Finalizar sprint
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      onClick={handleCreateSprint}
+                      disabled={!permissions.pipeline_edit_tasks}
+                      sx={{ textTransform: "none", fontWeight: 600 }}
+                    >
+                      Criar sprint
+                    </Button>
+                  )}
+                </Stack>
+              </Stack>
+            </Paper>
+
+            <Paper
+              elevation={0}
+              variant="outlined"
+              sx={{
+                p: 2.5,
+              }}
+            >
+              <Stack spacing={2}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                  Backlog
+                </Typography>
+                {filteredBacklog.length === 0 ? (
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Nenhuma tarefa no backlog.
+                  </Typography>
+                ) : (
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                      gap: 2,
+                    }}
+                  >
+                    {filteredBacklog.map((deal) => (
+                      <Paper
+                        key={deal.id}
+                        elevation={0}
+                        onClick={() => handleViewOpen(deal)}
+                        sx={(theme) => ({
+                          p: 2,
+                          borderRadius: "var(--radius-card)",
+                          border: 1,
+                      borderColor: "divider",
+                          backgroundColor: "background.paper",
+                          cursor: "pointer",
+                          ...interactiveCardSx(theme),
+                        })}
+                      >
+                        <Stack spacing={2}>
+                          <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                              {deal.name}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                              {getDealOwnerLabel(deal)}
+                            </Typography>
+                          </Box>
+                          <Button
+                            variant="outlined"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleMoveToSprint(deal.id);
+                            }}
+                            disabled={!sprintState.activeSprint || !permissions.pipeline_edit_tasks}
+                            sx={{ textTransform: "none", fontWeight: 600, alignSelf: "flex-start" }}
+                          >
+                            Adicionar a sprint
+                          </Button>
+                        </Stack>
+                      </Paper>
+                    ))}
+                  </Box>
+                )}
+              </Stack>
+            </Paper>
+          </Stack>
+        ) : null}
+
       <Dialog open={Boolean(viewingDeal)} onClose={handleViewClose} maxWidth="sm" fullWidth>
         <DialogContent>
           <Stack spacing={2.5}>
@@ -2255,7 +2267,8 @@ export default function Pipeline() {
                       onClick={() => handleCopyLink(viewingDeal.id)}
                       sx={{
                         color: "text.secondary",
-                        border: "1px solid rgba(255,255,255,0.12)",
+                        border: 1,
+                      borderColor: "divider",
                       }}
                     >
                       <LinkRoundedIcon fontSize="small" />
@@ -2337,8 +2350,9 @@ export default function Pipeline() {
               <Box
                 sx={{
                   borderRadius: "var(--radius-card)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  backgroundColor: "rgba(10, 16, 23, 0.75)",
+                  border: 1,
+                      borderColor: "divider",
+                  backgroundColor: "background.paper",
                   p: 2,
                   minHeight: 120,
                 }}
@@ -2408,9 +2422,10 @@ export default function Pipeline() {
               expanded={configAccordion === "sprints"}
               onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "sprints" : false)}
               sx={{
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: 1,
+                      borderColor: "divider",
                 borderRadius: "var(--radius-card)",
-                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                backgroundColor: "background.paper",
                 "&:before": { display: "none" },
               }}
             >
@@ -2428,8 +2443,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2502,8 +2518,9 @@ export default function Pipeline() {
                             sx={{
                               p: 1.5,
                               borderRadius: "var(--radius-card)",
-                              border: "1px solid rgba(255,255,255,0.08)",
-                              backgroundColor: "rgba(10, 16, 23, 0.7)",
+                              border: 1,
+                      borderColor: "divider",
+                              backgroundColor: "background.paper",
                             }}
                           >
                             <Stack
@@ -2543,9 +2560,10 @@ export default function Pipeline() {
               expanded={configAccordion === "fields"}
               onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "fields" : false)}
               sx={{
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: 1,
+                      borderColor: "divider",
                 borderRadius: "var(--radius-card)",
-                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                backgroundColor: "background.paper",
                 "&:before": { display: "none" },
               }}
             >
@@ -2569,8 +2587,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2594,8 +2613,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2619,8 +2639,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2647,8 +2668,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2675,8 +2697,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2703,8 +2726,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2731,8 +2755,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2759,8 +2784,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2787,8 +2813,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2815,8 +2842,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2843,8 +2871,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2871,8 +2900,9 @@ export default function Pipeline() {
                       justifyContent: "space-between",
                       p: 1.5,
                       borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -2900,9 +2930,10 @@ export default function Pipeline() {
               expanded={configAccordion === "categories"}
               onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "categories" : false)}
               sx={{
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: 1,
+                      borderColor: "divider",
                 borderRadius: "var(--radius-card)",
-                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                backgroundColor: "background.paper",
                 "&:before": { display: "none" },
               }}
             >
@@ -2918,8 +2949,9 @@ export default function Pipeline() {
                       sx={{
                         p: 2,
                         borderRadius: "var(--radius-card)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        backgroundColor: "rgba(10, 16, 23, 0.7)",
+                        border: 1,
+                      borderColor: "divider",
+                        backgroundColor: "background.paper",
                       }}
                     >
                       <Stack spacing={1.5}>
@@ -2942,10 +2974,9 @@ export default function Pipeline() {
                                 height: 28,
                                 borderRadius: 1,
                                 backgroundColor: color,
-                                border:
-                                  editingCategoryColor === color
-                                    ? "2px solid rgba(255,255,255,0.8)"
-                                    : "1px solid rgba(255,255,255,0.2)",
+                                borderStyle: "solid",
+                                borderWidth: editingCategoryColor === color ? 2 : 1,
+                                borderColor: "divider",
                                 cursor: "pointer",
                               }}
                             />
@@ -2998,10 +3029,9 @@ export default function Pipeline() {
                                 height: 28,
                                 borderRadius: 1,
                                 backgroundColor: color,
-                                border:
-                                  newCategoryColor === color
-                                    ? "2px solid rgba(255,255,255,0.8)"
-                                    : "1px solid rgba(255,255,255,0.2)",
+                                borderStyle: "solid",
+                                borderWidth: newCategoryColor === color ? 2 : 1,
+                                borderColor: "divider",
                                 cursor: "pointer",
                               }}
                             />
@@ -3026,9 +3056,10 @@ export default function Pipeline() {
               expanded={configAccordion === "columns"}
               onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "columns" : false)}
               sx={{
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: 1,
+                      borderColor: "divider",
                 borderRadius: "var(--radius-card)",
-                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                backgroundColor: "background.paper",
                 "&:before": { display: "none" },
               }}
             >
@@ -3073,9 +3104,10 @@ export default function Pipeline() {
                   <Accordion
                     elevation={0}
                     sx={{
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      border: 1,
+                      borderColor: "divider",
                       borderRadius: "var(--radius-card)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      backgroundColor: "background.paper",
                       "&:before": { display: "none" },
                       "&.Mui-expanded": { marginTop: 1.5 },
                     }}
@@ -3105,9 +3137,10 @@ export default function Pipeline() {
                               elevation={0}
                               sx={{
                                 p: 2,
-                                border: "1px solid rgba(255,255,255,0.08)",
+                                border: 1,
+                      borderColor: "divider",
                                 borderRadius: "var(--radius-card)",
-                                backgroundColor: "rgba(7, 11, 16, 0.7)",
+                                backgroundColor: "background.paper",
                               }}
                             >
                               <Stack
@@ -3122,7 +3155,7 @@ export default function Pipeline() {
                                   <Tooltip title="Restaurar" placement="top">
                                     <IconButton
                                       onClick={() => handleRestoreColumn(column.id)}
-                                      sx={{ border: "1px solid rgba(255,255,255,0.12)" }}
+                                      sx={{ border: 1, borderColor: "divider" }}
                                       aria-label={`Restaurar ${column.title}`}
                                     >
                                       <RestoreFromTrashRoundedIcon fontSize="small" />
@@ -3131,7 +3164,7 @@ export default function Pipeline() {
                                   <Tooltip title="Remover" placement="top">
                                     <IconButton
                                       onClick={() => handleRequestRemoveColumn(column)}
-                                      sx={{ border: "1px solid rgba(255,255,255,0.12)" }}
+                                      sx={{ border: 1, borderColor: "divider" }}
                                       aria-label={`Remover ${column.title}`}
                                     >
                                       <DeleteRoundedIcon fontSize="small" />
@@ -3493,12 +3526,11 @@ function SortableColumn({
     <Paper
       ref={setNodeRef}
       elevation={0}
+      variant="outlined"
       sx={{
         p: 2.5,
-        flex: 1,
+        flex: "0 0 280px",
         minWidth: 280,
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "rgba(15, 23, 32, 0.9)",
       }}
       style={style}
     >
@@ -3547,7 +3579,7 @@ function SortableColumn({
             </IconButton>
           </Box>
         </Box>
-        <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+        <Divider />
         <SortableContext
           items={filteredDeals.map((deal) => cardDragId(deal.id))}
           strategy={verticalListSortingStrategy}
@@ -3607,8 +3639,9 @@ function SortableDeal({
       sx={{
         p: 2,
         borderRadius: "var(--radius-card)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "rgba(10, 16, 23, 0.85)",
+        border: 1,
+                      borderColor: "divider",
+        backgroundColor: "background.paper",
         cursor: canEditTasks ? "grab" : "pointer",
         touchAction: canEditTasks ? "none" : "auto",
       }}
@@ -3665,8 +3698,9 @@ function SortableColumnRow({
       elevation={0}
       sx={{
         p: 2,
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "rgba(15, 23, 32, 0.9)",
+        border: 1,
+                      borderColor: "divider",
+        backgroundColor: "background.paper",
       }}
       style={style}
     >
@@ -3681,7 +3715,7 @@ function SortableColumnRow({
           <Tooltip title="Arquivar" placement="top">
             <IconButton
               onClick={onArchive}
-              sx={{ border: "1px solid rgba(255,255,255,0.12)" }}
+              sx={{ border: 1, borderColor: "divider" }}
               aria-label={`Arquivar ${column.title}`}
             >
               <ArchiveRoundedIcon fontSize="small" />
@@ -3690,7 +3724,7 @@ function SortableColumnRow({
           <Tooltip title="Remover" placement="top">
             <IconButton
               onClick={onRemove}
-              sx={{ border: "1px solid rgba(255,255,255,0.12)" }}
+              sx={{ border: 1, borderColor: "divider" }}
               aria-label={`Remover ${column.title}`}
             >
               <DeleteRoundedIcon fontSize="small" />
@@ -3700,7 +3734,8 @@ function SortableColumnRow({
             {...attributes}
             {...listeners}
             sx={{
-              border: "1px solid rgba(255,255,255,0.12)",
+              border: 1,
+                      borderColor: "divider",
               cursor: "grab",
             }}
             aria-label={`Arrastar ${column.title}`}
@@ -3785,9 +3820,10 @@ function RichTextEditor({
   const iconButtonProps = {
     size: "small" as const,
     sx: {
-      border: "1px solid rgba(255,255,255,0.12)",
-      backgroundColor: "rgba(7, 9, 13, 0.6)",
-      "&:hover": { backgroundColor: "rgba(7, 9, 13, 0.8)" },
+      border: 1,
+      borderColor: "divider",
+      backgroundColor: "background.paper",
+      "&:hover": { backgroundColor: "action.hover" },
     },
   };
 
@@ -3864,12 +3900,12 @@ function RichTextEditor({
             <FormatListNumberedRoundedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Citação" placement="top">
+        <Tooltip title="Citacao" placement="top">
           <IconButton
             {...iconButtonProps}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
             color={editor?.isActive("blockquote") ? "primary" : "default"}
-            aria-label="Citação"
+            aria-label="Citacao"
           >
             <FormatQuoteRoundedIcon fontSize="small" />
           </IconButton>
@@ -3887,8 +3923,9 @@ function RichTextEditor({
       <Box
         sx={{
           borderRadius: "var(--radius-card)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          backgroundColor: "rgba(10, 16, 23, 0.75)",
+          border: 1,
+                      borderColor: "divider",
+          backgroundColor: "background.paper",
           "& .tiptap": {
             minHeight: 180,
             outline: "none",

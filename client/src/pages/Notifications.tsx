@@ -72,8 +72,9 @@ export default function Notifications() {
           elevation={0}
           sx={{
             p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
+            border: 1,
+                      borderColor: "divider",
+            backgroundColor: "background.paper",
           }}
         >
           <Stack spacing={2.5}>
@@ -90,8 +91,9 @@ export default function Notifications() {
                     elevation={0}
                     sx={{
                       p: 2,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
                     }}
                   >
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
