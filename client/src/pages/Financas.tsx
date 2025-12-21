@@ -297,15 +297,14 @@ export default function Financas() {
     const rolePermissions = storedPermissions
       ? (JSON.parse(storedPermissions) as Record<string, Record<string, boolean>>)
       : {};
-    return (
-      rolePermissions[roleName] || {
-        pipeline_view: true,
-        pipeline_edit_tasks: true,
-        pipeline_edit_columns: true,
-        finance_view: true,
-        finance_edit: true,
-      }
-    );
+    const defaults = {
+      pipeline_view: true,
+      pipeline_edit_tasks: true,
+      pipeline_edit_columns: true,
+      finance_view: true,
+      finance_edit: true,
+    };
+    return { ...defaults, ...(rolePermissions[roleName] || {}) };
   };
 
   useEffect(() => {
@@ -688,7 +687,6 @@ export default function Financas() {
               <span>
                 <IconButton
                   onClick={() => setSettingsOpen(true)}
-                  disabled={!permissions.finance_edit}
                   sx={{
                     border: "1px solid rgba(255,255,255,0.12)",
                     borderRadius: 2,
@@ -711,7 +709,6 @@ export default function Financas() {
                 setOpen(true);
               }}
               sx={{ textTransform: "none", fontWeight: 600 }}
-              disabled={!permissions.finance_edit}
             >
               Adicionar gasto
             </Button>
@@ -720,13 +717,8 @@ export default function Financas() {
 
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
           <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              flex: 1,
-              border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(15, 23, 32, 0.85)",
-            }}
+            variant="outlined"
+            sx={{ p: 3, flex: 1 }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
               Gastos por categoria
@@ -764,13 +756,8 @@ export default function Financas() {
           </Paper>
 
           <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              flex: 1,
-              border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(15, 23, 32, 0.85)",
-            }}
+            variant="outlined"
+            sx={{ p: 3, flex: 1 }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
               Evolucao mensal
@@ -798,12 +785,8 @@ export default function Financas() {
         </Stack>
 
         <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            border: "1px solid rgba(255,255,255,0.08)",
-            backgroundColor: "rgba(15, 23, 32, 0.85)",
-          }}
+          variant="outlined"
+          sx={{ p: 3 }}
         >
           <Stack
             direction={{ xs: "column", md: "row" }}
@@ -920,7 +903,7 @@ export default function Financas() {
                   <TableRow>
                     <TableCell colSpan={tableColumnCount} sx={{ color: "text.secondary" }}>
                       <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                        😕 Nao ha resultados para a sua pesquisa.
+                         Nao ha resultados para a sua pesquisa.
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -1008,12 +991,14 @@ export default function Financas() {
                 fullWidth
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
+                disabled={!permissions.finance_edit}
               />
               <TextField
                 label="Valor"
                 fullWidth
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
+                disabled={!permissions.finance_edit}
               />
               <TextField
                 select
@@ -1021,6 +1006,7 @@ export default function Financas() {
                 fullWidth
                 value={categoryId}
                 onChange={(event) => setCategoryId(event.target.value)}
+                disabled={!permissions.finance_edit}
               >
                 {categories.map((cat) => (
                   <MenuItem key={cat.id} value={cat.id}>
@@ -1035,6 +1021,7 @@ export default function Financas() {
                 minRows={3}
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}
+                disabled={!permissions.finance_edit}
               />
               <Autocomplete
                 multiple
@@ -1043,6 +1030,7 @@ export default function Financas() {
                 onChange={(_, value) => setContactIds(value.map((contact) => contact.id))}
                 getOptionLabel={(option) => option.name || option.emails?.[0] || "Contato"}
                 noOptionsText="Nenhum contato"
+                disabled={!permissions.finance_edit}
                 renderInput={(params) => (
                   <TextField {...params} label="Contatos associados" fullWidth />
                 )}
@@ -1063,7 +1051,11 @@ export default function Financas() {
               <Button variant="outlined" onClick={() => setOpen(false)}>
                 Cancelar
               </Button>
-              <Button variant="contained" onClick={handleSaveExpense}>
+              <Button
+                variant="contained"
+                onClick={handleSaveExpense}
+                disabled={!permissions.finance_edit}
+              >
                 {editingExpenseId ? "Salvar alteracoes" : "Salvar gasto"}
               </Button>
             </Stack>
@@ -1102,13 +1094,6 @@ export default function Financas() {
               onChange={(_, isExpanded) =>
                 setSettingsAccordion(isExpanded ? "categories" : false)
               }
-              elevation={0}
-              sx={{
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "rgba(15, 23, 32, 0.75)",
-                "&:before": { display: "none" },
-              }}
             >
               <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -1118,14 +1103,7 @@ export default function Financas() {
               <AccordionDetails>
                 <Stack spacing={1.5}>
                   {editingCategoryId ? (
-                    <Box
-                      sx={{
-                        p: 2,
-                        borderRadius: "var(--radius-card)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        backgroundColor: "rgba(10, 16, 23, 0.7)",
-                      }}
-                    >
+                    <Paper variant="outlined" sx={{ p: 2 }}>
                       <Stack spacing={1.5}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                           Editar categoria
@@ -1166,7 +1144,7 @@ export default function Financas() {
                           </Button>
                         </Stack>
                       </Stack>
-                    </Box>
+                    </Paper>
                   ) : null}
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     {categories.map((cat) => (
@@ -1236,13 +1214,6 @@ export default function Financas() {
               onChange={(_, isExpanded) =>
                 setSettingsAccordion(isExpanded ? "table" : false)
               }
-              elevation={0}
-              sx={{
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "rgba(15, 23, 32, 0.75)",
-                "&:before": { display: "none" },
-              }}
             >
               <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -1257,15 +1228,13 @@ export default function Financas() {
                     gap: 1.5,
                   }}
                 >
-                  <Box
+                  <Paper
+                    variant="outlined"
                     sx={(theme) => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -1284,16 +1253,14 @@ export default function Financas() {
                       }
                       onClick={(event) => event.stopPropagation()}
                     />
-                  </Box>
-                  <Box
+                  </Paper>
+                  <Paper
+                    variant="outlined"
                     sx={(theme) => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -1312,16 +1279,14 @@ export default function Financas() {
                       }
                       onClick={(event) => event.stopPropagation()}
                     />
-                  </Box>
-                  <Box
+                  </Paper>
+                  <Paper
+                    variant="outlined"
                     sx={(theme) => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -1340,16 +1305,14 @@ export default function Financas() {
                       }
                       onClick={(event) => event.stopPropagation()}
                     />
-                  </Box>
-                  <Box
+                  </Paper>
+                  <Paper
+                    variant="outlined"
                     sx={(theme) => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -1368,16 +1331,14 @@ export default function Financas() {
                       }
                       onClick={(event) => event.stopPropagation()}
                     />
-                  </Box>
-                  <Box
+                  </Paper>
+                  <Paper
+                    variant="outlined"
                     sx={(theme) => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(10, 16, 23, 0.7)",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}
@@ -1396,7 +1357,7 @@ export default function Financas() {
                       }
                       onClick={(event) => event.stopPropagation()}
                     />
-                  </Box>
+                  </Paper>
                 </Box>
               </AccordionDetails>
             </Accordion>

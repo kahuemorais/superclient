@@ -51,9 +51,14 @@ function App() {
     pipeline: true,
     finance: true,
   });
+  const [language, setLanguage] = useState("pt-BR");
   const [hasNotifications, setHasNotifications] = useState(false);
   const [switchNotice, setSwitchNotice] = useState("");
   const [switchSnackbarOpen, setSwitchSnackbarOpen] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   useEffect(() => {
     const syncAuth = async () => {
@@ -78,12 +83,15 @@ function App() {
             const nextPrefs = {
               modulePipeline: Boolean(prefs.modulePipeline ?? true),
               moduleFinance: Boolean(prefs.moduleFinance ?? true),
+              language: typeof prefs.language === "string" ? prefs.language : "pt-BR",
             };
             window.localStorage.setItem("sc_prefs", JSON.stringify(nextPrefs));
             setModuleAccess({
               pipeline: nextPrefs.modulePipeline,
               finance: nextPrefs.moduleFinance,
             });
+            setLanguage(nextPrefs.language);
+            document.documentElement.lang = nextPrefs.language;
           }
         } catch {
           // Keep stored preferences if profile fetch fails.
@@ -118,11 +126,15 @@ function App() {
         const parsed = JSON.parse(storedPrefs) as {
           modulePipeline?: boolean;
           moduleFinance?: boolean;
+          language?: string;
         };
         setModuleAccess({
           pipeline: Boolean(parsed.modulePipeline ?? true),
           finance: Boolean(parsed.moduleFinance ?? true),
         });
+        const nextLanguage = typeof parsed.language === "string" ? parsed.language : "pt-BR";
+        setLanguage(nextLanguage);
+        document.documentElement.lang = nextLanguage;
       } catch {
         window.localStorage.removeItem("sc_prefs");
       }

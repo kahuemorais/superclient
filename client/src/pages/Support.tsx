@@ -4,6 +4,7 @@ import {
   AccordionSummary,
   Box,
   Button,
+  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -66,7 +67,7 @@ const faqItems = [
   {
     title: "Perfil",
     content:
-      "Atualize dados pessoais, altere preferencias e faca logout. Em trocar de conta, selecione contas recentes ou faça login em outra.",
+      "Atualize dados pessoais, altere preferencias e faca logout. Em trocar de conta, selecione contas recentes ou faca login em outra.",
   },
   {
     title: "Sessao e seguranca",
@@ -75,12 +76,22 @@ const faqItems = [
   },
 ];
 
-const whatsappUrl =
-  "https://wa.me/5500000000000?text=Ola%2C%20preciso%20de%20suporte%20no%20Superclient.";
+const supportCategories = [
+  { value: "duvidas", label: "Duvidas" },
+  { value: "sugestoes", label: "Sugestoes" },
+  { value: "problemas_financeiros", label: "Problemas financeiros" },
+  { value: "suporte_tecnico", label: "Suporte tecnico" },
+  { value: "cobranca", label: "Cobranca" },
+  { value: "outros", label: "Outros" },
+];
 
 export default function Support() {
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<string | false>(false);
+  const [contactExpanded, setContactExpanded] = useState(false);
+  const [supportEmail, setSupportEmail] = useState("");
+  const [supportCategory, setSupportCategory] = useState("duvidas");
+  const [supportMessage, setSupportMessage] = useState("");
   const filteredItems = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) {
@@ -101,14 +112,7 @@ export default function Support() {
           </Typography>
         </Box>
 
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 2, md: 3 },
-            border: "1px solid rgba(255,255,255,0.08)",
-            backgroundColor: "rgba(15, 23, 32, 0.8)",
-          }}
-        >
+        <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
           <Stack spacing={2}>
             <TextField
               fullWidth
@@ -123,30 +127,17 @@ export default function Support() {
                 filteredItems.map((item) => (
                   <Accordion
                     key={item.title}
-                    elevation={0}
-                    disableGutters
                     expanded={expanded === item.title}
                     onChange={(_, isExpanded) =>
                       setExpanded(isExpanded ? item.title : false)
                     }
-                    sx={{
-                      backgroundColor: "transparent",
-                      borderBottom: "1px solid rgba(255,255,255,0.08)",
-                      "&:before": { display: "none" },
-                    }}
                   >
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreRoundedIcon />}
-                      sx={{
-                        px: 0,
-                        "& .MuiAccordionSummary-content": { my: 0.5 },
-                      }}
-                    >
+                    <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                         {item.title}
                       </Typography>
                     </AccordionSummary>
-                    <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                    <AccordionDetails>
                       <Typography variant="body2" sx={{ color: "text.secondary" }}>
                         {item.content}
                       </Typography>
@@ -155,26 +146,55 @@ export default function Support() {
                 ))
               ) : (
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  😕 Nao ha resultados para a sua pesquisa.
+                  Nao ha resultados para a sua pesquisa.
                 </Typography>
               )}
             </Stack>
           </Stack>
         </Paper>
 
-        <Box>
-          <Button
-            component="a"
-            href={whatsappUrl}
-            target="_blank"
-            rel="noreferrer"
-            variant="contained"
-            color="success"
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            Tirar duvidas pelo WhatsApp
-          </Button>
-        </Box>
+        <Accordion
+          expanded={contactExpanded}
+          onChange={(_, isExpanded) => setContactExpanded(isExpanded)}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+            <Typography variant="h6">Fale com o suporte</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2}>
+              <TextField
+                label="Email para contato"
+                fullWidth
+                value={supportEmail}
+                onChange={(event) => setSupportEmail(event.target.value)}
+              />
+              <TextField
+                select
+                label="Categoria"
+                fullWidth
+                value={supportCategory}
+                onChange={(event) => setSupportCategory(event.target.value)}
+              >
+                {supportCategories.map((category) => (
+                  <MenuItem key={category.value} value={category.value}>
+                    {category.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Mensagem"
+                fullWidth
+                multiline
+                minRows={4}
+                value={supportMessage}
+                onChange={(event) => setSupportMessage(event.target.value)}
+              />
+              <Button variant="contained" sx={{ alignSelf: "flex-start" }}>
+                Enviar mensagem
+              </Button>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
       </Stack>
     </Box>
   );

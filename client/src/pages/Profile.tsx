@@ -1,16 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Dialog,
   DialogContent,
   IconButton,
+  MenuItem,
   Paper,
+  Snackbar,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import { useLocation } from "wouter";
 import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
@@ -23,23 +32,130 @@ type StoredAccount = {
   token?: string;
 };
 
+type AccessModule = {
+  id: number;
+  name: string;
+  description: string;
+  enabled: boolean;
+};
+
+type ModuleDialog =
+  | {
+      kind: "core";
+      key: "modulePipeline" | "moduleFinance";
+      nextValue: boolean;
+    }
+  | {
+      kind: "access";
+      id: number;
+      name: string;
+      nextValue: boolean;
+    };
+
 const ACCOUNT_STORAGE_KEY = "sc_accounts";
+
+const coreModuleLabels = {
+  modulePipeline: {
+    title: "Pipeline",
+    price: "R$ 89/mes",
+    description: "Gestao de oportunidades e tasks.",
+    features: [
+      "Quadro kanban com etapas personalizadas",
+      "Sprints, backlog e historico",
+      "Checklist, prioridades e responsaveis",
+      "Campos customizados por tarefa",
+    ],
+  },
+  moduleFinance: {
+    title: "Financas",
+    price: "R$ 79/mes",
+    description: "Controle de gastos e categorias.",
+    features: [
+      "Lancamentos e categorias personalizadas",
+      "Graficos por categoria e periodo",
+      "Filtros avancados e busca rapida",
+      "Associacao de contatos aos gastos",
+    ],
+  },
+};
+
+const accessModuleFeatures: Record<string, string[]> = {
+  "Dashboard executivo": [
+    "KPIs em tempo real",
+    "Indicadores de performance",
+    "Visao consolidada por area",
+  ],
+  "Gestao de usuarios": [
+    "Controle de papeis e permissoes",
+    "Distribuicao por time",
+    "Permissoes por modulo",
+  ],
+  "Convites e onboarding": [
+    "Convites com papeis pre-definidos",
+    "Fluxos de entrada por time",
+    "Acompanhamento de status",
+  ],
+  Relatorios: [
+    "Exportacao de dados",
+    "Auditoria de alteracoes",
+    "Relatorios por periodo",
+  ],
+};
+
+const fallbackAccessModules: AccessModule[] = [
+  { id: -1, name: "Dashboard executivo", description: "KPIs e indicadores de acesso.", enabled: true },
+  { id: -2, name: "Gestao de usuarios", description: "Perfis, roles e permissao.", enabled: true },
+  { id: -3, name: "Convites e onboarding", description: "Fluxos de entrada.", enabled: true },
+  { id: -4, name: "Relatorios", description: "Exportacao e auditoria.", enabled: true },
+];
+
+const languageOptions = [
+  { value: "pt-BR", label: "Portugues do Brasil" },
+  { value: "pt-PT", label: "Portugues de Portugal" },
+  { value: "pt-AO", label: "Portugues de Angola" },
+  { value: "es-419", label: "Espanhol latino-americano" },
+  { value: "es-ES", label: "Espanhol europeu" },
+  { value: "en-US", label: "Ingles americano" },
+  { value: "en-CA", label: "Ingles canadense" },
+  { value: "en-GB", label: "Ingles britanico" },
+  { value: "en-AU", label: "Ingles australiano" },
+  { value: "de-DE", label: "Alemao" },
+  { value: "fr-FR", label: "Frances" },
+];
 
 export default function Profile() {
   const [, setLocation] = useLocation();
+  const [expanded, setExpanded] = useState<
+    "main" | "security" | "preferences" | "notifications" | "modules" | "account" | false
+  >(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [team, setTeam] = useState("");
+  const [role, setRole] = useState("");
+  const [timezone, setTimezone] = useState("");
+  const [phones, setPhones] = useState<string[]>([""]);
+  const [emails, setEmails] = useState<string[]>([""]);
+  const [addresses, setAddresses] = useState<string[]>([""]);
+  const [comments, setComments] = useState<string[]>([""]);
   const [preferences, setPreferences] = useState({
-    email: true,
+    notifyEmail: true,
+    notifyMentions: true,
+    notifyPipelineUpdates: true,
+    notifyFinanceAlerts: true,
+    notifyWeeklySummary: true,
+    notifyProductUpdates: true,
     singleSession: false,
     modulePipeline: true,
     moduleFinance: true,
+    language: "pt-BR",
   });
-  const [moduleDialog, setModuleDialog] = useState<{
-    key: "modulePipeline" | "moduleFinance";
-    nextValue: boolean;
-  } | null>(null);
+  const [languageDraft, setLanguageDraft] = useState("pt-BR");
+  const [languageDialogOpen, setLanguageDialogOpen] = useState(false);
+  const [pendingLanguage, setPendingLanguage] = useState<string | null>(null);
+  const [languageSnackbarOpen, setLanguageSnackbarOpen] = useState(false);
+  const lastLanguageRef = useRef<string | null>(null);
+  const [accessModules, setAccessModules] = useState<AccessModule[]>([]);
+  const [moduleDialog, setModuleDialog] = useState<ModuleDialog | null>(null);
   const [switchDialogOpen, setSwitchDialogOpen] = useState(false);
   const [switchAccounts, setSwitchAccounts] = useState<StoredAccount[]>([]);
   const [switchEmail, setSwitchEmail] = useState("");
@@ -48,6 +164,8 @@ export default function Profile() {
   const [switchLoading, setSwitchLoading] = useState(false);
   const isLoadedRef = useRef(false);
   const saveTimeoutRef = useRef<number | null>(null);
+  const accessModulesToShow = accessModules.length ? accessModules : fallbackAccessModules;
+  const canToggleAccessModules = accessModules.length > 0;
 
   const loadAccounts = () => {
     const stored = window.localStorage.getItem(ACCOUNT_STORAGE_KEY);
@@ -84,6 +202,77 @@ export default function Profile() {
     setSwitchAccounts(nextAccounts);
   };
 
+  const hydrateProfile = (response: {
+    data?: {
+      user?: { name?: string | null; email?: string | null };
+      profile?: {
+        phone?: string;
+        team?: string;
+        role?: string;
+        timezone?: string;
+        phones?: string[];
+        emails?: string[];
+        addresses?: string[];
+        comments?: string[];
+      };
+      preferences?: {
+        emailNotifications?: boolean;
+        singleSession?: boolean;
+        modulePipeline?: boolean;
+        moduleFinance?: boolean;
+        language?: string;
+      };
+    };
+  }) => {
+    const user = response?.data?.user;
+    const profile = response?.data?.profile;
+    const prefs = response?.data?.preferences;
+    setName(user?.name || "");
+    setEmail(user?.email || "");
+    setTeam(profile?.team || "");
+    setRole(profile?.role || "");
+    setTimezone(profile?.timezone || "");
+    const initialPhones =
+      profile?.phones?.length && Array.isArray(profile.phones)
+        ? profile.phones
+        : profile?.phone
+          ? [profile.phone]
+          : [];
+    setPhones(ensureList(initialPhones));
+    setEmails(ensureList(Array.isArray(profile?.emails) ? profile?.emails || [] : []));
+    setAddresses(ensureList(Array.isArray(profile?.addresses) ? profile?.addresses || [] : []));
+    setComments(ensureList(Array.isArray(profile?.comments) ? profile?.comments || [] : []));
+    setPreferences({
+      notifyEmail: Boolean(prefs?.emailNotifications ?? true),
+      notifyMentions: Boolean(prefs?.notifyMentions ?? true),
+      notifyPipelineUpdates: Boolean(prefs?.notifyPipelineUpdates ?? true),
+      notifyFinanceAlerts: Boolean(prefs?.notifyFinanceAlerts ?? true),
+      notifyWeeklySummary: Boolean(prefs?.notifyWeeklySummary ?? true),
+      notifyProductUpdates: Boolean(prefs?.notifyProductUpdates ?? true),
+      singleSession: Boolean(prefs?.singleSession),
+      modulePipeline: Boolean(prefs?.modulePipeline ?? true),
+      moduleFinance: Boolean(prefs?.moduleFinance ?? true),
+      language: prefs?.language || "pt-BR",
+    });
+    setLanguageDraft(prefs?.language || "pt-BR");
+    window.localStorage.setItem(
+      "sc_prefs",
+      JSON.stringify({
+        modulePipeline: Boolean(prefs?.modulePipeline ?? true),
+        moduleFinance: Boolean(prefs?.moduleFinance ?? true),
+        language: prefs?.language || "pt-BR",
+      })
+    );
+    window.dispatchEvent(new Event("prefs-change"));
+    if (user?.email) {
+      window.localStorage.setItem(
+        "sc_user",
+        JSON.stringify({ name: user.name || "", email: user.email })
+      );
+      persistAccount(user);
+    }
+  };
+
   useEffect(() => {
     const stored = window.localStorage.getItem("sc_user");
     if (stored) {
@@ -102,40 +291,26 @@ export default function Profile() {
     const syncProfile = async () => {
       try {
         const response = await api.get("/api/profile");
-        const user = response?.data?.user;
-        const profile = response?.data?.profile;
-        const prefs = response?.data?.preferences;
-        setName(user?.name || "");
-        setEmail(user?.email || "");
-        setPhone(profile?.phone || "");
-        setPreferences({
-          email: Boolean(prefs?.emailNotifications),
-          singleSession: Boolean(prefs?.singleSession),
-          modulePipeline: Boolean(prefs?.modulePipeline ?? true),
-          moduleFinance: Boolean(prefs?.moduleFinance ?? true),
-        });
-        window.localStorage.setItem(
-          "sc_prefs",
-          JSON.stringify({
-            modulePipeline: Boolean(prefs?.modulePipeline ?? true),
-            moduleFinance: Boolean(prefs?.moduleFinance ?? true),
-          })
-        );
-        window.dispatchEvent(new Event("prefs-change"));
-        if (user?.email) {
-          window.localStorage.setItem(
-            "sc_user",
-            JSON.stringify({ name: user.name || "", email: user.email })
-          );
-          persistAccount(user);
-        }
+        hydrateProfile(response);
       } catch {
         // Keep local values if the session is unavailable.
       } finally {
         isLoadedRef.current = true;
       }
     };
+    const syncModules = async () => {
+      try {
+        const response = await api.get("/api/access/modules");
+        const modules = Array.isArray(response?.data?.modules)
+          ? (response.data.modules as AccessModule[])
+          : [];
+        setAccessModules(modules);
+      } catch {
+        setAccessModules([]);
+      }
+    };
     void syncProfile();
+    void syncModules();
   }, []);
 
   const handleLogout = () => {
@@ -206,17 +381,38 @@ export default function Profile() {
     }
   };
 
+  const sanitizePhone = (value: string) => value.replace(/\D/g, "");
+
+  const sanitizeList = (items: string[]) =>
+    items.map((item) => item.trim()).filter(Boolean);
+
+  const ensureList = (items: string[]) => (items.length ? items : [""]);
+
   const saveProfile = () => {
+    const primaryPhone = sanitizeList(phones)[0] || "";
     void api
       .put("/api/profile", {
         name,
         email,
-        phone,
+        phone: primaryPhone,
+        team,
+        role,
+        timezone,
+        phones: sanitizeList(phones),
+        emails: sanitizeList(emails),
+        addresses: sanitizeList(addresses),
+        comments: sanitizeList(comments),
         preferences: {
-          emailNotifications: preferences.email,
+          emailNotifications: preferences.notifyEmail,
           singleSession: preferences.singleSession,
           modulePipeline: preferences.modulePipeline,
           moduleFinance: preferences.moduleFinance,
+          language: preferences.language,
+          notifyMentions: preferences.notifyMentions,
+          notifyPipelineUpdates: preferences.notifyPipelineUpdates,
+          notifyFinanceAlerts: preferences.notifyFinanceAlerts,
+          notifyWeeklySummary: preferences.notifyWeeklySummary,
+          notifyProductUpdates: preferences.notifyProductUpdates,
         },
       })
       .then((response) => {
@@ -246,6 +442,7 @@ export default function Profile() {
         JSON.stringify({
           modulePipeline: preferences.modulePipeline,
           moduleFinance: preferences.moduleFinance,
+          language: preferences.language,
         })
       );
       window.dispatchEvent(new Event("prefs-change"));
@@ -256,35 +453,141 @@ export default function Profile() {
         window.clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [name, email, phone, preferences]);
+  }, [
+    name,
+    email,
+    team,
+    role,
+    timezone,
+    phones,
+    emails,
+    addresses,
+    comments,
+    preferences,
+  ]);
+
+  useEffect(() => {
+    setLanguageDraft(preferences.language);
+  }, [preferences.language]);
 
   const requestModuleToggle = (
     key: "modulePipeline" | "moduleFinance",
     nextValue: boolean
   ) => {
-    setModuleDialog({ key, nextValue });
+    setModuleDialog({ kind: "core", key, nextValue });
   };
 
-  const confirmModuleToggle = () => {
+  const requestAccessModuleToggle = (module: AccessModule, nextValue: boolean) => {
+    if (!canToggleAccessModules) {
+      return;
+    }
+    setModuleDialog({ kind: "access", id: module.id, name: module.name, nextValue });
+  };
+
+  const confirmModuleToggle = async () => {
     if (!moduleDialog) {
       return;
     }
-    setPreferences((prev) => ({ ...prev, [moduleDialog.key]: moduleDialog.nextValue }));
-    setModuleDialog(null);
+    if (moduleDialog.kind === "core") {
+      setPreferences((prev) => ({ ...prev, [moduleDialog.key]: moduleDialog.nextValue }));
+      setModuleDialog(null);
+      return;
+    }
+    try {
+      const response = await api.patch(`/api/access/modules/${moduleDialog.id}`, {
+        enabled: moduleDialog.nextValue,
+      });
+      const updated = response?.data?.module as AccessModule | undefined;
+      setAccessModules((prev) =>
+        prev.map((item) =>
+          item.id === moduleDialog.id
+            ? {
+                ...item,
+                enabled: updated?.enabled ?? moduleDialog.nextValue,
+              }
+            : item
+        )
+      );
+    } catch {
+      // Keep local state if the update fails.
+    } finally {
+      setModuleDialog(null);
+    }
   };
 
-  const moduleLabels = {
-    modulePipeline: {
-      title: "Pipeline",
-      price: "R$ 89/mes",
-      description: "Gestao de oportunidades e tasks.",
-    },
-    moduleFinance: {
-      title: "Financas",
-      price: "R$ 79/mes",
-      description: "Controle de gastos e categorias.",
-    },
+  const updateListItem = (
+    setter: Dispatch<SetStateAction<string[]>>,
+    index: number,
+    value: string,
+    transform?: (value: string) => string
+  ) => {
+    const nextValue = transform ? transform(value) : value;
+    setter((prev) => prev.map((item, idx) => (idx === index ? nextValue : item)));
   };
+
+  const removeListItem = (
+    setter: Dispatch<SetStateAction<string[]>>,
+    index: number
+  ) => {
+    setter((prev) => {
+      const next = prev.filter((_, idx) => idx !== index);
+      return next.length ? next : [""];
+    });
+  };
+
+  const addListItem = (setter: Dispatch<SetStateAction<string[]>>) => {
+    setter((prev) => [...prev, ""]);
+  };
+
+  const getLanguageLabel = (value: string) =>
+    languageOptions.find((option) => option.value === value)?.label || value;
+
+  const handleLanguageSelect = (nextLanguage: string) => {
+    setLanguageDraft(nextLanguage);
+    if (nextLanguage === preferences.language) {
+      setPendingLanguage(null);
+      return;
+    }
+    setPendingLanguage(nextLanguage);
+    setLanguageDialogOpen(true);
+  };
+
+  const handleLanguageConfirm = () => {
+    if (!pendingLanguage || pendingLanguage === preferences.language) {
+      setLanguageDialogOpen(false);
+      setPendingLanguage(null);
+      return;
+    }
+    lastLanguageRef.current = preferences.language;
+    setPreferences((prev) => ({ ...prev, language: pendingLanguage }));
+    setLanguageDialogOpen(false);
+    setPendingLanguage(null);
+    setLanguageSnackbarOpen(true);
+  };
+
+  const handleLanguageCancel = () => {
+    setLanguageDraft(preferences.language);
+    setLanguageDialogOpen(false);
+    setPendingLanguage(null);
+  };
+
+  const handleLanguageUndo = () => {
+    if (!lastLanguageRef.current) {
+      setLanguageSnackbarOpen(false);
+      return;
+    }
+    const previous = lastLanguageRef.current;
+    setPreferences((prev) => ({ ...prev, language: previous }));
+    setLanguageDraft(previous);
+    setLanguageSnackbarOpen(false);
+  };
+
+  const moduleFeatures = moduleDialog
+    ? moduleDialog.kind === "core"
+      ? coreModuleLabels[moduleDialog.key].features
+      : accessModuleFeatures[moduleDialog.name] || []
+    : [];
+  const showModuleFeatures = Boolean(moduleDialog?.nextValue && moduleFeatures.length);
 
   return (
     <Box sx={{ maxWidth: 980, mx: "auto" }}>
@@ -293,25 +596,17 @@ export default function Profile() {
           <Typography variant="h4">Perfil</Typography>
         </Stack>
 
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
-          }}
+        <Accordion
+          expanded={expanded === "main"}
+          onChange={(_, isExpanded) => setExpanded(isExpanded ? "main" : false)}
         >
-          <Stack spacing={3}>
+          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
             <Typography variant="h6">Dados principais</Typography>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                gap: 2,
-              }}
-            >
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2.5}>
               <TextField
-                label="Nome completo"
+                label="Nome"
                 fullWidth
                 value={name}
                 onChange={(event) => setName(event.target.value)}
@@ -323,40 +618,189 @@ export default function Profile() {
                 onChange={(event) => setEmail(event.target.value)}
               />
               <TextField
-                label="Telefone"
+                label="Time"
                 fullWidth
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
+                value={team}
+                onChange={(event) => setTeam(event.target.value)}
               />
-            </Box>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={saveProfile}
-              sx={{ alignSelf: "flex-start" }}
-            >
-              Salvar alteracoes
-            </Button>
-          </Stack>
-        </Paper>
+              <TextField
+                label="Cargo"
+                fullWidth
+                value={role}
+                onChange={(event) => setRole(event.target.value)}
+              />
+              <TextField
+                label="Fuso horario"
+                fullWidth
+                value={timezone}
+                onChange={(event) => setTimezone(event.target.value)}
+              />
 
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-            gap: 3,
-          }}
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Telefones
+                </Typography>
+                {phones.map((phone, index) => (
+                  <Stack key={`phone-${index}`} direction="row" spacing={1} alignItems="center">
+                    <TextField
+                      label={`Telefone ${index + 1}`}
+                      fullWidth
+                      value={phone}
+                      onChange={(event) =>
+                        updateListItem(setPhones, index, event.target.value, sanitizePhone)
+                      }
+                      inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+                    />
+                    <IconButton onClick={() => removeListItem(setPhones, index)}>
+                      <CloseRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                ))}
+                <Button
+                  variant="outlined"
+                  startIcon={<AddRoundedIcon />}
+                  onClick={() => addListItem(setPhones)}
+                  sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                >
+                  Adicionar telefone
+                </Button>
+              </Stack>
+
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Emails
+                </Typography>
+                {emails.map((item, index) => (
+                  <Stack key={`email-${index}`} direction="row" spacing={1} alignItems="center">
+                    <TextField
+                      label={`Email ${index + 1}`}
+                      fullWidth
+                      value={item}
+                      onChange={(event) =>
+                        updateListItem(setEmails, index, event.target.value)
+                      }
+                    />
+                    <IconButton onClick={() => removeListItem(setEmails, index)}>
+                      <CloseRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                ))}
+                <Button
+                  variant="outlined"
+                  startIcon={<AddRoundedIcon />}
+                  onClick={() => addListItem(setEmails)}
+                  sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                >
+                  Adicionar email
+                </Button>
+              </Stack>
+
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Enderecos
+                </Typography>
+                {addresses.map((address, index) => (
+                  <Stack
+                    key={`address-${index}`}
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                  >
+                    <TextField
+                      label={`Endereco ${index + 1}`}
+                      fullWidth
+                      value={address}
+                      onChange={(event) =>
+                        updateListItem(setAddresses, index, event.target.value)
+                      }
+                    />
+                    <IconButton
+                      component="a"
+                      href={
+                        address
+                          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                              address
+                            )}`
+                          : undefined
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      disabled={!address}
+                    >
+                      <LinkRoundedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton onClick={() => removeListItem(setAddresses, index)}>
+                      <CloseRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                ))}
+                <Button
+                  variant="outlined"
+                  startIcon={<AddRoundedIcon />}
+                  onClick={() => addListItem(setAddresses)}
+                  sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                >
+                  Adicionar endereco
+                </Button>
+              </Stack>
+
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Comentarios
+                </Typography>
+                {comments.map((comment, index) => (
+                  <Stack
+                    key={`comment-${index}`}
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                  >
+                    <TextField
+                      label={`Comentario ${index + 1}`}
+                      fullWidth
+                      multiline
+                      minRows={2}
+                      value={comment}
+                      onChange={(event) =>
+                        updateListItem(setComments, index, event.target.value)
+                      }
+                    />
+                    <IconButton onClick={() => removeListItem(setComments, index)}>
+                      <CloseRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                ))}
+                <Button
+                  variant="outlined"
+                  startIcon={<AddRoundedIcon />}
+                  onClick={() => addListItem(setComments)}
+                  sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                >
+                  Adicionar comentario
+                </Button>
+              </Stack>
+
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={saveProfile}
+                sx={{ alignSelf: "flex-start" }}
+              >
+                Salvar alteracoes
+              </Button>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion
+          expanded={expanded === "notifications"}
+          onChange={(_, isExpanded) => setExpanded(isExpanded ? "notifications" : false)}
         >
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 3, md: 4 },
-              border: "1px solid rgba(255,255,255,0.1)",
-              backgroundColor: "rgba(15, 23, 32, 0.9)",
-            }}
-          >
-            <Stack spacing={3}>
-              <Typography variant="h6">Seguranca</Typography>
+          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+            <Typography variant="h6">Notificacoes</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2.5}>
               <Box
                 sx={{
                   display: "grid",
@@ -364,112 +808,271 @@ export default function Profile() {
                   gap: 2,
                 }}
               >
-                <TextField label="Senha atual" type="password" fullWidth />
-                <TextField label="Nova senha" type="password" fullWidth />
-              </Box>
-              <Button
-                variant="outlined"
-                size="large"
-                sx={{ alignSelf: "flex-start" }}
-              >
-                Atualizar senha
-              </Button>
-          </Stack>
-        </Paper>
-
-        <Paper
-          elevation={0}
-            sx={{
-              p: { xs: 3, md: 4 },
-              border: "1px solid rgba(255,255,255,0.1)",
-              backgroundColor: "rgba(15, 23, 32, 0.9)",
-            }}
-          >
-            <Stack spacing={2}>
-              <Typography variant="h6">Conta</Typography>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <Button
-                  color="error"
-                  variant="contained"
-                  size="large"
-                  onClick={handleLogout}
-                  sx={{ textTransform: "none", fontWeight: 600 }}
-                >
-                  Sair
-                </Button>
-                <Button
+                <Paper
                   variant="outlined"
-                  size="large"
-                  onClick={handleSwitchAccount}
-                  sx={{ textTransform: "none", fontWeight: 600 }}
+                  onClick={() =>
+                    setPreferences((prev) => ({ ...prev, notifyEmail: !prev.notifyEmail }))
+                  }
+                  sx={(theme) => ({
+                    p: 2.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
                 >
-                  Trocar de conta
-                </Button>
-              </Stack>
-            </Stack>
-          </Paper>
-        </Box>
-
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
-          }}
-        >
-          <Stack spacing={2.5}>
-            <Typography variant="h6">Preferencias</Typography>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                gap: 2,
-              }}
-            >
-              <Paper
-                elevation={0}
-                onClick={() =>
-                  setPreferences((prev) => ({ ...prev, email: !prev.email }))
-                }
-                sx={(theme) => ({
-                  p: 2.5,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(15, 23, 32, 0.9)",
-                  cursor: "pointer",
-                  ...interactiveCardSx(theme),
-                })}
-              >
-                <Stack spacing={1.5}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 2,
-                    }}
-                  >
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                      Notificacoes por email
+                  <Stack spacing={1.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Notificacoes por email
+                      </Typography>
+                      <ToggleCheckbox
+                        checked={preferences.notifyEmail}
+                        onChange={(event) =>
+                          setPreferences((prev) => ({
+                            ...prev,
+                            notifyEmail: event.target.checked,
+                          }))
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                      Receba alertas relevantes no email.
                     </Typography>
-                    <ToggleCheckbox
-                      checked={preferences.email}
-                      onChange={(event) =>
-                        setPreferences((prev) => ({
-                          ...prev,
-                          email: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                    Receba alertas sobre acessos e convites.
-                  </Typography>
-                </Stack>
-              </Paper>
+                  </Stack>
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  onClick={() =>
+                    setPreferences((prev) => ({
+                      ...prev,
+                      notifyMentions: !prev.notifyMentions,
+                    }))
+                  }
+                  sx={(theme) => ({
+                    p: 2.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                >
+                  <Stack spacing={1.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Mencoes e atribuicoes
+                      </Typography>
+                      <ToggleCheckbox
+                        checked={preferences.notifyMentions}
+                        onChange={(event) =>
+                          setPreferences((prev) => ({
+                            ...prev,
+                            notifyMentions: event.target.checked,
+                          }))
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                      Avise quando voce for mencionado em tarefas.
+                    </Typography>
+                  </Stack>
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  onClick={() =>
+                    setPreferences((prev) => ({
+                      ...prev,
+                      notifyPipelineUpdates: !prev.notifyPipelineUpdates,
+                    }))
+                  }
+                  sx={(theme) => ({
+                    p: 2.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                >
+                  <Stack spacing={1.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Atualizacoes da pipeline
+                      </Typography>
+                      <ToggleCheckbox
+                        checked={preferences.notifyPipelineUpdates}
+                        onChange={(event) =>
+                          setPreferences((prev) => ({
+                            ...prev,
+                            notifyPipelineUpdates: event.target.checked,
+                          }))
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                      Movimentacoes e mudancas de status.
+                    </Typography>
+                  </Stack>
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  onClick={() =>
+                    setPreferences((prev) => ({
+                      ...prev,
+                      notifyFinanceAlerts: !prev.notifyFinanceAlerts,
+                    }))
+                  }
+                  sx={(theme) => ({
+                    p: 2.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                >
+                  <Stack spacing={1.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Alertas financeiros
+                      </Typography>
+                      <ToggleCheckbox
+                        checked={preferences.notifyFinanceAlerts}
+                        onChange={(event) =>
+                          setPreferences((prev) => ({
+                            ...prev,
+                            notifyFinanceAlerts: event.target.checked,
+                          }))
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                      Limites e variacoes relevantes.
+                    </Typography>
+                  </Stack>
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  onClick={() =>
+                    setPreferences((prev) => ({
+                      ...prev,
+                      notifyWeeklySummary: !prev.notifyWeeklySummary,
+                    }))
+                  }
+                  sx={(theme) => ({
+                    p: 2.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                >
+                  <Stack spacing={1.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Resumo semanal
+                      </Typography>
+                      <ToggleCheckbox
+                        checked={preferences.notifyWeeklySummary}
+                        onChange={(event) =>
+                          setPreferences((prev) => ({
+                            ...prev,
+                            notifyWeeklySummary: event.target.checked,
+                          }))
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                      Relatorio semanal da conta.
+                    </Typography>
+                  </Stack>
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  onClick={() =>
+                    setPreferences((prev) => ({
+                      ...prev,
+                      notifyProductUpdates: !prev.notifyProductUpdates,
+                    }))
+                  }
+                  sx={(theme) => ({
+                    p: 2.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                >
+                  <Stack spacing={1.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Novidades do produto
+                      </Typography>
+                      <ToggleCheckbox
+                        checked={preferences.notifyProductUpdates}
+                        onChange={(event) =>
+                          setPreferences((prev) => ({
+                            ...prev,
+                            notifyProductUpdates: event.target.checked,
+                          }))
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                      Novos recursos e melhorias.
+                    </Typography>
+                  </Stack>
+                </Paper>
+              </Box>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion
+          expanded={expanded === "preferences"}
+          onChange={(_, isExpanded) => setExpanded(isExpanded ? "preferences" : false)}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+            <Typography variant="h6">Preferencias</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2.5}>
               <Paper
-                elevation={0}
+                variant="outlined"
                 onClick={() =>
                   setPreferences((prev) => ({
                     ...prev,
@@ -478,9 +1081,8 @@ export default function Profile() {
                 }
                 sx={(theme) => ({
                   p: 2.5,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(15, 23, 32, 0.9)",
                   cursor: "pointer",
+                  maxWidth: 420,
                   ...interactiveCardSx(theme),
                 })}
               >
@@ -512,79 +1114,210 @@ export default function Profile() {
                   </Typography>
                 </Stack>
               </Paper>
-            </Box>
-          </Stack>
-        </Paper>
+              <TextField
+                select
+                label="Idioma"
+                value={languageDraft}
+                onChange={(event) => handleLanguageSelect(event.target.value)}
+                sx={{ maxWidth: 360 }}
+              >
+                {languageOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
 
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(15, 23, 32, 0.9)",
-          }}
+        <Accordion
+          expanded={expanded === "modules"}
+          onChange={(_, isExpanded) => setExpanded(isExpanded ? "modules" : false)}
         >
-          <Stack spacing={2.5}>
-            <Typography variant="h6">Modulos pagos</Typography>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                gap: 2,
-              }}
-            >
-              {(Object.keys(moduleLabels) as Array<"modulePipeline" | "moduleFinance">).map(
-                (key) => (
-                  <Paper
-                    key={key}
-                    elevation={0}
-                    onClick={() => requestModuleToggle(key, !preferences[key])}
-                    sx={(theme) => ({
-                      p: 2.5,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: "rgba(15, 23, 32, 0.9)",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                  >
-                    <Stack spacing={1.5}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 2,
-                        }}
-                      >
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          {moduleLabels[key].title}
-                        </Typography>
-                        <ToggleCheckbox
-                          checked={preferences[key]}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            requestModuleToggle(key, !preferences[key]);
+          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+            <Typography variant="h6">Modulos</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2.5}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                  gap: 2,
+                }}
+              >
+                {(Object.keys(coreModuleLabels) as Array<"modulePipeline" | "moduleFinance">).map(
+                  (key) => (
+                    <Paper
+                      key={key}
+                      variant="outlined"
+                      onClick={() => requestModuleToggle(key, !preferences[key])}
+                      sx={(theme) => ({
+                        p: 2.5,
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                    >
+                      <Stack spacing={1.5}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 2,
                           }}
-                          onChange={() => {}}
-                        />
-                      </Box>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {moduleLabels[key].description}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {moduleLabels[key].price}
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                )
-              )}
-            </Box>
-          </Stack>
-        </Paper>
+                        >
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                            {coreModuleLabels[key].title}
+                          </Typography>
+                          <ToggleCheckbox
+                            checked={preferences[key]}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              requestModuleToggle(key, !preferences[key]);
+                            }}
+                            onChange={() => {}}
+                          />
+                        </Box>
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                          {coreModuleLabels[key].description}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                          {coreModuleLabels[key].price}
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  )
+                )}
+              </Box>
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Modulos administrativos
+                </Typography>
+                {accessModulesToShow.length ? (
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                      gap: 2,
+                    }}
+                  >
+                    {accessModulesToShow.map((module) => (
+                      <Paper
+                        key={module.id}
+                        variant="outlined"
+                        onClick={() => requestAccessModuleToggle(module, !module.enabled)}
+                        sx={(theme) => ({
+                          p: 2,
+                          cursor: "pointer",
+                          ...interactiveCardSx(theme),
+                        })}
+                      >
+                        <Stack spacing={1}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 2,
+                            }}
+                          >
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                              {module.name}
+                            </Typography>
+                            <ToggleCheckbox
+                              checked={module.enabled}
+                              disabled={!canToggleAccessModules}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                requestAccessModuleToggle(module, !module.enabled);
+                              }}
+                              onChange={() => {}}
+                            />
+                          </Box>
+                          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                            {module.description}
+                          </Typography>
+                        </Stack>
+                      </Paper>
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Nenhum modulo adicional encontrado.
+                  </Typography>
+                )}
+              </Stack>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
 
+        <Accordion
+          expanded={expanded === "security"}
+          onChange={(_, isExpanded) => setExpanded(isExpanded ? "security" : false)}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+            <Typography variant="h6">Senha</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={3}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                  gap: 2,
+                }}
+              >
+                <TextField label="Senha atual" type="password" fullWidth />
+                <TextField label="Nova senha" type="password" fullWidth />
+              </Box>
+              <Button variant="outlined" size="large" sx={{ alignSelf: "flex-start" }}>
+                Atualizar senha
+              </Button>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion
+          expanded={expanded === "account"}
+          onChange={(_, isExpanded) => setExpanded(isExpanded ? "account" : false)}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+            <Typography variant="h6">Conta</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <Button
+                  color="error"
+                  variant="contained"
+                  size="large"
+                  onClick={handleLogout}
+                  sx={{ textTransform: "none", fontWeight: 600 }}
+                >
+                  Sair
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  onClick={handleSwitchAccount}
+                  sx={{ textTransform: "none", fontWeight: 600 }}
+                >
+                  Trocar de conta
+                </Button>
+              </Stack>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
       </Stack>
 
-      <Dialog open={Boolean(moduleDialog)} onClose={() => setModuleDialog(null)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={Boolean(moduleDialog)}
+        onClose={() => setModuleDialog(null)}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogContent>
           <Stack spacing={2}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -602,13 +1335,37 @@ export default function Profile() {
             {moduleDialog ? (
               <Stack spacing={1.5}>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  {moduleDialog.nextValue
-                    ? `Voce confirma a ativacao do modulo ${moduleLabels[moduleDialog.key].title}?`
-                    : `Voce confirma a desativacao do modulo ${moduleLabels[moduleDialog.key].title}?`}
+                  {moduleDialog.kind === "core"
+                    ? moduleDialog.nextValue
+                      ? `Voce confirma a ativacao do modulo ${coreModuleLabels[moduleDialog.key].title}?`
+                      : `Voce confirma a desativacao do modulo ${coreModuleLabels[moduleDialog.key].title}?`
+                    : moduleDialog.nextValue
+                      ? `Voce confirma a ativacao do modulo ${moduleDialog.name}?`
+                      : `Voce confirma a desativacao do modulo ${moduleDialog.name}?`}
                 </Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  {moduleLabels[moduleDialog.key].price} por modulo.
-                </Typography>
+                {moduleDialog.kind === "core" ? (
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    {coreModuleLabels[moduleDialog.key].price} por modulo.
+                  </Typography>
+                ) : null}
+                {showModuleFeatures ? (
+                  <Stack spacing={1}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      O que voce recebe
+                    </Typography>
+                    <Stack spacing={0.5}>
+                      {moduleFeatures.map((feature) => (
+                        <Typography
+                          key={feature}
+                          variant="body2"
+                          sx={{ color: "text.secondary" }}
+                        >
+                          - {feature}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </Stack>
+                ) : null}
               </Stack>
             ) : null}
             <Stack direction="row" spacing={2} justifyContent="flex-end">
@@ -616,6 +1373,36 @@ export default function Profile() {
                 Cancelar
               </Button>
               <Button variant="contained" onClick={confirmModuleToggle}>
+                Confirmar
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={languageDialogOpen}
+        onClose={handleLanguageCancel}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogContent>
+          <Stack spacing={2}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Typography variant="h6">Alterar idioma</Typography>
+              <IconButton onClick={handleLanguageCancel} sx={{ color: "text.secondary" }}>
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              Deseja alterar o idioma para{" "}
+              {getLanguageLabel(pendingLanguage || languageDraft)}?
+            </Typography>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button variant="outlined" onClick={handleLanguageCancel}>
+                Cancelar
+              </Button>
+              <Button variant="contained" onClick={handleLanguageConfirm}>
                 Confirmar
               </Button>
             </Stack>
@@ -646,7 +1433,7 @@ export default function Profile() {
                   {switchAccounts.map((account) => (
                     <Paper
                       key={account.email}
-                      elevation={0}
+                      variant="outlined"
                       onClick={() => {
                         if (account.email === email) {
                           setSwitchDialogOpen(false);
@@ -676,14 +1463,6 @@ export default function Profile() {
                       }}
                       sx={(theme) => ({
                         p: 1.5,
-                        border:
-                          account.email === email
-                            ? "1px solid rgba(34, 201, 166, 0.6)"
-                            : "1px solid rgba(255,255,255,0.08)",
-                        backgroundColor:
-                          account.email === email
-                            ? "rgba(34, 201, 166, 0.12)"
-                            : "rgba(15, 23, 32, 0.9)",
                         cursor: "pointer",
                         ...interactiveCardSx(theme),
                       })}
@@ -754,6 +1533,17 @@ export default function Profile() {
         </DialogContent>
       </Dialog>
 
+      <Snackbar
+        open={languageSnackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setLanguageSnackbarOpen(false)}
+        message={`Idioma alterado para ${getLanguageLabel(preferences.language)}.`}
+        action={
+          <Button color="inherit" size="small" onClick={handleLanguageUndo}>
+            Reverter
+          </Button>
+        }
+      />
     </Box>
   );
 }

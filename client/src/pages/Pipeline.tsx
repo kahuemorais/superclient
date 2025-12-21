@@ -2039,7 +2039,7 @@ export default function Pipeline() {
               }}
             >
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                😕 Nao ha resultados para a sua pesquisa.
+                ðŸ˜• Nao ha resultados para a sua pesquisa.
               </Typography>
             </Paper>
           ) : null}
@@ -2059,7 +2059,380 @@ export default function Pipeline() {
                   backgroundColor: "transparent",
                   border: "none",
                   color: "text.primary",
-                    }}
+                  "&:hover": { backgroundColor: "transparent", color: "primary.main" },
+                  "&:active": { backgroundColor: "transparent" },
+                }}
+                aria-label="Voltar colunas"
+              >
+                <ChevronLeftRoundedIcon fontSize="large" />
+              </IconButton>
+              <IconButton
+                onClick={() => scrollColumnsBy("right")}
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  right: 0,
+                  transform: "translate(35%, -50%)",
+                  zIndex: 2,
+                  width: 48,
+                  height: 48,
+                  borderRadius: 0,
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "text.primary",
+                  "&:hover": { backgroundColor: "transparent", color: "primary.main" },
+                  "&:active": { backgroundColor: "transparent" },
+                }}
+                aria-label="Avancar colunas"
+              >
+                <ChevronRightRoundedIcon fontSize="large" />
+              </IconButton>
+              <Box
+                ref={scrollRef}
+                onPointerDown={handleScrollPointerDown}
+                onPointerMove={handleScrollPointerMove}
+                onPointerUp={handleScrollPointerUp}
+                onPointerLeave={handleScrollPointerUp}
+                sx={{
+                  overflowX: "auto",
+                  pb: 4,
+                  cursor: "grab",
+                  "&:active": { cursor: "grabbing" },
+                }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{ width: "max-content", minWidth: "100%" }}
+                >
+                {visibleColumns.map((column) => (
+                  <SortableColumn
+                    key={column.id}
+                    column={column}
+                    onEdit={handleViewOpen}
+                    onEditColumn={handleColumnEditOpen}
+                    onAddDeal={handleAddDeal}
+                    filteredDeals={filterDealsByQuery(column, normalizedQuery)}
+                    categoryMap={categoryMap}
+                    getDealOwnerLabel={getDealOwnerLabel}
+                    showValue={taskFieldSettings.value}
+                    canEditTasks={canEditTasksOnBoard}
+                    canEditColumns={permissions.pipeline_edit_columns}
+                  />
+                ))}
+                {permissions.pipeline_edit_columns ? (
+                  <Paper
+                    elevation={0}
+                    onClick={handleAddColumn}
+                    data-draggable
+                    sx={(theme) => ({
+                      p: 2.5,
+                      minWidth: 280,
+                      border: "1px dashed rgba(255,255,255,0.2)",
+                      backgroundColor: "rgba(15, 23, 32, 0.6)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      ...interactiveCardSx(theme),
+                    })}
+                  >
+                    <Stack spacing={1} alignItems="center">
+                      <AddRoundedIcon />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Adicionar coluna
+                      </Typography>
+                    </Stack>
+                  </Paper>
+                ) : null}
+              </Stack>
+            </Box>
+            </Box>
+          </SortableContext>
+          <DragOverlay>
+            {activeDragId ? (
+              isColumnId(activeDragId) ? (
+                (() => {
+                  const column = findColumn(stripPrefix(activeDragId));
+                  if (!column) {
+                    return null;
+                  }
+                  return (
+                    <Paper
+                      elevation={0}
+                      sx={(theme) => ({
+                        p: 2.5,
+                        minWidth: 280,
+                        borderRadius: "var(--radius-card)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        backgroundColor: "rgba(15, 23, 32, 0.95)",
+                        boxShadow: theme.shadows[6],
+                      })}
+                    >
+                      <Stack spacing={2}>
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                            {column.title}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600 }}>
+                            {column.deals.length}
+                          </Typography>
+                        </Box>
+                        <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+                        <Stack spacing={1.5}>
+                          {column.deals.slice(0, 3).map((deal) => (
+                            <Box
+                              key={deal.id}
+                              sx={{
+                                p: 2,
+                                borderRadius: "var(--radius-card)",
+                                border: "1px solid rgba(255,255,255,0.08)",
+                                backgroundColor: "rgba(10, 16, 23, 0.85)",
+                              }}
+                            >
+                              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                {deal.name}
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                                {getDealOwnerLabel(deal)}
+                              </Typography>
+                            </Box>
+                          ))}
+                          {column.deals.length > 3 ? (
+                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                              +{column.deals.length - 3} tasks
+                            </Typography>
+                          ) : null}
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                  );
+                })()
+              ) : isCardId(activeDragId) ? (
+                (() => {
+                  const deal = findDeal(stripPrefix(activeDragId));
+                  if (!deal) {
+                    return null;
+                  }
+                  return (
+                    <Box
+                      sx={(theme) => ({
+                        p: 2,
+                        borderRadius: "var(--radius-card)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        backgroundColor: "rgba(10, 16, 23, 0.95)",
+                        boxShadow: theme.shadows[6],
+                      })}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {deal.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                        {getDealOwnerLabel(deal)}
+                      </Typography>
+                      {taskFieldSettings.value ? (
+                        <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
+                          {deal.value}
+                        </Typography>
+                      ) : null}
+                    </Box>
+                  );
+                })()
+              ) : null
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      <Dialog open={Boolean(viewingDeal)} onClose={handleViewClose} maxWidth="sm" fullWidth>
+        <DialogContent>
+          <Stack spacing={2.5}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="h6">{viewingDeal?.name || "-"}</Typography>
+                {viewingDeal ? (
+                  <Tooltip title="Copiar link" placement="top">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleCopyLink(viewingDeal.id)}
+                      sx={{
+                        color: "text.secondary",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                      }}
+                    >
+                      <LinkRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                ) : null}
+              </Box>
+              <IconButton onClick={handleViewClose} sx={{ color: "text.secondary" }}>
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            {taskFieldSettings.value ? (
+              <Stack spacing={0.5}>
+                <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                  Valor
+                </Typography>
+                <Typography variant="body1">{viewingDeal?.value || "-"}</Typography>
+              </Stack>
+            ) : null}
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Responsaveis
+              </Typography>
+              <Typography variant="body1">
+                {viewingDeal
+                  ? getPersonLabels(viewingDeal.responsibleIds).join(", ") || viewingDeal.owner
+                  : "-"}
+              </Typography>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Pessoas na tarefa
+              </Typography>
+              <Typography variant="body1">
+                {viewingDeal ? getPersonLabels(viewingDeal.workerIds).join(", ") || "-" : "-"}
+              </Typography>
+            </Stack>
+            {taskFieldSettings.link ? (
+              <Stack spacing={0.5}>
+                <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                  Link
+                </Typography>
+                <Typography variant="body1">{viewingDeal?.link || "-"}</Typography>
+              </Stack>
+            ) : null}
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Categorias
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {viewingDeal?.categoryIds?.length
+                  ? viewingDeal.categoryIds.map((id) => {
+                      const cat = categoryMap.get(id);
+                      if (!cat) {
+                        return null;
+                      }
+                      return (
+                        <Chip
+                          key={id}
+                          label={cat.name}
+                          sx={{
+                            color: "#e6edf3",
+                            backgroundColor: darkenColor(cat.color, 0.5),
+                          }}
+                        />
+                      );
+                    })
+                  : (
+                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                      Sem categoria
+                    </Typography>
+                  )}
+              </Stack>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Descricao
+              </Typography>
+              <Box
+                sx={{
+                  borderRadius: "var(--radius-card)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  backgroundColor: "rgba(10, 16, 23, 0.75)",
+                  p: 2,
+                  minHeight: 120,
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: viewingDeal?.descriptionHtml || viewingDeal?.comments || "",
+                }}
+              />
+            </Stack>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              {permissions.pipeline_edit_tasks ? (
+                <Button
+                  color="error"
+                  variant="outlined"
+                  onClick={() => setRemoveDealOpen(true)}
+                >
+                  Remover
+                </Button>
+              ) : null}
+              {permissions.pipeline_edit_tasks ? (
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    if (!viewingDeal) {
+                      return;
+                    }
+                    handleEditOpen(viewingDeal);
+                    setViewingDeal(null);
+                  }}
+                >
+                  Editar
+                </Button>
+              ) : null}
+              <Button variant="contained" onClick={handleViewClose}>
+                Fechar
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={taskFieldSettingsOpen}
+        onClose={() => {
+          setTaskFieldSettingsOpen(false);
+          cancelEditCategory();
+          setConfigAccordion(false);
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogContent>
+          <Stack spacing={2.5}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Typography variant="h6">Configuracoes</Typography>
+              <IconButton
+                onClick={() => {
+                  setTaskFieldSettingsOpen(false);
+                  cancelEditCategory();
+                  setConfigAccordion(false);
+                }}
+                sx={{ color: "text.secondary" }}
+              >
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            <Accordion
+              elevation={0}
+              expanded={configAccordion === "sprints"}
+              onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "sprints" : false)}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--radius-card)",
+                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                "&:before": { display: "none" },
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Sprints e backlog
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Stack spacing={2}>
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
                     onClick={() => handleToggleSprints(!sprintState.enabled)}
                   >
                     <Typography variant="subtitle2">Usar sprints e backlog</Typography>
@@ -2522,7 +2895,259 @@ export default function Pipeline() {
                 </Box>
               </AccordionDetails>
             </Accordion>
-
+            <Accordion
+              elevation={0}
+              expanded={configAccordion === "categories"}
+              onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "categories" : false)}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--radius-card)",
+                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                "&:before": { display: "none" },
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Categorias
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Stack spacing={1.5}>
+                  {editingCategoryId ? (
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: "var(--radius-card)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          Editar categoria
+                        </Typography>
+                        <TextField
+                          label="Nome"
+                          fullWidth
+                          value={editingCategoryName}
+                          onChange={(event) => setEditingCategoryName(event.target.value)}
+                        />
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {DEFAULT_COLORS.map((color) => (
+                            <Box
+                              key={color}
+                              onClick={() => setEditingCategoryColor(color)}
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 1,
+                                backgroundColor: color,
+                                border:
+                                  editingCategoryColor === color
+                                    ? "2px solid rgba(255,255,255,0.8)"
+                                    : "1px solid rgba(255,255,255,0.2)",
+                                cursor: "pointer",
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                        <Stack direction="row" spacing={2} justifyContent="flex-end">
+                          <Button variant="outlined" onClick={cancelEditCategory}>
+                            Cancelar
+                          </Button>
+                          <Button variant="contained" onClick={saveCategory}>
+                            Salvar
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  ) : null}
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {categories.map((cat) => (
+                      <Chip
+                        key={cat.id}
+                        label={cat.name}
+                        onClick={() => startEditCategory(cat)}
+                        onDelete={() => handleRemoveCategory(cat.id)}
+                        sx={{
+                          color: "#e6edf3",
+                          backgroundColor: darkenColor(cat.color, 0.5),
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                  {editingCategoryId ? null : (
+                    <Box>
+                      <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+                        Nova categoria
+                      </Typography>
+                      <Stack spacing={1.5}>
+                        <TextField
+                          label="Nome"
+                          fullWidth
+                          value={newCategoryName}
+                          onChange={(event) => setNewCategoryName(event.target.value)}
+                        />
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {DEFAULT_COLORS.map((color) => (
+                            <Box
+                              key={color}
+                              onClick={() => setNewCategoryColor(color)}
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 1,
+                                backgroundColor: color,
+                                border:
+                                  newCategoryColor === color
+                                    ? "2px solid rgba(255,255,255,0.8)"
+                                    : "1px solid rgba(255,255,255,0.2)",
+                                cursor: "pointer",
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                        <Button
+                          variant="outlined"
+                          onClick={handleAddCategory}
+                          startIcon={<AddRoundedIcon />}
+                          sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                        >
+                          Criar categoria
+                        </Button>
+                      </Stack>
+                    </Box>
+                  )}
+                </Stack>
+              </AccordionDetails>
+            </Accordion>
+            <Accordion
+              elevation={0}
+              expanded={configAccordion === "columns"}
+              onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "columns" : false)}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--radius-card)",
+                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                "&:before": { display: "none" },
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Colunas
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Stack spacing={2}>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Renomeie, reorganize ou arquive colunas.
+                  </Typography>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners}
+                    onDragEnd={handleColumnReorder}
+                  >
+                    <SortableContext
+                      items={activeColumns.map((column) => column.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <Stack spacing={1.5}>
+                        {activeColumns.map((column) => (
+                          <SortableColumnRow
+                            key={column.id}
+                            column={column}
+                            onRename={(nextTitle) => {
+                              setColumns((prev) =>
+                                prev.map((item) =>
+                                  item.id === column.id ? { ...item, title: nextTitle } : item
+                                )
+                              );
+                            }}
+                            onArchive={() => handleArchiveColumn(column.id)}
+                            onRemove={() => handleRequestRemoveColumn(column)}
+                          />
+                        ))}
+                      </Stack>
+                    </SortableContext>
+                  </DndContext>
+                  <Accordion
+                    elevation={0}
+                    sx={{
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "var(--radius-card)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      "&:before": { display: "none" },
+                      "&.Mui-expanded": { marginTop: 1.5 },
+                    }}
+                  >
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreRoundedIcon />}
+                      sx={{
+                        minHeight: 48,
+                        "&.Mui-expanded": { minHeight: 48 },
+                        "& .MuiAccordionSummary-content": { my: 0 },
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Colunas arquivadas ({archivedColumns.length})
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+                      {archivedColumns.length === 0 ? (
+                        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                          Nenhuma coluna arquivada.
+                        </Typography>
+                      ) : (
+                        <Stack spacing={1.5}>
+                          {archivedColumns.map((column) => (
+                            <Paper
+                              key={column.id}
+                              elevation={0}
+                              sx={{
+                                p: 2,
+                                border: "1px solid rgba(255,255,255,0.08)",
+                                borderRadius: "var(--radius-card)",
+                                backgroundColor: "rgba(7, 11, 16, 0.7)",
+                              }}
+                            >
+                              <Stack
+                                direction={{ xs: "column", sm: "row" }}
+                                spacing={2}
+                                alignItems="center"
+                              >
+                                <Typography variant="subtitle2" sx={{ flex: 1 }}>
+                                  {column.title}
+                                </Typography>
+                                <Stack direction="row" spacing={1}>
+                                  <Tooltip title="Restaurar" placement="top">
+                                    <IconButton
+                                      onClick={() => handleRestoreColumn(column.id)}
+                                      sx={{ border: "1px solid rgba(255,255,255,0.12)" }}
+                                      aria-label={`Restaurar ${column.title}`}
+                                    >
+                                      <RestoreFromTrashRoundedIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Remover" placement="top">
+                                    <IconButton
+                                      onClick={() => handleRequestRemoveColumn(column)}
+                                      sx={{ border: "1px solid rgba(255,255,255,0.12)" }}
+                                      aria-label={`Remover ${column.title}`}
+                                    >
+                                      <DeleteRoundedIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Stack>
+                              </Stack>
+                            </Paper>
+                          ))}
+                        </Stack>
+                      )}
+                    </AccordionDetails>
+                  </Accordion>
+                </Stack>
+              </AccordionDetails>
+            </Accordion>
             <Stack direction="row" spacing={2} justifyContent="flex-end">
               <Button
                 variant="outlined"
@@ -2538,7 +3163,209 @@ export default function Pipeline() {
           </Stack>
         </DialogContent>
       </Dialog>
-
+      <Dialog
+        open={removeDealOpen}
+        onClose={() => setRemoveDealOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogContent>
+          <Stack spacing={2}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Typography variant="h6">Remover tarefa</Typography>
+              <IconButton onClick={() => setRemoveDealOpen(false)} sx={{ color: "text.secondary" }}>
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              Voce confirma a exclusao desta tarefa? Essa acao nao pode ser desfeita.
+            </Typography>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button variant="outlined" onClick={() => setRemoveDealOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                color="error"
+                variant="contained"
+                onClick={() => {
+                  if (!viewingDeal) {
+                    return;
+                  }
+                  setColumns((prev) =>
+                    prev.map((column) => ({
+                      ...column,
+                      deals: column.deals.filter((deal) => deal.id !== viewingDeal.id),
+                    }))
+                  );
+                  setViewingDeal(null);
+                  setRemoveDealOpen(false);
+                }}
+              >
+                Remover
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={removeColumnOpen}
+        onClose={() => {
+          setRemoveColumnOpen(false);
+          setRemoveColumnTarget(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogContent>
+          <Stack spacing={2}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Typography variant="h6">Remover coluna</Typography>
+              <IconButton
+                onClick={() => {
+                  setRemoveColumnOpen(false);
+                  setRemoveColumnTarget(null);
+                }}
+                sx={{ color: "text.secondary" }}
+              >
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              Voce confirma a exclusao da coluna {removeColumnTarget?.title || ""}? Todas as
+              tarefas nela serao removidas.
+            </Typography>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setRemoveColumnOpen(false);
+                  setRemoveColumnTarget(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button color="error" variant="contained" onClick={handleConfirmRemoveColumn}>
+                Remover
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={Boolean(editingDeal)} onClose={handleEditClose} maxWidth="sm" fullWidth>
+        <DialogContent>
+          <Stack spacing={2.5}>
+            <Box>
+              <Typography variant="h6">Editar tarefa</Typography>
+            </Box>
+            <TextField
+              label="Titulo"
+              fullWidth
+              value={editName}
+              onChange={(event) => setEditName(event.target.value)}
+            />
+            {taskFieldSettings.value ? (
+              <TextField
+                label="Valor"
+                fullWidth
+                value={editValue}
+                onChange={(event) => setEditValue(event.target.value)}
+              />
+            ) : null}
+            <Autocomplete
+              multiple
+              options={personOptions}
+              value={selectPersonsByIds(editResponsibleIds)}
+              onChange={(_, value) => setEditResponsibleIds(value.map((person) => person.id))}
+              getOptionLabel={(option) => formatPersonLabel(option)}
+              noOptionsText="Nenhum usuario"
+              renderInput={(params) => <TextField {...params} label="Responsaveis" fullWidth />}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    {...getTagProps({ index })}
+                    key={option.id}
+                    label={formatPersonLabel(option)}
+                    size="small"
+                  />
+                ))
+              }
+            />
+            <Autocomplete
+              multiple
+              options={personOptions}
+              value={selectPersonsByIds(editWorkerIds)}
+              onChange={(_, value) => setEditWorkerIds(value.map((person) => person.id))}
+              getOptionLabel={(option) => formatPersonLabel(option)}
+              noOptionsText="Nenhum usuario"
+              renderInput={(params) => <TextField {...params} label="Pessoas na tarefa" fullWidth />}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    {...getTagProps({ index })}
+                    key={option.id}
+                    label={formatPersonLabel(option)}
+                    size="small"
+                  />
+                ))
+              }
+            />
+            {taskFieldSettings.link ? (
+              <TextField
+                label="Link"
+                fullWidth
+                value={editLink}
+                onChange={(event) => setEditLink(event.target.value)}
+              />
+            ) : null}
+            <Autocomplete
+              multiple
+              options={categories}
+              value={categories.filter((cat) => editCategoryIds.includes(cat.id))}
+              onChange={(_, value) => setEditCategoryIds(value.map((cat) => cat.id))}
+              getOptionLabel={(option) => option.name}
+              disableCloseOnSelect
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
+                  {option.name}
+                </li>
+              )}
+              renderInput={(params) => <TextField {...params} label="Categorias" fullWidth />}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    {...getTagProps({ index })}
+                    key={option.id}
+                    label={option.name}
+                    size="small"
+                    sx={{
+                      color: "#e6edf3",
+                      backgroundColor: darkenColor(option.color, 0.5),
+                    }}
+                  />
+                ))
+              }
+            />
+            <Stack spacing={1}>
+              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                Descricao
+              </Typography>
+              <RichTextEditor value={editDescription} onChange={setEditDescription} />
+            </Stack>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button color="error" variant="outlined" onClick={handleDealRemove}>
+                Remover
+              </Button>
+              <Button variant="outlined" onClick={handleEditClose}>
+                Cancelar
+              </Button>
+              <Button variant="contained" onClick={handleEditSave}>
+                Salvar
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={5000}
@@ -2618,6 +3445,7 @@ export default function Pipeline() {
           </Stack>
         </DialogContent>
       </Dialog>
+      </Stack>
     </Box>
   );
 }
@@ -2959,6 +3787,8 @@ function RichTextEditor({
     sx: {
       border: "1px solid rgba(255,255,255,0.12)",
       backgroundColor: "rgba(7, 9, 13, 0.6)",
+      "&:hover": { backgroundColor: "rgba(7, 9, 13, 0.8)" },
+    },
   };
 
   return (
