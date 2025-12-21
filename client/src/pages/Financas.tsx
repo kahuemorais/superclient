@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Chip,
@@ -18,13 +21,27 @@ import {
   TableRow,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useLocation } from "wouter";
 import api from "../api";
+import ToggleCheckbox from "../components/ToggleCheckbox";
 
 type Category = {
   id: string;
@@ -49,6 +66,7 @@ type Contact = {
 };
 
 const STORAGE_KEY = "finance_data_v1";
+const TABLE_FIELDS_KEY = "finance_table_fields_v1";
 const DEFAULT_COLORS = [
   "#0f766e",
   "#1d4ed8",
@@ -245,7 +263,17 @@ export default function Financas() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState("");
   const [editingCategoryColor, setEditingCategoryColor] = useState(DEFAULT_COLORS[0]);
-  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsAccordion, setSettingsAccordion] = useState<
+    "categories" | "table" | false
+  >(false);
+  const [tableFields, setTableFields] = useState({
+    title: true,
+    category: true,
+    amount: true,
+    date: true,
+    comment: true,
+  });
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [removeExpenseOpen, setRemoveExpenseOpen] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -413,6 +441,26 @@ export default function Financas() {
   }, [permissions.finance_view, setLocation]);
 
   useEffect(() => {
+    const stored = window.localStorage.getItem(TABLE_FIELDS_KEY);
+    if (!stored) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(stored) as Partial<typeof tableFields>;
+      setTableFields((prev) => ({
+        ...prev,
+        ...parsed,
+      }));
+    } catch {
+      window.localStorage.removeItem(TABLE_FIELDS_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(TABLE_FIELDS_KEY, JSON.stringify(tableFields));
+  }, [tableFields]);
+
+  useEffect(() => {
     if (!isLoadedRef.current) {
       return;
     }
@@ -493,6 +541,18 @@ export default function Financas() {
     });
   }, [sortedExpenses, expenseQuery, categoryFilters]);
 
+  const visibleTableColumns = useMemo(() => {
+    const columns = [
+      { key: "title", label: "Titulo" },
+      { key: "category", label: "Categoria" },
+      { key: "amount", label: "Valor" },
+      { key: "date", label: "Data" },
+      { key: "comment", label: "Comentario" },
+    ];
+    return columns.filter((column) => tableFields[column.key as keyof typeof tableFields]);
+  }, [tableFields]);
+
+  const tableColumnCount = Math.max(1, visibleTableColumns.length);
 
   const handleSaveExpense = () => {
     if (!permissions.finance_edit) {
@@ -624,16 +684,21 @@ export default function Financas() {
             </Typography>
           </Box>
           <Stack direction="row" spacing={2}>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setEditingCategoryId(null);
-                setCategoryDialogOpen(true);
-              }}
-              sx={{ textTransform: "none", fontWeight: 600 }}
-            >
-              Categorias
-            </Button>
+            <Tooltip title="Configuracoes" placement="bottom">
+              <span>
+                <IconButton
+                  onClick={() => setSettingsOpen(true)}
+                  disabled={!permissions.finance_edit}
+                  sx={{
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 2,
+                    color: "text.primary",
+                  }}
+                >
+                  <SettingsRoundedIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
             <Button
               variant="contained"
               onClick={() => {
@@ -683,7 +748,7 @@ export default function Financas() {
                       <Cell key={entry.id} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip
+                  <RechartsTooltip
                     contentStyle={{
                       background: "rgba(12, 18, 26, 0.98)",
                       border: "1px solid rgba(255,255,255,0.12)",
@@ -715,7 +780,7 @@ export default function Financas() {
                 <BarChart data={totalsByMonth}>
                   <XAxis dataKey="month" tick={{ fill: "#9aa6b2", fontSize: 12 }} />
                   <YAxis tick={{ fill: "#9aa6b2", fontSize: 12 }} />
-                  <Tooltip
+                  <RechartsTooltip
                     contentStyle={{
                       background: "rgba(12, 18, 26, 0.98)",
                       border: "1px solid rgba(255,255,255,0.12)",
@@ -823,27 +888,37 @@ export default function Financas() {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
-                    Titulo
-                  </TableCell>
-                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
-                    Categoria
-                  </TableCell>
-                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
-                    Valor
-                  </TableCell>
-                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
-                    Data
-                  </TableCell>
-                  <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
-                    Comentario
-                  </TableCell>
+                  {tableFields.title ? (
+                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                      Titulo
+                    </TableCell>
+                  ) : null}
+                  {tableFields.category ? (
+                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                      Categoria
+                    </TableCell>
+                  ) : null}
+                  {tableFields.amount ? (
+                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                      Valor
+                    </TableCell>
+                  ) : null}
+                  {tableFields.date ? (
+                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                      Data
+                    </TableCell>
+                  ) : null}
+                  {tableFields.comment ? (
+                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                      Comentario
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredExpenses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} sx={{ color: "text.secondary" }}>
+                    <TableCell colSpan={tableColumnCount} sx={{ color: "text.secondary" }}>
                       <Typography variant="body2" sx={{ color: "text.secondary" }}>
                         😕 Nao ha resultados para a sua pesquisa.
                       </Typography>
@@ -859,28 +934,38 @@ export default function Financas() {
                         onClick={() => handleViewOpen(expense)}
                         sx={{ cursor: "pointer" }}
                       >
-                        <TableCell>{expense.title}</TableCell>
-                        <TableCell>
-                          {category ? (
-                            <Chip
-                              size="small"
-                              label={category.name}
-                              sx={{
-                                color: "#e6edf3",
-                                backgroundColor: darkenColor(category.color, 0.5),
-                              }}
-                            />
-                          ) : (
-                            "-"
-                          )}
-                        </TableCell>
-                        <TableCell>{expense.amount.toLocaleString("pt-BR")}</TableCell>
-                        <TableCell>
-                          {new Date(expense.createdAt).toLocaleDateString("pt-BR")}
-                        </TableCell>
-                        <TableCell sx={{ color: "text.secondary" }}>
-                          {expense.comment || "-"}
-                        </TableCell>
+                        {tableFields.title ? (
+                          <TableCell>{expense.title}</TableCell>
+                        ) : null}
+                        {tableFields.category ? (
+                          <TableCell>
+                            {category ? (
+                              <Chip
+                                size="small"
+                                label={category.name}
+                                sx={{
+                                  color: "#e6edf3",
+                                  backgroundColor: darkenColor(category.color, 0.5),
+                                }}
+                              />
+                            ) : (
+                              "-"
+                            )}
+                          </TableCell>
+                        ) : null}
+                        {tableFields.amount ? (
+                          <TableCell>{expense.amount.toLocaleString("pt-BR")}</TableCell>
+                        ) : null}
+                        {tableFields.date ? (
+                          <TableCell>
+                            {new Date(expense.createdAt).toLocaleDateString("pt-BR")}
+                          </TableCell>
+                        ) : null}
+                        {tableFields.comment ? (
+                          <TableCell sx={{ color: "text.secondary" }}>
+                            {expense.comment || "-"}
+                          </TableCell>
+                        ) : null}
                       </TableRow>
                     );
                   })
@@ -987,10 +1072,11 @@ export default function Financas() {
       </Dialog>
 
       <Dialog
-        open={categoryDialogOpen}
+        open={settingsOpen}
         onClose={() => {
-          setCategoryDialogOpen(false);
+          setSettingsOpen(false);
           cancelEditCategory();
+          setSettingsAccordion(false);
         }}
         maxWidth="sm"
         fullWidth
@@ -998,11 +1084,12 @@ export default function Financas() {
         <DialogContent>
           <Stack spacing={2.5}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Typography variant="h6">Categorias</Typography>
+              <Typography variant="h6">Configuracoes</Typography>
               <IconButton
                 onClick={() => {
-                  setCategoryDialogOpen(false);
+                  setSettingsOpen(false);
                   cancelEditCategory();
+                  setSettingsAccordion(false);
                 }}
                 sx={{ color: "text.secondary" }}
               >
@@ -1010,123 +1097,332 @@ export default function Financas() {
               </IconButton>
             </Box>
 
-            {editingCategoryId ? (
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(10, 16, 23, 0.7)",
-                }}
-              >
-                <Stack spacing={1.5}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Editar categoria
-                  </Typography>
-                  <TextField
-                    label="Nome"
-                    fullWidth
-                    value={editingCategoryName}
-                    onChange={(event) => setEditingCategoryName(event.target.value)}
-                  />
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {DEFAULT_COLORS.map((color) => (
-                      <Box
-                        key={color}
-                        onClick={() => {
-                          setEditingCategoryColor(color);
-                        }}
-                        sx={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 1,
-                          backgroundColor: color,
-                          border:
-                            editingCategoryColor === color
-                              ? "2px solid rgba(255,255,255,0.8)"
-                              : "1px solid rgba(255,255,255,0.2)",
-                          cursor: "pointer",
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                  <Stack direction="row" spacing={2} justifyContent="flex-end">
-                    <Button variant="outlined" onClick={cancelEditCategory}>
-                      Cancelar
-                    </Button>
-                    <Button variant="contained" onClick={saveCategory}>
-                      Salvar
-                    </Button>
-                  </Stack>
-                </Stack>
-              </Box>
-            ) : null}
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {categories.map((cat) => (
-                <Chip
-                  key={cat.id}
-                  label={cat.name}
-                  onClick={() => startEditCategory(cat)}
-                  onDelete={() => handleRemoveCategory(cat.id)}
-                  sx={{
-                    color: "#e6edf3",
-                    backgroundColor: darkenColor(cat.color, 0.5),
-                  }}
-                />
-              ))}
-            </Stack>
-
-            {editingCategoryId ? null : (
-              <Box>
-                <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-                  Nova categoria
+            <Accordion
+              expanded={settingsAccordion === "categories"}
+              onChange={(_, isExpanded) =>
+                setSettingsAccordion(isExpanded ? "categories" : false)
+              }
+              elevation={0}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--radius-card)",
+                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                "&:before": { display: "none" },
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Categorias
                 </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
                 <Stack spacing={1.5}>
-                  <TextField
-                    label="Nome"
-                    fullWidth
-                    value={newCategoryName}
-                    onChange={(event) => setNewCategoryName(event.target.value)}
-                  />
+                  {editingCategoryId ? (
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: "var(--radius-card)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          Editar categoria
+                        </Typography>
+                        <TextField
+                          label="Nome"
+                          fullWidth
+                          value={editingCategoryName}
+                          onChange={(event) => setEditingCategoryName(event.target.value)}
+                        />
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {DEFAULT_COLORS.map((color) => (
+                            <Box
+                              key={color}
+                              onClick={() => {
+                                setEditingCategoryColor(color);
+                              }}
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 1,
+                                backgroundColor: color,
+                                border:
+                                  editingCategoryColor === color
+                                    ? "2px solid rgba(255,255,255,0.8)"
+                                    : "1px solid rgba(255,255,255,0.2)",
+                                cursor: "pointer",
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                        <Stack direction="row" spacing={2} justifyContent="flex-end">
+                          <Button variant="outlined" onClick={cancelEditCategory}>
+                            Cancelar
+                          </Button>
+                          <Button variant="contained" onClick={saveCategory}>
+                            Salvar
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  ) : null}
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {DEFAULT_COLORS.map((color) => (
-                      <Box
-                        key={color}
-                        onClick={() => {
-                          setNewCategoryColor(color);
-                        }}
+                    {categories.map((cat) => (
+                      <Chip
+                        key={cat.id}
+                        label={cat.name}
+                        onClick={() => startEditCategory(cat)}
+                        onDelete={() => handleRemoveCategory(cat.id)}
                         sx={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 1,
-                          backgroundColor: color,
-                          border:
-                            newCategoryColor === color
-                              ? "2px solid rgba(255,255,255,0.8)"
-                              : "1px solid rgba(255,255,255,0.2)",
-                          cursor: "pointer",
+                          color: "#e6edf3",
+                          backgroundColor: darkenColor(cat.color, 0.5),
                         }}
                       />
                     ))}
                   </Stack>
-                  <Button
-                    variant="outlined"
-                    onClick={handleAddCategory}
-                    startIcon={<AddRoundedIcon />}
-                    sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
-                  >
-                    Criar categoria
-                  </Button>
+
+                  {editingCategoryId ? null : (
+                    <Box>
+                      <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+                        Nova categoria
+                      </Typography>
+                      <Stack spacing={1.5}>
+                        <TextField
+                          label="Nome"
+                          fullWidth
+                          value={newCategoryName}
+                          onChange={(event) => setNewCategoryName(event.target.value)}
+                        />
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {DEFAULT_COLORS.map((color) => (
+                            <Box
+                              key={color}
+                              onClick={() => {
+                                setNewCategoryColor(color);
+                              }}
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 1,
+                                backgroundColor: color,
+                                border:
+                                  newCategoryColor === color
+                                    ? "2px solid rgba(255,255,255,0.8)"
+                                    : "1px solid rgba(255,255,255,0.2)",
+                                cursor: "pointer",
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                        <Button
+                          variant="outlined"
+                          onClick={handleAddCategory}
+                          startIcon={<AddRoundedIcon />}
+                          sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                        >
+                          Criar categoria
+                        </Button>
+                      </Stack>
+                    </Box>
+                  )}
                 </Stack>
-              </Box>
-            )}
+              </AccordionDetails>
+            </Accordion>
+
+            <Accordion
+              expanded={settingsAccordion === "table"}
+              onChange={(_, isExpanded) =>
+                setSettingsAccordion(isExpanded ? "table" : false)
+              }
+              elevation={0}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--radius-card)",
+                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                "&:before": { display: "none" },
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Tabela de financas
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                    gap: 1.5,
+                  }}
+                >
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTableFields((prev) => ({ ...prev, title: !prev.title }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Titulo</Typography>
+                    <ToggleCheckbox
+                      checked={tableFields.title}
+                      onChange={(event) =>
+                        setTableFields((prev) => ({
+                          ...prev,
+                          title: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTableFields((prev) => ({ ...prev, category: !prev.category }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Categoria</Typography>
+                    <ToggleCheckbox
+                      checked={tableFields.category}
+                      onChange={(event) =>
+                        setTableFields((prev) => ({
+                          ...prev,
+                          category: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTableFields((prev) => ({ ...prev, amount: !prev.amount }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Valor</Typography>
+                    <ToggleCheckbox
+                      checked={tableFields.amount}
+                      onChange={(event) =>
+                        setTableFields((prev) => ({
+                          ...prev,
+                          amount: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTableFields((prev) => ({ ...prev, date: !prev.date }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Data</Typography>
+                    <ToggleCheckbox
+                      checked={tableFields.date}
+                      onChange={(event) =>
+                        setTableFields((prev) => ({
+                          ...prev,
+                          date: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTableFields((prev) => ({ ...prev, comment: !prev.comment }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Comentario</Typography>
+                    <ToggleCheckbox
+                      checked={tableFields.comment}
+                      onChange={(event) =>
+                        setTableFields((prev) => ({
+                          ...prev,
+                          comment: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                </Box>
+              </AccordionDetails>
+            </Accordion>
 
             <Stack direction="row" spacing={2} justifyContent="flex-end">
               <Button
+                variant="text"
+                onClick={() => {
+                  setTableFields({
+                    title: true,
+                    category: true,
+                    amount: true,
+                    date: true,
+                    comment: true,
+                  });
+                }}
+                sx={{ textTransform: "none", fontWeight: 600, color: "text.secondary" }}
+              >
+                Restaurar padrao
+              </Button>
+              <Button
                 variant="outlined"
                 onClick={() => {
-                  setCategoryDialogOpen(false);
+                  setSettingsOpen(false);
                   cancelEditCategory();
+                  setSettingsAccordion(false);
                 }}
               >
                 Fechar

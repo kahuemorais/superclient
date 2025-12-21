@@ -7,13 +7,14 @@ import {
   IconButton,
   Paper,
   Stack,
-  Switch,
   TextField,
   Typography,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useLocation } from "wouter";
 import api from "../api";
+import ToggleCheckbox from "../components/ToggleCheckbox";
+import { interactiveCardSx } from "../styles/interactiveCard";
 
 type StoredAccount = {
   name: string;
@@ -431,12 +432,13 @@ export default function Profile() {
                 onClick={() =>
                   setPreferences((prev) => ({ ...prev, email: !prev.email }))
                 }
-                sx={{
+                sx={(theme) => ({
                   p: 2.5,
                   border: "1px solid rgba(255,255,255,0.08)",
                   backgroundColor: "rgba(15, 23, 32, 0.9)",
                   cursor: "pointer",
-                }}
+                  ...interactiveCardSx(theme),
+                })}
               >
                 <Stack spacing={1.5}>
                   <Box
@@ -450,7 +452,7 @@ export default function Profile() {
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                       Notificacoes por email
                     </Typography>
-                    <Switch
+                    <ToggleCheckbox
                       checked={preferences.email}
                       onChange={(event) =>
                         setPreferences((prev) => ({
@@ -474,12 +476,13 @@ export default function Profile() {
                     singleSession: !prev.singleSession,
                   }))
                 }
-                sx={{
+                sx={(theme) => ({
                   p: 2.5,
                   border: "1px solid rgba(255,255,255,0.08)",
                   backgroundColor: "rgba(15, 23, 32, 0.9)",
                   cursor: "pointer",
-                }}
+                  ...interactiveCardSx(theme),
+                })}
               >
                 <Stack spacing={1.5}>
                   <Box
@@ -493,7 +496,7 @@ export default function Profile() {
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                       Sessao unica
                     </Typography>
-                    <Switch
+                    <ToggleCheckbox
                       checked={preferences.singleSession}
                       onChange={(event) =>
                         setPreferences((prev) => ({
@@ -536,12 +539,13 @@ export default function Profile() {
                     key={key}
                     elevation={0}
                     onClick={() => requestModuleToggle(key, !preferences[key])}
-                    sx={{
+                    sx={(theme) => ({
                       p: 2.5,
                       border: "1px solid rgba(255,255,255,0.08)",
                       backgroundColor: "rgba(15, 23, 32, 0.9)",
                       cursor: "pointer",
-                    }}
+                      ...interactiveCardSx(theme),
+                    })}
                   >
                     <Stack spacing={1.5}>
                       <Box
@@ -555,7 +559,7 @@ export default function Profile() {
                         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                           {moduleLabels[key].title}
                         </Typography>
-                        <Switch
+                        <ToggleCheckbox
                           checked={preferences[key]}
                           onClick={(event) => {
                             event.stopPropagation();
@@ -670,7 +674,7 @@ export default function Profile() {
                         setSwitchEmail(account.email);
                         setSwitchError("");
                       }}
-                      sx={{
+                      sx={(theme) => ({
                         p: 1.5,
                         border:
                           account.email === email
@@ -681,7 +685,8 @@ export default function Profile() {
                             ? "rgba(34, 201, 166, 0.12)"
                             : "rgba(15, 23, 32, 0.9)",
                         cursor: "pointer",
-                      }}
+                        ...interactiveCardSx(theme),
+                      })}
                     >
                       <Stack spacing={0.5}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>

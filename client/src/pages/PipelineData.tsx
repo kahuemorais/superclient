@@ -16,6 +16,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Link as RouterLink } from "wouter";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import api from "../api";
+import { interactiveCardSx } from "../styles/interactiveCard";
 
 type PipelineSummary = {
   id: string;
@@ -466,13 +467,14 @@ export default function PipelineData() {
                   <Box
                     key={deal.id}
                     onClick={() => openDeal(deal)}
-                    sx={{
+                    sx={(theme) => ({
                       p: 2,
                       borderRadius: "var(--radius-card)",
                       border: "1px solid rgba(255,255,255,0.08)",
                       backgroundColor: "rgba(10, 16, 23, 0.85)",
                       cursor: "pointer",
-                    }}
+                      ...interactiveCardSx(theme),
+                    })}
                   >
                     <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                       {deal.name}

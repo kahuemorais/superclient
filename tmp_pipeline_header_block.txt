@@ -1,0 +1,109 @@
+      <Stack spacing={3}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+              Pipeline
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={2}>
+            <Button
+              component={RouterLink}
+              href="/pipeline/dados"
+              variant="outlined"
+              sx={{ textTransform: "none", fontWeight: 600 }}
+            >
+              Ver dados
+            </Button>
+          </Stack>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 2,
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <TextField
+              label="Buscar tasks"
+              value={taskQuery}
+              onChange={(event) => setTaskQuery(event.target.value)}
+              sx={{ minWidth: { xs: "100%", sm: 280 } }}
+            />
+            <Autocomplete
+              multiple
+              options={categories}
+              value={categories.filter((cat) => categoryFilters.includes(cat.id))}
+              onChange={(_, value) => setCategoryFilters(value.map((cat) => cat.id))}
+              getOptionLabel={(option) => option.name}
+              disableCloseOnSelect
+              ListboxProps={{ style: { maxHeight: 240 } }}
+              renderOption={(props, option, { selected }) => (
+                <li {...props}>
+                  <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
+                  {option.name}
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField {...params} label="Filtrar categorias" />
+              )}
+              renderTags={(value, getTagProps) => {
+                const visible = value.slice(0, 2);
+                const hiddenCount = value.length - visible.length;
+                return (
+                  <>
+                    {visible.map((option, index) => (
+                      <Chip
+                        {...getTagProps({ index })}
+                        key={option.id}
+                        label={option.name}
+                        size="small"
+                        sx={{
+                          color: "#e6edf3",
+                          backgroundColor: darkenColor(option.color, 0.5),
+                          maxWidth: 120,
+                          "& .MuiChip-label": {
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: 100,
+                          },
+                        }}
+                      />
+                    ))}
+                    {hiddenCount > 0 ? (
+                      <Chip
+                        label={`+${hiddenCount}`}
+                        size="small"
+                        sx={{
+                          color: "text.secondary",
+                          border: "1px solid rgba(255,255,255,0.16)",
+                        }}
+                      />
+                    ) : null}
+                  </>
+                );
+              }}
+              sx={{ minWidth: { xs: "100%", sm: 280 }, "& .MuiAutocomplete-inputRoot": { minHeight: 44 } }}
+            />
+          </Stack>
+          <Stack direction="row" spacing={2} sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <Tooltip title="Configuracoes" placement="bottom">
+              <span>
+                <IconButton
+                  onClick={() => setTaskFieldSettingsOpen(true)}
+                  disabled={!permissions.pipeline_edit_tasks}
+                  sx={{
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 2,
+                    color: "text.primary",
+                  }}
+                >
+                  <SettingsRoundedIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Stack>
+        </Box>

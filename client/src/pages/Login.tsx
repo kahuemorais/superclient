@@ -18,9 +18,9 @@ import { useLocation } from "wouter";
 import api from "../api";
 
 const highlights = [
-  "Controle de acessos com trilhas por time",
-  "Convites em segundos com expiracao automatica",
-  "Perfil unificado para apps e integrações",
+  "Pipeline com tarefas por etapa e visao em tempo real",
+  "Financas com categorias, filtros e status claros",
+  "Gestao de acessos com papeis e permissao granular",
 ];
 
 const plans = [
@@ -247,11 +247,11 @@ export default function Login() {
       <Box sx={{ pr: { md: 4 } }}>
         <Stack spacing={2.5}>
           <Typography variant="h3" sx={{ fontWeight: 700 }}>
-            Centralize acesso, perfil e convites em um fluxo leve.
+            Organize tarefas, gastos e acessos em um unico lugar.
           </Typography>
           <Typography variant="body1" sx={{ color: "text.secondary", fontSize: 18 }}>
-            O Superclient conecta autenticacao, gestao de acessos e onboarding
-            para equipes que nao podem parar.
+            O Superclient entrega pipeline, financas e gestao em um fluxo simples,
+            com visao clara do que importa no dia a dia.
           </Typography>
           <Box
             sx={{
@@ -288,23 +288,23 @@ export default function Login() {
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-              O que sua equipe ganha
+              Por que times escolhem o Superclient
             </Typography>
             <Stack spacing={1}>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                - Fluxos padronizados de login e criacao de conta.
+                - Clareza total do trabalho com colunas, filtros e categorias.
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                - Perfis prontos para auditoria e compliance.
+                - Controle de gastos com dados completos e historico.
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                - Convites com controle de tempo e permissao.
+                - Permissoes por papel para colaborar com seguranca.
               </Typography>
             </Stack>
           </Box>
           <Box sx={{ mt: 2 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
-              Planos para cada ritmo
+              Comece agora e evolua quando precisar
             </Typography>
             <Stack spacing={2}>
               {plans.map((plan) => (
@@ -616,3 +616,4 @@ export default function Login() {
     </Box>
   );
 }
+

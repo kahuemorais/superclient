@@ -9,11 +9,12 @@ import {
   MenuItem,
   Paper,
   Stack,
-  Switch,
   TextField,
   Typography,
 } from "@mui/material";
 import api from "../api";
+import ToggleCheckbox from "../components/ToggleCheckbox";
+import { interactiveCardSx } from "../styles/interactiveCard";
 
 type RolePermissionKey =
   | "pipeline_view"
@@ -376,12 +377,13 @@ export default function AccessManagement() {
                   key={module.name}
                   elevation={0}
                   onClick={() => requestModuleToggle(index)}
-                  sx={{
+                  sx={(theme) => ({
                     p: 2.5,
                     border: "1px solid rgba(255,255,255,0.08)",
                     backgroundColor: "rgba(15, 23, 32, 0.9)",
                     cursor: "pointer",
-                  }}
+                    ...interactiveCardSx(theme),
+                  })}
                 >
                   <Stack spacing={1.5}>
                     <Box
@@ -395,7 +397,7 @@ export default function AccessManagement() {
                       <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                         {module.name}
                       </Typography>
-                      <Switch
+                      <ToggleCheckbox
                         checked={moduleStates[index]}
                         onChange={() => requestModuleToggle(index)}
                         onClick={(event) => event.stopPropagation()}
@@ -440,12 +442,13 @@ export default function AccessManagement() {
                     key={permission.key}
                     elevation={0}
                     onClick={() => toggleRolePermission(index)}
-                    sx={{
+                    sx={(theme) => ({
                       p: 2.5,
                       border: "1px solid rgba(255,255,255,0.08)",
                       backgroundColor: "rgba(15, 23, 32, 0.9)",
                       cursor: "pointer",
-                    }}
+                      ...interactiveCardSx(theme),
+                    })}
                   >
                     <Stack spacing={1}>
                       <Box
@@ -459,7 +462,7 @@ export default function AccessManagement() {
                         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                           {permission.title}
                         </Typography>
-                        <Switch
+                        <ToggleCheckbox
                           checked={
                             activeRole
                               ? rolePermissions[activeRole]?.[permission.key] ?? true

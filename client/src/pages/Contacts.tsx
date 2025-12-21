@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Autocomplete,
   Alert,
   Box,
@@ -26,6 +29,10 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import ToggleCheckbox from "../components/ToggleCheckbox";
+import { interactiveCardSx } from "../styles/interactiveCard";
 
 type Contact = {
   id: string;
@@ -48,6 +55,7 @@ type Category = {
 const STORAGE_KEY = "contacts_v1";
 const CATEGORY_STORAGE_KEY = "contact_categories_v1";
 const USER_ROLE_STORAGE_KEY = "sc_user_roles";
+const CARD_FIELDS_KEY = "contact_card_fields_v1";
 
 const DEFAULT_COLORS = [
   "#0f766e",
@@ -231,7 +239,16 @@ export default function Contacts() {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [contactForm, setContactForm] = useState<Contact | null>(null);
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
-  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsAccordion, setSettingsAccordion] = useState<
+    "categories" | "cards" | false
+  >(false);
+  const [cardFields, setCardFields] = useState({
+    phones: true,
+    emails: true,
+    addresses: true,
+    categories: true,
+  });
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
@@ -315,6 +332,23 @@ export default function Contacts() {
       }
     };
   }, [contacts, categories]);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(CARD_FIELDS_KEY);
+    if (!stored) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(stored) as Partial<typeof cardFields>;
+      setCardFields((prev) => ({ ...prev, ...parsed }));
+    } catch {
+      window.localStorage.removeItem(CARD_FIELDS_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(CARD_FIELDS_KEY, JSON.stringify(cardFields));
+  }, [cardFields]);
 
   const categoryMap = new Map(categories.map((cat) => [cat.id, cat]));
 
@@ -686,16 +720,6 @@ export default function Contacts() {
           </Box>
           <Stack direction="row" spacing={2}>
             <Button
-              variant="outlined"
-              onClick={() => {
-                setEditingCategoryId(null);
-                setCategoryDialogOpen(true);
-              }}
-              sx={{ textTransform: "none", fontWeight: 600 }}
-            >
-              Categorias
-            </Button>
-            <Button
               variant="contained"
               onClick={openNewContact}
               sx={{ textTransform: "none", fontWeight: 600 }}
@@ -720,7 +744,11 @@ export default function Contacts() {
           </Paper>
         ) : (
           <Stack spacing={2}>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+            >
               <TextField
                 label="Buscar contatos"
                 value={contactQuery}
@@ -788,6 +816,22 @@ export default function Contacts() {
                   "& .MuiAutocomplete-inputRoot": { minHeight: 44 },
                 }}
               />
+              <Box sx={{ flex: 1, display: { xs: "none", sm: "block" } }} />
+              <Tooltip title="Configuracoes" placement="bottom">
+                <span>
+                  <IconButton
+                    onClick={() => setSettingsOpen(true)}
+                    sx={{
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      borderRadius: 2,
+                      color: "text.primary",
+                      alignSelf: { xs: "flex-start", sm: "center" },
+                    }}
+                  >
+                    <SettingsRoundedIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Stack>
             {filteredContacts.length === 0 ? (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -802,36 +846,65 @@ export default function Contacts() {
                 }}
               >
                 {filteredContacts.map((contact) => (
+                  (() => {
+                    const visibleDetailCount = [
+                      cardFields.phones,
+                      cardFields.emails,
+                      cardFields.addresses,
+                      cardFields.categories,
+                    ].filter(Boolean).length;
+                    const minHeight =
+                      visibleDetailCount === 0
+                        ? 96
+                        : visibleDetailCount === 1
+                          ? 120
+                          : visibleDetailCount === 2
+                            ? 136
+                            : 160;
+                    return (
                   <Paper
                     key={contact.id}
                     elevation={0}
                     onClick={() => openContact(contact)}
-                    sx={{
+                    sx={(theme) => ({
                       p: 2.5,
-                      minHeight: 160,
+                      minHeight,
                       border: "1px solid rgba(255,255,255,0.08)",
                       backgroundColor: "rgba(15, 23, 32, 0.9)",
                       cursor: "pointer",
-                    }}
+                      ...interactiveCardSx(theme),
+                    })}
                   >
                     <Stack spacing={1}>
                       <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                         {contact.name || "Sem nome"}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {contact.phones.filter(Boolean).length} telefones
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {contact.emails.filter(Boolean).length} emails
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {contact.addresses.filter(Boolean).length} enderecos
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {contact.categoryIds?.length ? `${contact.categoryIds.length} categorias` : "Sem categoria"}
-                      </Typography>
+                      {cardFields.phones ? (
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                          {contact.phones.filter(Boolean).length} telefones
+                        </Typography>
+                      ) : null}
+                      {cardFields.emails ? (
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                          {contact.emails.filter(Boolean).length} emails
+                        </Typography>
+                      ) : null}
+                      {cardFields.addresses ? (
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                          {contact.addresses.filter(Boolean).length} enderecos
+                        </Typography>
+                      ) : null}
+                      {cardFields.categories ? (
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                          {contact.categoryIds?.length
+                            ? `${contact.categoryIds.length} categorias`
+                            : "Sem categoria"}
+                        </Typography>
+                      ) : null}
                     </Stack>
                   </Paper>
+                    );
+                  })()
                 ))}
               </Box>
             )}
@@ -1199,7 +1272,6 @@ export default function Contacts() {
                         }}
                         sx={{
                           appearance: "none",
-                          border: "none",
                           borderRadius: 1.5,
                           p: 0.75,
                           cursor: "pointer",
@@ -1208,9 +1280,6 @@ export default function Contacts() {
                             : "transparent",
                           color: day.inMonth ? "text.primary" : "text.secondary",
                           border: isToday ? "1px solid rgba(34, 201, 166, 0.5)" : "1px solid transparent",
-                          "&:hover": {
-                            backgroundColor: "rgba(34, 201, 166, 0.15)",
-                          },
                         }}
                       >
                         <Typography variant="caption">{day.date.getDate()}</Typography>
@@ -1439,10 +1508,11 @@ export default function Contacts() {
       </Dialog>
 
       <Dialog
-        open={categoryDialogOpen}
+        open={settingsOpen}
         onClose={() => {
-          setCategoryDialogOpen(false);
+          setSettingsOpen(false);
           cancelEditCategory();
+          setSettingsAccordion(false);
         }}
         maxWidth="sm"
         fullWidth
@@ -1450,11 +1520,12 @@ export default function Contacts() {
         <DialogContent>
           <Stack spacing={2.5}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Typography variant="h6">Categorias</Typography>
+              <Typography variant="h6">Configuracoes</Typography>
               <IconButton
                 onClick={() => {
-                  setCategoryDialogOpen(false);
+                  setSettingsOpen(false);
                   cancelEditCategory();
+                  setSettingsAccordion(false);
                 }}
                 sx={{ color: "text.secondary" }}
               >
@@ -1462,117 +1533,284 @@ export default function Contacts() {
               </IconButton>
             </Box>
 
-            {editingCategoryId ? (
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "rgba(10, 16, 23, 0.7)",
-                }}
-              >
-                <Stack spacing={1.5}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Editar categoria
-                  </Typography>
-                  <TextField
-                    label="Nome"
-                    fullWidth
-                    value={editingCategoryName}
-                    onChange={(event) => setEditingCategoryName(event.target.value)}
-                  />
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {DEFAULT_COLORS.map((color) => (
-                      <Box
-                        key={color}
-                        onClick={() => setEditingCategoryColor(color)}
-                        sx={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 1,
-                          backgroundColor: color,
-                          border:
-                            editingCategoryColor === color
-                              ? "2px solid rgba(255,255,255,0.8)"
-                              : "1px solid rgba(255,255,255,0.2)",
-                          cursor: "pointer",
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                  <Stack direction="row" spacing={2} justifyContent="flex-end">
-                    <Button variant="outlined" onClick={cancelEditCategory}>
-                      Cancelar
-                    </Button>
-                    <Button variant="contained" onClick={saveCategory}>
-                      Salvar
-                    </Button>
-                  </Stack>
-                </Stack>
-              </Box>
-            ) : null}
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {categories.map((cat) => (
-                <Chip
-                  key={cat.id}
-                  label={cat.name}
-                  onClick={() => startEditCategory(cat)}
-                  onDelete={() => handleRemoveCategory(cat.id)}
-                  sx={{
-                    color: "#e6edf3",
-                    backgroundColor: darkenColor(cat.color, 0.5),
-                  }}
-                />
-              ))}
-            </Stack>
-            {editingCategoryId ? null : (
-              <Box>
-                <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-                  Nova categoria
+            <Accordion
+              expanded={settingsAccordion === "categories"}
+              onChange={(_, isExpanded) =>
+                setSettingsAccordion(isExpanded ? "categories" : false)
+              }
+              elevation={0}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--radius-card)",
+                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                "&:before": { display: "none" },
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Categorias
                 </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
                 <Stack spacing={1.5}>
-                  <TextField
-                    label="Nome"
-                    fullWidth
-                    value={newCategoryName}
-                    onChange={(event) => setNewCategoryName(event.target.value)}
-                  />
+                  {editingCategoryId ? (
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: "var(--radius-card)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          Editar categoria
+                        </Typography>
+                        <TextField
+                          label="Nome"
+                          fullWidth
+                          value={editingCategoryName}
+                          onChange={(event) => setEditingCategoryName(event.target.value)}
+                        />
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {DEFAULT_COLORS.map((color) => (
+                            <Box
+                              key={color}
+                              onClick={() => setEditingCategoryColor(color)}
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 1,
+                                backgroundColor: color,
+                                border:
+                                  editingCategoryColor === color
+                                    ? "2px solid rgba(255,255,255,0.8)"
+                                    : "1px solid rgba(255,255,255,0.2)",
+                                cursor: "pointer",
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                        <Stack direction="row" spacing={2} justifyContent="flex-end">
+                          <Button variant="outlined" onClick={cancelEditCategory}>
+                            Cancelar
+                          </Button>
+                          <Button variant="contained" onClick={saveCategory}>
+                            Salvar
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  ) : null}
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {DEFAULT_COLORS.map((color) => (
-                      <Box
-                        key={color}
-                        onClick={() => setNewCategoryColor(color)}
+                    {categories.map((cat) => (
+                      <Chip
+                        key={cat.id}
+                        label={cat.name}
+                        onClick={() => startEditCategory(cat)}
+                        onDelete={() => handleRemoveCategory(cat.id)}
                         sx={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 1,
-                          backgroundColor: color,
-                          border:
-                            newCategoryColor === color
-                              ? "2px solid rgba(255,255,255,0.8)"
-                              : "1px solid rgba(255,255,255,0.2)",
-                          cursor: "pointer",
+                          color: "#e6edf3",
+                          backgroundColor: darkenColor(cat.color, 0.5),
                         }}
                       />
                     ))}
                   </Stack>
-                  <Button
-                    variant="outlined"
-                    onClick={handleAddCategory}
-                    startIcon={<AddRoundedIcon />}
-                    sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
-                  >
-                    Criar categoria
-                  </Button>
+                  {editingCategoryId ? null : (
+                    <Box>
+                      <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+                        Nova categoria
+                      </Typography>
+                      <Stack spacing={1.5}>
+                        <TextField
+                          label="Nome"
+                          fullWidth
+                          value={newCategoryName}
+                          onChange={(event) => setNewCategoryName(event.target.value)}
+                        />
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {DEFAULT_COLORS.map((color) => (
+                            <Box
+                              key={color}
+                              onClick={() => setNewCategoryColor(color)}
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 1,
+                                backgroundColor: color,
+                                border:
+                                  newCategoryColor === color
+                                    ? "2px solid rgba(255,255,255,0.8)"
+                                    : "1px solid rgba(255,255,255,0.2)",
+                                cursor: "pointer",
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                        <Button
+                          variant="outlined"
+                          onClick={handleAddCategory}
+                          startIcon={<AddRoundedIcon />}
+                          sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                        >
+                          Criar categoria
+                        </Button>
+                      </Stack>
+                    </Box>
+                  )}
                 </Stack>
-              </Box>
-            )}
+              </AccordionDetails>
+            </Accordion>
+
+            <Accordion
+              expanded={settingsAccordion === "cards"}
+              onChange={(_, isExpanded) =>
+                setSettingsAccordion(isExpanded ? "cards" : false)
+              }
+              elevation={0}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--radius-card)",
+                backgroundColor: "rgba(15, 23, 32, 0.75)",
+                "&:before": { display: "none" },
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Detalhes do card
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                    gap: 1.5,
+                  }}
+                >
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setCardFields((prev) => ({ ...prev, phones: !prev.phones }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Telefones</Typography>
+                    <ToggleCheckbox
+                      checked={cardFields.phones}
+                      onChange={(event) =>
+                        setCardFields((prev) => ({
+                          ...prev,
+                          phones: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setCardFields((prev) => ({ ...prev, emails: !prev.emails }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Emails</Typography>
+                    <ToggleCheckbox
+                      checked={cardFields.emails}
+                      onChange={(event) =>
+                        setCardFields((prev) => ({
+                          ...prev,
+                          emails: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setCardFields((prev) => ({ ...prev, addresses: !prev.addresses }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Enderecos</Typography>
+                    <ToggleCheckbox
+                      checked={cardFields.addresses}
+                      onChange={(event) =>
+                        setCardFields((prev) => ({
+                          ...prev,
+                          addresses: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={(theme) => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderRadius: "var(--radius-card)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: "rgba(10, 16, 23, 0.7)",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setCardFields((prev) => ({ ...prev, categories: !prev.categories }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Categorias</Typography>
+                    <ToggleCheckbox
+                      checked={cardFields.categories}
+                      onChange={(event) =>
+                        setCardFields((prev) => ({
+                          ...prev,
+                          categories: event.target.checked,
+                        }))
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Box>
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+
             <Stack direction="row" spacing={2} justifyContent="flex-end">
               <Button
                 variant="outlined"
                 onClick={() => {
-                  setCategoryDialogOpen(false);
+                  setSettingsOpen(false);
                   cancelEditCategory();
+                  setSettingsAccordion(false);
                 }}
               >
                 Fechar
