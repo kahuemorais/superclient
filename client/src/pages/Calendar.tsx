@@ -2276,10 +2276,8 @@ export default function Calendar() {
               <Typography variant="h6">Configurações do calendário</Typography>
               <IconButton
                 onClick={() => setCalendarSettingsOpen(false)}
+                aria-label="Fechar"
                 sx={{
-                  border: 1,
-                  borderColor: "divider",
-                  backgroundColor: "background.paper",
                   color: "text.secondary",
                   "&:hover": { backgroundColor: "action.hover" },
                 }}

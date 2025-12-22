@@ -2744,10 +2744,8 @@ export default function Pipeline() {
                     cancelEditCategory();
                     setConfigAccordion(false);
                   }}
+                  aria-label="Fechar"
                   sx={{
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
                     color: "text.secondary",
                     "&:hover": { backgroundColor: "action.hover" },
                   }}
