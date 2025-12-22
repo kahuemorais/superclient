@@ -1120,23 +1120,34 @@ export default function Calendar() {
   return (
     <PageContainer>
       <Stack spacing={3}>
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          alignItems={{ xs: "flex-start", md: "center" }}
-          justifyContent="space-between"
-        >
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+        <Stack spacing={2}>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ width: "100%" }}
+          >
+            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               Calendário
             </Typography>
-          </Box>
-          <Stack direction="row" spacing={1.5} alignItems="center">
+            <SettingsIconButton onClick={() => setCalendarSettingsOpen(true)} />
+          </Stack>
+
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            alignItems={{ xs: "stretch", sm: "center" }}
+          >
             <Button
               variant="outlined"
               component={RouterLink}
               href="/calendario/concluidas"
-              sx={{ textTransform: "none", fontWeight: 600 }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                width: { xs: "100%", sm: "auto" },
+              }}
             >
               Ver tarefas feitas
             </Button>
@@ -1149,11 +1160,14 @@ export default function Calendar() {
                   new Date(today.getFullYear(), today.getMonth(), 1)
                 );
               }}
-              sx={{ textTransform: "none", fontWeight: 600 }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                width: { xs: "100%", sm: "auto" },
+              }}
             >
               Hoje
             </Button>
-            <SettingsIconButton onClick={() => setCalendarSettingsOpen(true)} />
           </Stack>
         </Stack>
 

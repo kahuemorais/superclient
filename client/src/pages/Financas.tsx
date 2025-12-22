@@ -75,6 +75,7 @@ type Contact = {
 
 const STORAGE_KEY = "finance_data_v1";
 const TABLE_FIELDS_KEY = "finance_table_fields_v1";
+const TABLE_LAYOUT_KEY = "finance_table_layout_v1";
 const DEFAULT_COLORS = [
   "#0f766e",
   "#1d4ed8",
@@ -323,6 +324,9 @@ export default function Financas() {
   const [tableFields, setTableFields] = useState({
     ...defaultFinanceTableFields,
   });
+  const [tablePosition, setTablePosition] = useState<"below" | "above">(
+    "below"
+  );
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [removeExpenseOpen, setRemoveExpenseOpen] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -338,6 +342,7 @@ export default function Financas() {
   const restoreDefaultsSnapshotRef = useRef<{
     categories: Category[];
     tableFields: typeof tableFields;
+    tablePosition: typeof tablePosition;
     settingsAccordion: typeof settingsAccordion;
     newCategoryName: string;
     newCategoryColor: string;
@@ -352,6 +357,7 @@ export default function Financas() {
     restoreDefaultsSnapshotRef.current = {
       categories,
       tableFields,
+      tablePosition,
       settingsAccordion,
       newCategoryName,
       newCategoryColor,
@@ -365,6 +371,7 @@ export default function Financas() {
     setSettingsAccordion(false);
     setCategories(defaultCategories);
     setTableFields({ ...defaultFinanceTableFields });
+    setTablePosition("below");
     setRestoreDefaultsSnackbarOpen(true);
   };
 
@@ -376,6 +383,7 @@ export default function Financas() {
     }
     setCategories(snapshot.categories);
     setTableFields(snapshot.tableFields);
+    setTablePosition(snapshot.tablePosition);
     setSettingsAccordion(snapshot.settingsAccordion);
     setNewCategoryName(snapshot.newCategoryName);
     setNewCategoryColor(snapshot.newCategoryColor);
@@ -569,6 +577,33 @@ export default function Financas() {
   useEffect(() => {
     window.localStorage.setItem(TABLE_FIELDS_KEY, JSON.stringify(tableFields));
   }, [tableFields]);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(TABLE_LAYOUT_KEY);
+    if (!stored) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(stored) as {
+        tablePosition?: "below" | "above";
+      };
+      if (
+        parsed.tablePosition === "below" ||
+        parsed.tablePosition === "above"
+      ) {
+        setTablePosition(parsed.tablePosition);
+      }
+    } catch {
+      window.localStorage.removeItem(TABLE_LAYOUT_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      TABLE_LAYOUT_KEY,
+      JSON.stringify({ tablePosition })
+    );
+  }, [tablePosition]);
 
   useEffect(() => {
     if (!isLoadedRef.current) {
@@ -796,17 +831,291 @@ export default function Financas() {
     setEditingCategoryId(null);
   };
 
+  const chartsSection = (
+    <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+      <AppCard sx={{ p: 3, flex: 1, overflow: "hidden" }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          Gastos por categoria
+        </Typography>
+        <Box sx={{ height: 240, overflow: "hidden" }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+              <Pie
+                data={totalsByCategory}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={isSmDown ? 52 : 60}
+                outerRadius={isSmDown ? 78 : 90}
+                label={isSmDown ? false : ({ name }) => `${name}`}
+                labelLine={false}
+              >
+                {totalsByCategory.map(entry => (
+                  <Cell key={entry.id} fill={entry.color} />
+                ))}
+              </Pie>
+              <RechartsTooltip
+                contentStyle={{
+                  background: "rgba(12, 18, 26, 0.98)",
+                  border: 1,
+                  borderColor: "divider",
+                  color: "#e6edf3",
+                }}
+                labelStyle={{ color: "#e6edf3" }}
+                itemStyle={{ color: "#e6edf3" }}
+                cursor={{ fill: "rgba(12, 18, 26, 0.45)" }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </Box>
+      </AppCard>
+
+      <AppCard sx={{ p: 3, flex: 1, overflow: "hidden" }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          Evolucao mensal
+        </Typography>
+        <Box sx={{ height: 240, overflow: "hidden" }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={totalsByMonth}>
+              <XAxis dataKey="month" tick={{ fill: "#9aa6b2", fontSize: 12 }} />
+              <YAxis tick={{ fill: "#9aa6b2", fontSize: 12 }} />
+              <RechartsTooltip
+                contentStyle={{
+                  background: "rgba(12, 18, 26, 0.98)",
+                  border: 1,
+                  borderColor: "divider",
+                  color: "#e6edf3",
+                }}
+                labelStyle={{ color: "#e6edf3" }}
+                itemStyle={{ color: "#e6edf3" }}
+                cursor={{ fill: "rgba(12, 18, 26, 0.45)" }}
+              />
+              <Bar dataKey="value" fill="#22c9a6" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Box>
+      </AppCard>
+    </Stack>
+  );
+
+  const tableSection = (
+    <Paper variant="outlined" sx={{ p: 3 }}>
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={2}
+        alignItems={{ xs: "stretch", md: "center" }}
+        justifyContent="space-between"
+        sx={{ mb: 2 }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          Detalhe dos gastos
+        </Typography>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <TextField
+            label="Buscar gastos"
+            value={expenseQuery}
+            onChange={event => setExpenseQuery(event.target.value)}
+            sx={{ minWidth: { xs: "100%", sm: 240 } }}
+            InputProps={{
+              endAdornment: expenseQuery ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={() => setExpenseQuery("")}
+                    aria-label="Limpar busca"
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            }}
+          />
+          <Autocomplete
+            multiple
+            options={categories}
+            value={categories.filter(cat => categoryFilters.includes(cat.id))}
+            onChange={(_, value) =>
+              setCategoryFilters(value.map(cat => cat.id))
+            }
+            getOptionLabel={option => option.name}
+            disableCloseOnSelect
+            ListboxProps={{
+              style: { maxHeight: 240 },
+            }}
+            renderOption={(props, option, { selected }) => (
+              <li {...props}>
+                <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
+                {option.name}
+              </li>
+            )}
+            renderInput={params => (
+              <TextField {...params} label="Filtrar categorias" fullWidth />
+            )}
+            renderTags={(value, getTagProps) => {
+              const visible = value.slice(0, 2);
+              const hiddenCount = value.length - visible.length;
+              return (
+                <>
+                  {visible.map((option, index) => (
+                    <Chip
+                      {...getTagProps({ index })}
+                      key={option.id}
+                      label={option.name}
+                      size="small"
+                      sx={{
+                        color: "#e6edf3",
+                        backgroundColor: darkenColor(option.color, 0.5),
+                        maxWidth: 120,
+                        "& .MuiChip-label": {
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          maxWidth: 100,
+                        },
+                      }}
+                    />
+                  ))}
+                  {hiddenCount > 0 ? (
+                    <Chip
+                      label={`+${hiddenCount}`}
+                      size="small"
+                      sx={{
+                        color: "text.secondary",
+                        border: 1,
+                        borderColor: "divider",
+                      }}
+                    />
+                  ) : null}
+                </>
+              );
+            }}
+            sx={{
+              minWidth: { xs: "100%", sm: 280 },
+              "& .MuiAutocomplete-inputRoot": { minHeight: 44 },
+            }}
+          />
+        </Stack>
+      </Stack>
+
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              {tableFields.title ? (
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                  Titulo
+                </TableCell>
+              ) : null}
+              {tableFields.category ? (
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                  Categoria
+                </TableCell>
+              ) : null}
+              {tableFields.amount ? (
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                  Valor
+                </TableCell>
+              ) : null}
+              {tableFields.date ? (
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                  Data
+                </TableCell>
+              ) : null}
+              {tableFields.comment ? (
+                <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                  Comentario
+                </TableCell>
+              ) : null}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredExpenses.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={tableColumnCount}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Nenhum gasto encontrado.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredExpenses.map(expense => {
+                const category = categoryMap.get(expense.categoryId);
+                return (
+                  <TableRow
+                    key={expense.id}
+                    hover
+                    onClick={() => handleViewOpen(expense)}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    {tableFields.title ? (
+                      <TableCell>{expense.title}</TableCell>
+                    ) : null}
+                    {tableFields.category ? (
+                      <TableCell>
+                        {category ? (
+                          <Chip
+                            size="small"
+                            label={category.name}
+                            sx={{
+                              color: "#e6edf3",
+                              backgroundColor: darkenColor(category.color, 0.5),
+                            }}
+                          />
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                    ) : null}
+                    {tableFields.amount ? (
+                      <TableCell>
+                        {expense.amount.toLocaleString("pt-BR")}
+                      </TableCell>
+                    ) : null}
+                    {tableFields.date ? (
+                      <TableCell>
+                        {new Date(expense.createdAt).toLocaleDateString(
+                          "pt-BR"
+                        )}
+                      </TableCell>
+                    ) : null}
+                    {tableFields.comment ? (
+                      <TableCell sx={{ color: "text.secondary" }}>
+                        {expense.comment || "-"}
+                      </TableCell>
+                    ) : null}
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
+  );
+
   return (
     <PageContainer sx={{ overflowX: "hidden" }}>
       <Stack spacing={3}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+        <Stack spacing={2}>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ width: "100%" }}
+          >
+            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               Finanças
             </Typography>
-          </Box>
-          <Stack direction="row" spacing={2}>
             <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+          </Stack>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: { xs: "stretch", sm: "flex-end" },
+            }}
+          >
             <Button
               variant="contained"
               onClick={() => {
@@ -818,292 +1127,20 @@ export default function Financas() {
                 setContactIds([]);
                 setOpen(true);
               }}
-              sx={{ textTransform: "none", fontWeight: 600 }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                width: { xs: "100%", sm: "auto" },
+              }}
             >
               Adicionar gasto
             </Button>
-          </Stack>
-        </Box>
-
-        <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-          <AppCard sx={{ p: 3, flex: 1, overflow: "hidden" }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              Gastos por categoria
-            </Typography>
-            <Box sx={{ height: 240, overflow: "hidden" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                  <Pie
-                    data={totalsByCategory}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={isSmDown ? 52 : 60}
-                    outerRadius={isSmDown ? 78 : 90}
-                    label={isSmDown ? false : ({ name }) => `${name}`}
-                    labelLine={false}
-                    labelStyle={{ fill: "#e6edf3", fontSize: 12 }}
-                  >
-                    {totalsByCategory.map(entry => (
-                      <Cell key={entry.id} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip
-                    contentStyle={{
-                      background: "rgba(12, 18, 26, 0.98)",
-                      border: 1,
-                      borderColor: "divider",
-                      color: "#e6edf3",
-                    }}
-                    labelStyle={{ color: "#e6edf3" }}
-                    itemStyle={{ color: "#e6edf3" }}
-                    cursor={{ fill: "rgba(12, 18, 26, 0.45)" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </Box>
-          </AppCard>
-
-          <AppCard sx={{ p: 3, flex: 1, overflow: "hidden" }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              Evolucao mensal
-            </Typography>
-            <Box sx={{ height: 240, overflow: "hidden" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={totalsByMonth}>
-                  <XAxis
-                    dataKey="month"
-                    tick={{ fill: "#9aa6b2", fontSize: 12 }}
-                  />
-                  <YAxis tick={{ fill: "#9aa6b2", fontSize: 12 }} />
-                  <RechartsTooltip
-                    contentStyle={{
-                      background: "rgba(12, 18, 26, 0.98)",
-                      border: 1,
-                      borderColor: "divider",
-                      color: "#e6edf3",
-                    }}
-                    labelStyle={{ color: "#e6edf3" }}
-                    itemStyle={{ color: "#e6edf3" }}
-                    cursor={{ fill: "rgba(12, 18, 26, 0.45)" }}
-                  />
-                  <Bar dataKey="value" fill="#22c9a6" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </AppCard>
+          </Box>
         </Stack>
 
-        <Paper variant="outlined" sx={{ p: 3 }}>
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={2}
-            alignItems={{ xs: "stretch", md: "center" }}
-            justifyContent="space-between"
-            sx={{ mb: 2 }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Detalhe dos gastos
-            </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
-                label="Buscar gastos"
-                value={expenseQuery}
-                onChange={event => setExpenseQuery(event.target.value)}
-                sx={{ minWidth: { xs: "100%", sm: 240 } }}
-                InputProps={{
-                  endAdornment: expenseQuery ? (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => setExpenseQuery("")}
-                        aria-label="Limpar busca"
-                      >
-                        <CloseRoundedIcon fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  ) : null,
-                }}
-              />
-              <Autocomplete
-                multiple
-                options={categories}
-                value={categories.filter(cat =>
-                  categoryFilters.includes(cat.id)
-                )}
-                onChange={(_, value) =>
-                  setCategoryFilters(value.map(cat => cat.id))
-                }
-                getOptionLabel={option => option.name}
-                disableCloseOnSelect
-                ListboxProps={{
-                  style: { maxHeight: 240 },
-                }}
-                renderOption={(props, option, { selected }) => (
-                  <li {...props}>
-                    <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
-                    {option.name}
-                  </li>
-                )}
-                renderInput={params => (
-                  <TextField {...params} label="Filtrar categorias" fullWidth />
-                )}
-                renderTags={(value, getTagProps) => {
-                  const visible = value.slice(0, 2);
-                  const hiddenCount = value.length - visible.length;
-                  return (
-                    <>
-                      {visible.map((option, index) => (
-                        <Chip
-                          {...getTagProps({ index })}
-                          key={option.id}
-                          label={option.name}
-                          size="small"
-                          sx={{
-                            color: "#e6edf3",
-                            backgroundColor: darkenColor(option.color, 0.5),
-                            maxWidth: 120,
-                            "& .MuiChip-label": {
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              maxWidth: 100,
-                            },
-                          }}
-                        />
-                      ))}
-                      {hiddenCount > 0 ? (
-                        <Chip
-                          label={`+${hiddenCount}`}
-                          size="small"
-                          sx={{
-                            color: "text.secondary",
-                            border: 1,
-                            borderColor: "divider",
-                          }}
-                        />
-                      ) : null}
-                    </>
-                  );
-                }}
-                sx={{
-                  minWidth: { xs: "100%", sm: 280 },
-                  "& .MuiAutocomplete-inputRoot": { minHeight: 44 },
-                }}
-              />
-            </Stack>
-          </Stack>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  {tableFields.title ? (
-                    <TableCell
-                      sx={{ color: "text.secondary", fontWeight: 600 }}
-                    >
-                      Titulo
-                    </TableCell>
-                  ) : null}
-                  {tableFields.category ? (
-                    <TableCell
-                      sx={{ color: "text.secondary", fontWeight: 600 }}
-                    >
-                      Categoria
-                    </TableCell>
-                  ) : null}
-                  {tableFields.amount ? (
-                    <TableCell
-                      sx={{ color: "text.secondary", fontWeight: 600 }}
-                    >
-                      Valor
-                    </TableCell>
-                  ) : null}
-                  {tableFields.date ? (
-                    <TableCell
-                      sx={{ color: "text.secondary", fontWeight: 600 }}
-                    >
-                      Data
-                    </TableCell>
-                  ) : null}
-                  {tableFields.comment ? (
-                    <TableCell
-                      sx={{ color: "text.secondary", fontWeight: 600 }}
-                    >
-                      Comentario
-                    </TableCell>
-                  ) : null}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredExpenses.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={tableColumnCount}
-                      sx={{ color: "text.secondary" }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        Nenhum gasto encontrado.
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredExpenses.map(expense => {
-                    const category = categoryMap.get(expense.categoryId);
-                    return (
-                      <TableRow
-                        key={expense.id}
-                        hover
-                        onClick={() => handleViewOpen(expense)}
-                        sx={{ cursor: "pointer" }}
-                      >
-                        {tableFields.title ? (
-                          <TableCell>{expense.title}</TableCell>
-                        ) : null}
-                        {tableFields.category ? (
-                          <TableCell>
-                            {category ? (
-                              <Chip
-                                size="small"
-                                label={category.name}
-                                sx={{
-                                  color: "#e6edf3",
-                                  backgroundColor: darkenColor(
-                                    category.color,
-                                    0.5
-                                  ),
-                                }}
-                              />
-                            ) : (
-                              "-"
-                            )}
-                          </TableCell>
-                        ) : null}
-                        {tableFields.amount ? (
-                          <TableCell>
-                            {expense.amount.toLocaleString("pt-BR")}
-                          </TableCell>
-                        ) : null}
-                        {tableFields.date ? (
-                          <TableCell>
-                            {new Date(expense.createdAt).toLocaleDateString(
-                              "pt-BR"
-                            )}
-                          </TableCell>
-                        ) : null}
-                        {tableFields.comment ? (
-                          <TableCell sx={{ color: "text.secondary" }}>
-                            {expense.comment || "-"}
-                          </TableCell>
-                        ) : null}
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
+        {tablePosition === "above" ? tableSection : null}
+        {chartsSection}
+        {tablePosition === "below" ? tableSection : null}
       </Stack>
 
       <Dialog
@@ -1445,6 +1482,19 @@ export default function Financas() {
                 </Typography>
               </AccordionSummary>
               <AccordionDetails>
+                <TextField
+                  select
+                  label="Posição da tabela"
+                  value={tablePosition}
+                  onChange={event =>
+                    setTablePosition(event.target.value as "below" | "above")
+                  }
+                  fullWidth
+                  sx={{ mb: 2 }}
+                >
+                  <MenuItem value="below">Abaixo dos gráficos</MenuItem>
+                  <MenuItem value="above">Acima dos gráficos</MenuItem>
+                </TextField>
                 <Box
                   sx={{
                     display: "grid",

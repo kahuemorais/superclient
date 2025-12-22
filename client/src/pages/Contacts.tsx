@@ -34,6 +34,8 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import SettingsIconButton from "../components/SettingsIconButton";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import { interactiveCardSx } from "../styles/interactiveCard";
+import PageContainer from "../components/layout/PageContainer";
+import AppCard from "../components/layout/AppCard";
 
 type Contact = {
   id: string;
@@ -848,39 +850,48 @@ export default function Contacts() {
   };
 
   return (
-    <Box sx={{ maxWidth: 1100, mx: "auto" }}>
+    <PageContainer>
       <Stack spacing={3}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+        <Stack spacing={2}>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ width: "100%" }}
+          >
+            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               Contatos
             </Typography>
-          </Box>
-          <Stack direction="row" spacing={2}>
+            <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+          </Stack>
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: { xs: "stretch", sm: "flex-end" },
+            }}
+          >
             <Button
               variant="contained"
               onClick={openNewContact}
-              sx={{ textTransform: "none", fontWeight: 600 }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                width: { xs: "100%", sm: "auto" },
+              }}
             >
               Adicionar contato
             </Button>
-          </Stack>
-        </Box>
+          </Box>
+        </Stack>
 
         {contacts.length === 0 ? (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              border: 1,
-              borderColor: "divider",
-              backgroundColor: "background.paper",
-            }}
-          >
+          <AppCard sx={{ p: 3 }}>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
               Nenhum contato cadastrado ainda.
             </Typography>
-          </Paper>
+          </AppCard>
         ) : (
           <Stack spacing={2}>
             <Stack
@@ -973,10 +984,6 @@ export default function Contacts() {
                   "& .MuiAutocomplete-inputRoot": { minHeight: 44 },
                 }}
               />
-              <Box sx={{ flex: 1, display: { xs: "none", sm: "block" } }} />
-              <Box sx={{ alignSelf: { xs: "flex-start", sm: "center" } }}>
-                <SettingsIconButton onClick={() => setSettingsOpen(true)} />
-              </Box>
             </Stack>
             {filteredContacts.length === 0 ? (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -1007,16 +1014,12 @@ export default function Contacts() {
                             ? 136
                             : 160;
                     return (
-                      <Paper
+                      <AppCard
                         key={contact.id}
-                        elevation={0}
                         onClick={() => openContact(contact)}
                         sx={theme => ({
                           p: 2.5,
                           minHeight,
-                          border: 1,
-                          borderColor: "divider",
-                          backgroundColor: "background.paper",
                           cursor: "pointer",
                           ...interactiveCardSx(theme),
                         })}
@@ -1567,7 +1570,7 @@ export default function Contacts() {
                   })}
                 </Box>
               </Stack>
-            </Popover>
+                      </AppCard>
             <Autocomplete
               multiple
               options={categories}
@@ -1576,7 +1579,7 @@ export default function Contacts() {
               )}
               onChange={(_, value) =>
                 setContactForm(prev =>
-                  prev
+    </PageContainer>
                     ? { ...prev, categoryIds: value.map(cat => cat.id) }
                     : prev
                 )

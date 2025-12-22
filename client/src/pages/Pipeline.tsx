@@ -1995,17 +1995,22 @@ export default function Pipeline() {
   return (
     <PageContainer>
       <Stack spacing={3} sx={{ flex: 1, minHeight: 0 }}>
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          alignItems={{ xs: "stretch", md: "center" }}
-          justifyContent="space-between"
-        >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+        <Stack spacing={2}>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ width: "100%" }}
+          >
+            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               Pipeline
             </Typography>
-          </Box>
+            <SettingsIconButton
+              onClick={() => setTaskFieldSettingsOpen(true)}
+              disabled={!permissions.pipeline_edit_tasks}
+            />
+          </Stack>
 
           <Stack
             direction={{ xs: "column", sm: "row" }}
@@ -2096,18 +2101,6 @@ export default function Pipeline() {
                 "& .MuiAutocomplete-inputRoot": { minHeight: 44 },
               }}
             />
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: { xs: "flex-end", sm: "initial" },
-                width: { xs: "100%", sm: "auto" },
-              }}
-            >
-              <SettingsIconButton
-                onClick={() => setTaskFieldSettingsOpen(true)}
-                disabled={!permissions.pipeline_edit_tasks}
-              />
-            </Box>
           </Stack>
         </Stack>
 

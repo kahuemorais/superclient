@@ -6,6 +6,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Dialog,
   DialogContent,
   IconButton,
@@ -94,6 +95,24 @@ const DASHBOARD_SECTIONS_KEY = "dashboard_sections_v1";
 
 const DASHBOARD_ITEMS_KEY = "dashboard_items_v1";
 
+const DASHBOARD_QUICK_LINKS_KEY = "dashboard_quick_links_v1";
+
+const dashboardQuickLinks = [
+  { label: "Pipeline", href: "/pipeline", module: "pipeline" },
+  { label: "Finanças", href: "/financas", module: "finance" },
+  { label: "Contatos", href: "/contatos", module: "contacts" },
+  { label: "Calendário", href: "/calendario", module: "calendar" },
+  { label: "Notas", href: "/notas", module: "notes" },
+  { label: "Gestão", href: "/access", module: "access" },
+] as const;
+
+const defaultQuickLinksState = {
+  enabled: true,
+  visible: Object.fromEntries(
+    dashboardQuickLinks.map(link => [link.href, true])
+  ) as Record<(typeof dashboardQuickLinks)[number]["href"], boolean>,
+};
+
 const defaultDashboardSections = {
   pipeline: true,
   finance: true,
@@ -131,19 +150,45 @@ export default function Dashboard() {
   });
   const [sectionsDialogOpen, setSectionsDialogOpen] = useState(false);
   const [homeConfigAccordion, setHomeConfigAccordion] = useState<
-    false | "pipeline" | "finance" | "access"
+    false | "pipeline" | "finance" | "access" | "links"
   >(false);
+  const [quickLinksEnabled, setQuickLinksEnabled] = useState(
+    defaultQuickLinksState.enabled
+  );
+  const [quickLinksVisible, setQuickLinksVisible] = useState<
+    Record<string, boolean>
+  >({ ...defaultQuickLinksState.visible });
+  const [moduleAccess, setModuleAccess] = useState({
+    pipeline: true,
+    finance: true,
+    contacts: true,
+    calendar: true,
+    notes: true,
+    access: true,
+  });
   const restoreDefaultsSnapshotRef = useRef<{
     sections: typeof sections;
     items: typeof items;
+    quickLinksEnabled: typeof quickLinksEnabled;
+    quickLinksVisible: typeof quickLinksVisible;
   } | null>(null);
   const [restoreDefaultsSnackbarOpen, setRestoreDefaultsSnackbarOpen] =
     useState(false);
+  const pipelineLoadedRef = useRef(false);
+  const financeLoadedRef = useRef(false);
+  const accessLoadedRef = useRef(false);
 
   const handleRestoreDashboardDefaults = () => {
-    restoreDefaultsSnapshotRef.current = { sections, items };
+    restoreDefaultsSnapshotRef.current = {
+      sections,
+      items,
+      quickLinksEnabled,
+      quickLinksVisible,
+    };
     setSections({ ...defaultDashboardSections });
     setItems({ ...defaultDashboardItems });
+    setQuickLinksEnabled(defaultQuickLinksState.enabled);
+    setQuickLinksVisible({ ...defaultQuickLinksState.visible });
     setRestoreDefaultsSnackbarOpen(true);
   };
 
@@ -155,11 +200,49 @@ export default function Dashboard() {
     }
     setSections(snapshot.sections);
     setItems(snapshot.items);
+    setQuickLinksEnabled(snapshot.quickLinksEnabled);
+    setQuickLinksVisible(snapshot.quickLinksVisible);
     restoreDefaultsSnapshotRef.current = null;
     setRestoreDefaultsSnackbarOpen(false);
   };
 
   useEffect(() => {
+    const applyFromPrefs = () => {
+      const storedPrefs = window.localStorage.getItem("sc_prefs");
+      if (!storedPrefs) {
+        return;
+      }
+      try {
+        const parsed = JSON.parse(storedPrefs) as {
+          modulePipeline?: boolean;
+          moduleFinance?: boolean;
+          moduleContacts?: boolean;
+          moduleCalendar?: boolean;
+          moduleNotes?: boolean;
+        };
+        setModuleAccess({
+          pipeline: Boolean(parsed.modulePipeline ?? true),
+          finance: Boolean(parsed.moduleFinance ?? true),
+          contacts: Boolean(parsed.moduleContacts ?? true),
+          calendar: Boolean(parsed.moduleCalendar ?? true),
+          notes: Boolean(parsed.moduleNotes ?? true),
+          access: true,
+        });
+      } catch {
+        window.localStorage.removeItem("sc_prefs");
+      }
+    };
+
+    applyFromPrefs();
+    window.addEventListener("prefs-change", applyFromPrefs);
+    return () => window.removeEventListener("prefs-change", applyFromPrefs);
+  }, []);
+
+  useEffect(() => {
+    if (pipelineLoadedRef.current) {
+      return;
+    }
+    pipelineLoadedRef.current = true;
     const load = async () => {
       try {
         const response = await api.get("/api/pipeline/board");
@@ -177,6 +260,10 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    if (financeLoadedRef.current) {
+      return;
+    }
+    financeLoadedRef.current = true;
     const loadFinance = async () => {
       try {
         const response = await api.get("/api/finance/data");
@@ -195,6 +282,10 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    if (accessLoadedRef.current) {
+      return;
+    }
+    accessLoadedRef.current = true;
     const loadAccess = async () => {
       try {
         const [rolesResponse, modulesResponse, invitesResponse] =
@@ -255,6 +346,50 @@ export default function Dashboard() {
   useEffect(() => {
     window.localStorage.setItem(DASHBOARD_ITEMS_KEY, JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(DASHBOARD_QUICK_LINKS_KEY);
+    if (!stored) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(stored) as {
+        enabled?: boolean;
+        visible?: Record<string, boolean>;
+      };
+      if (typeof parsed.enabled === "boolean") {
+        setQuickLinksEnabled(parsed.enabled);
+      }
+      if (parsed.visible && typeof parsed.visible === "object") {
+        setQuickLinksVisible(prev => ({ ...prev, ...parsed.visible }));
+      }
+    } catch {
+      window.localStorage.removeItem(DASHBOARD_QUICK_LINKS_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      DASHBOARD_QUICK_LINKS_KEY,
+      JSON.stringify({ enabled: quickLinksEnabled, visible: quickLinksVisible })
+    );
+  }, [quickLinksEnabled, quickLinksVisible]);
+
+  const visibleQuickLinks = useMemo(() => {
+    if (!quickLinksEnabled) {
+      return [] as Array<(typeof dashboardQuickLinks)[number]>;
+    }
+    return dashboardQuickLinks
+      .filter(link => {
+        if (link.module === "pipeline") return moduleAccess.pipeline;
+        if (link.module === "finance") return moduleAccess.finance;
+        if (link.module === "contacts") return moduleAccess.contacts;
+        if (link.module === "calendar") return moduleAccess.calendar;
+        if (link.module === "notes") return moduleAccess.notes;
+        return true;
+      })
+      .filter(link => Boolean(quickLinksVisible[link.href]));
+  }, [moduleAccess, quickLinksEnabled, quickLinksVisible]);
 
   const pipelineSummary = useMemo(() => {
     const totalCount = columns.reduce(
@@ -337,6 +472,29 @@ export default function Dashboard() {
             onClick={() => setSectionsDialogOpen(true)}
           />
         </Stack>
+
+        {visibleQuickLinks.length ? (
+          <AppCard sx={{ p: { xs: 2, md: 2.5 } }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              flexWrap="wrap"
+              useFlexGap
+              sx={{ alignItems: "center" }}
+            >
+              {visibleQuickLinks.map(link => (
+                <Chip
+                  key={link.href}
+                  component={RouterLink}
+                  href={link.href}
+                  clickable
+                  label={link.label}
+                  variant="outlined"
+                />
+              ))}
+            </Stack>
+          </AppCard>
+        ) : null}
 
         {sections.pipeline ? (
           <AppCard sx={{ p: { xs: 3, md: 4 } }}>
@@ -960,6 +1118,99 @@ export default function Dashboard() {
                   </Accordion>
                 );
               })}
+
+              <Accordion
+                expanded={homeConfigAccordion === "links"}
+                onChange={(_, expanded) =>
+                  setHomeConfigAccordion(expanded ? "links" : false)
+                }
+                disableGutters
+                elevation={0}
+                sx={theme => ({
+                  border: 1,
+                  borderColor: "divider",
+                  borderRadius: "var(--radius-card)",
+                  backgroundColor: "background.paper",
+                  overflow: "hidden",
+                  "&:before": { display: "none" },
+                  ...interactiveCardSx(theme),
+                  ...(homeConfigAccordion === "links" ? {} : { mb: 0 }),
+                })}
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMoreRoundedIcon />}
+                  sx={{
+                    px: 2,
+                    py: 0.5,
+                    "& .MuiAccordionSummary-content": {
+                      my: 1,
+                      alignItems: "center",
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2">Links rápidos</Typography>
+                    <ToggleCheckbox
+                      checked={quickLinksEnabled}
+                      onChange={event =>
+                        setQuickLinksEnabled(event.target.checked)
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ pt: 0, px: 2, pb: 2 }}>
+                  <Stack
+                    spacing={1}
+                    sx={{ opacity: quickLinksEnabled ? 1 : 0.5 }}
+                  >
+                    {dashboardQuickLinks.map(link => (
+                      <Paper
+                        key={link.href}
+                        variant="outlined"
+                        onClick={() =>
+                          quickLinksEnabled
+                            ? setQuickLinksVisible(prev => ({
+                                ...prev,
+                                [link.href]: !prev[link.href],
+                              }))
+                            : undefined
+                        }
+                        sx={theme => ({
+                          p: 1.5,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          cursor: quickLinksEnabled ? "pointer" : "default",
+                          backgroundColor: "background.paper",
+                          ...interactiveCardSx(theme),
+                        })}
+                      >
+                        <Typography variant="body2">{link.label}</Typography>
+                        <ToggleCheckbox
+                          checked={Boolean(quickLinksVisible[link.href])}
+                          disabled={!quickLinksEnabled}
+                          onChange={event =>
+                            setQuickLinksVisible(prev => ({
+                              ...prev,
+                              [link.href]: event.target.checked,
+                            }))
+                          }
+                          onClick={event => event.stopPropagation()}
+                        />
+                      </Paper>
+                    ))}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
             </Stack>
             <Stack
               direction={{ xs: "column", sm: "row" }}
