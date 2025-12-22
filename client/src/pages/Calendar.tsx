@@ -61,6 +61,7 @@ import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import SettingsIconButton from "../components/SettingsIconButton";
+import PageContainer from "../components/layout/PageContainer";
 
 type Category = {
   id: string;
@@ -1117,12 +1118,7 @@ export default function Calendar() {
   );
 
   return (
-    <Box
-      sx={{
-        maxWidth: 1200,
-        mx: "auto",
-      }}
-    >
+    <PageContainer>
       <Stack spacing={3}>
         <Stack
           direction={{ xs: "column", md: "row" }}
@@ -1768,7 +1764,12 @@ export default function Calendar() {
                 />
               ) : null}
             </Stack>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button variant="outlined" onClick={handleOpenEditFromView}>
                 Editar
               </Button>
@@ -2147,7 +2148,12 @@ export default function Calendar() {
                 />
               </Stack>
             ) : null}
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button
                 color="error"
                 variant="outlined"
@@ -2537,7 +2543,12 @@ export default function Calendar() {
               </AccordionDetails>
             </Accordion>
 
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button
                 variant="outlined"
                 onClick={handleRestoreCalendarDefaults}
@@ -2588,7 +2599,7 @@ export default function Calendar() {
           Configurações restauradas.
         </Alert>
       </Snackbar>
-    </Box>
+    </PageContainer>
   );
 }
 

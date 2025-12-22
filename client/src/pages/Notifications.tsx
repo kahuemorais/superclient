@@ -14,9 +14,11 @@ const getUpcomingBirthdays = (contacts: Contact[]) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return contacts
-    .filter((contact) => contact.birthday)
-    .map((contact) => {
-      const [year, month, day] = String(contact.birthday).split("-").map(Number);
+    .filter(contact => contact.birthday)
+    .map(contact => {
+      const [year, month, day] = String(contact.birthday)
+        .split("-")
+        .map(Number);
       if (!month || !day) {
         return null;
       }
@@ -29,8 +31,11 @@ const getUpcomingBirthdays = (contacts: Contact[]) => {
       );
       return { contact, next, diffDays };
     })
-    .filter((item): item is { contact: Contact; next: Date; diffDays: number } => Boolean(item))
-    .filter((item) => item.diffDays >= 0 && item.diffDays <= 7)
+    .filter(
+      (item): item is { contact: Contact; next: Date; diffDays: number } =>
+        Boolean(item)
+    )
+    .filter(item => item.diffDays >= 0 && item.diffDays <= 7)
     .sort((a, b) => a.diffDays - b.diffDays);
 };
 
@@ -73,7 +78,7 @@ export default function Notifications() {
           sx={{
             p: { xs: 3, md: 4 },
             border: 1,
-                      borderColor: "divider",
+            borderColor: "divider",
             backgroundColor: "background.paper",
           }}
         >
@@ -85,7 +90,7 @@ export default function Notifications() {
               </Typography>
             ) : (
               <Stack spacing={1.5}>
-                {upcoming.map((item) => (
+                {upcoming.map(item => (
                   <Paper
                     key={item.contact.id}
                     elevation={0}
@@ -99,14 +104,23 @@ export default function Notifications() {
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                       {item.contact.name || "Contato sem nome"}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                      {item.next.toLocaleDateString("pt-BR")} · em {item.diffDays} dia(s)
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {item.next.toLocaleDateString("pt-BR")} · em{" "}
+                      {item.diffDays} dia(s)
                     </Typography>
                   </Paper>
                 ))}
               </Stack>
             )}
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button variant="outlined" onClick={markAsSeen}>
                 Marcar como visto
               </Button>

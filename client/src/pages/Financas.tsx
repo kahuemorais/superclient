@@ -26,11 +26,15 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import SettingsIconButton from "../components/SettingsIconButton";
+import PageContainer from "../components/layout/PageContainer";
+import AppCard from "../components/layout/AppCard";
 import {
   PieChart,
   Pie,
@@ -289,6 +293,8 @@ const darkenColor = (value: string, factor: number) => {
 };
 
 export default function Financas() {
+  const theme = useTheme();
+  const isSmDown = useMediaQuery(theme.breakpoints.down("sm"));
   const [, setLocation] = useLocation();
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
   const [expenses, setExpenses] = useState<Expense[]>(defaultExpenses);
@@ -791,7 +797,7 @@ export default function Financas() {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto" }}>
+    <PageContainer sx={{ overflowX: "hidden" }}>
       <Stack spacing={3}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ flex: 1 }}>
@@ -820,20 +826,20 @@ export default function Financas() {
         </Box>
 
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-          <Paper variant="outlined" sx={{ p: 3, flex: 1 }}>
+          <AppCard sx={{ p: 3, flex: 1, overflow: "hidden" }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
               Gastos por categoria
             </Typography>
-            <Box sx={{ height: 240 }}>
+            <Box sx={{ height: 240, overflow: "hidden" }}>
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                   <Pie
                     data={totalsByCategory}
                     dataKey="value"
                     nameKey="name"
-                    innerRadius={60}
-                    outerRadius={90}
-                    label={({ name }) => `${name}`}
+                    innerRadius={isSmDown ? 52 : 60}
+                    outerRadius={isSmDown ? 78 : 90}
+                    label={isSmDown ? false : ({ name }) => `${name}`}
                     labelLine={false}
                     labelStyle={{ fill: "#e6edf3", fontSize: 12 }}
                   >
@@ -855,13 +861,13 @@ export default function Financas() {
                 </PieChart>
               </ResponsiveContainer>
             </Box>
-          </Paper>
+          </AppCard>
 
-          <Paper variant="outlined" sx={{ p: 3, flex: 1 }}>
+          <AppCard sx={{ p: 3, flex: 1, overflow: "hidden" }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
               Evolucao mensal
             </Typography>
-            <Box sx={{ height: 240 }}>
+            <Box sx={{ height: 240, overflow: "hidden" }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={totalsByMonth}>
                   <XAxis
@@ -884,7 +890,7 @@ export default function Financas() {
                 </BarChart>
               </ResponsiveContainer>
             </Box>
-          </Paper>
+          </AppCard>
         </Stack>
 
         <Paper variant="outlined" sx={{ p: 3 }}>
@@ -1204,7 +1210,12 @@ export default function Financas() {
               />
             </Stack>
 
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button variant="outlined" onClick={() => setOpen(false)}>
                 Cancelar
               </Button>
@@ -1584,7 +1595,12 @@ export default function Financas() {
               </AccordionDetails>
             </Accordion>
 
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button variant="outlined" onClick={handleRestoreFinanceDefaults}>
                 Restaurar padrão
               </Button>
@@ -1724,7 +1740,12 @@ export default function Financas() {
                 </Typography>
               )}
             </Stack>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               {permissions.finance_edit ? (
                 <Button
                   color="error"
@@ -1782,7 +1803,12 @@ export default function Financas() {
               Você confirma a exclusão deste gasto? Essa ação não pode ser
               desfeita.
             </Typography>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button
                 variant="outlined"
                 onClick={() => setRemoveExpenseOpen(false)}
@@ -1809,6 +1835,6 @@ export default function Financas() {
           </Stack>
         </DialogContent>
       </Dialog>
-    </Box>
+    </PageContainer>
   );
 }

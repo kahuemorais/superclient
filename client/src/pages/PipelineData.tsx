@@ -14,7 +14,14 @@ import {
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Link as RouterLink } from "wouter";
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import api from "../api";
 import { interactiveCardSx } from "../styles/interactiveCard";
 
@@ -148,8 +155,11 @@ export default function PipelineData() {
 
   const pipeline = useMemo<PipelineSummary[]>(
     () =>
-      columns.map((column) => {
-        const total = column.deals.reduce((sum, deal) => sum + parseValue(deal.value), 0);
+      columns.map(column => {
+        const total = column.deals.reduce(
+          (sum, deal) => sum + parseValue(deal.value),
+          0
+        );
         return {
           id: column.id,
           stage: column.title,
@@ -163,7 +173,7 @@ export default function PipelineData() {
 
   const pipelineChart = useMemo(
     () =>
-      pipeline.map((item) => ({
+      pipeline.map(item => ({
         name: item.stage,
         count: item.count,
         valueTotal: item.valueTotal,
@@ -215,8 +225,8 @@ export default function PipelineData() {
 
   const deals = useMemo(
     () =>
-      columns.flatMap((column) =>
-        column.deals.map((deal) => ({
+      columns.flatMap(column =>
+        column.deals.map(deal => ({
           ...deal,
           stage: column.title,
           columnId: column.id,
@@ -234,12 +244,14 @@ export default function PipelineData() {
     if (!editingDeal || !dealForm) {
       return;
     }
-    setColumns((prev) => {
-      const next = prev.map((column) => ({
+    setColumns(prev => {
+      const next = prev.map(column => ({
         ...column,
-        deals: column.deals.filter((deal) => deal.id !== editingDeal.id),
+        deals: column.deals.filter(deal => deal.id !== editingDeal.id),
       }));
-      const targetIndex = next.findIndex((column) => column.id === dealForm.columnId);
+      const targetIndex = next.findIndex(
+        column => column.id === dealForm.columnId
+      );
       if (targetIndex === -1) {
         return prev;
       }
@@ -281,7 +293,7 @@ export default function PipelineData() {
         </Box>
 
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-          {pipeline.map((item) => (
+          {pipeline.map(item => (
             <Paper
               key={item.id}
               elevation={0}
@@ -289,7 +301,7 @@ export default function PipelineData() {
                 p: 2.5,
                 flex: 1,
                 border: 1,
-                      borderColor: "divider",
+                borderColor: "divider",
                 backgroundColor: "background.paper",
               }}
             >
@@ -315,7 +327,7 @@ export default function PipelineData() {
               p: 2.5,
               flex: 1,
               border: 1,
-                      borderColor: "divider",
+              borderColor: "divider",
               backgroundColor: "background.paper",
             }}
           >
@@ -332,7 +344,7 @@ export default function PipelineData() {
               p: 2.5,
               flex: 1,
               border: 1,
-                      borderColor: "divider",
+              borderColor: "divider",
               backgroundColor: "background.paper",
             }}
           >
@@ -349,7 +361,7 @@ export default function PipelineData() {
               p: 2.5,
               flex: 1,
               border: 1,
-                      borderColor: "divider",
+              borderColor: "divider",
               backgroundColor: "background.paper",
             }}
           >
@@ -370,7 +382,7 @@ export default function PipelineData() {
                 p: 2.5,
                 flex: 1,
                 border: 1,
-                      borderColor: "divider",
+                borderColor: "divider",
                 backgroundColor: "background.paper",
               }}
             >
@@ -387,7 +399,7 @@ export default function PipelineData() {
                 p: 2.5,
                 flex: 1,
                 border: 1,
-                      borderColor: "divider",
+                borderColor: "divider",
                 backgroundColor: "background.paper",
               }}
             >
@@ -411,7 +423,7 @@ export default function PipelineData() {
           sx={{
             p: 3,
             border: 1,
-                      borderColor: "divider",
+            borderColor: "divider",
             backgroundColor: "background.paper",
           }}
         >
@@ -422,7 +434,10 @@ export default function PipelineData() {
             <Box sx={{ height: 260 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={pipelineChart}>
-                  <XAxis dataKey="name" tick={{ fill: "#9aa6b2", fontSize: 12 }} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: "#9aa6b2", fontSize: 12 }}
+                  />
                   <YAxis tick={{ fill: "#9aa6b2", fontSize: 12 }} />
                   <Tooltip
                     formatter={(value, name) => {
@@ -436,7 +451,7 @@ export default function PipelineData() {
                       }
                       return [value, name];
                     }}
-                    labelFormatter={(label) => String(label)}
+                    labelFormatter={label => String(label)}
                     contentStyle={{
                       background: "rgba(12, 18, 26, 0.98)",
                       border: 1,
@@ -447,7 +462,11 @@ export default function PipelineData() {
                   />
                   <Bar dataKey="count" fill="#22c9a6" radius={[8, 8, 0, 0]} />
                   {showValueFields ? (
-                    <Bar dataKey="valueTotal" fill="#1d4ed8" radius={[8, 8, 0, 0]} />
+                    <Bar
+                      dataKey="valueTotal"
+                      fill="#1d4ed8"
+                      radius={[8, 8, 0, 0]}
+                    />
                   ) : null}
                 </BarChart>
               </ResponsiveContainer>
@@ -462,7 +481,7 @@ export default function PipelineData() {
               p: 3,
               flex: 1,
               border: 1,
-                      borderColor: "divider",
+              borderColor: "divider",
               backgroundColor: "background.paper",
             }}
           >
@@ -472,11 +491,11 @@ export default function PipelineData() {
               </Typography>
               <Divider />
               <Stack spacing={2}>
-                {deals.map((deal) => (
+                {deals.map(deal => (
                   <Box
                     key={deal.id}
                     onClick={() => openDeal(deal)}
-                    sx={(theme) => ({
+                    sx={theme => ({
                       p: 2,
                       borderRadius: "var(--radius-card)",
                       border: 1,
@@ -489,7 +508,10 @@ export default function PipelineData() {
                     <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                       {deal.name}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
                       {deal.stage} - {deal.owner}
                     </Typography>
                     <Typography variant="body2" sx={{ mt: 1, fontWeight: 600 }}>
@@ -503,12 +525,26 @@ export default function PipelineData() {
         </Stack>
       </Stack>
 
-      <Dialog open={Boolean(editingDeal)} onClose={() => setEditingDeal(null)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={Boolean(editingDeal)}
+        onClose={() => setEditingDeal(null)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogContent>
           <Stack spacing={2.5}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Typography variant="h6">Editar oportunidade</Typography>
-              <IconButton onClick={() => setEditingDeal(null)} sx={{ color: "text.secondary" }}>
+              <IconButton
+                onClick={() => setEditingDeal(null)}
+                sx={{ color: "text.secondary" }}
+              >
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -516,8 +552,10 @@ export default function PipelineData() {
               label="Nome"
               fullWidth
               value={dealForm?.name || ""}
-              onChange={(event) =>
-                setDealForm((prev) => (prev ? { ...prev, name: event.target.value } : prev))
+              onChange={event =>
+                setDealForm(prev =>
+                  prev ? { ...prev, name: event.target.value } : prev
+                )
               }
             />
             <TextField
@@ -525,13 +563,13 @@ export default function PipelineData() {
               label="Etapa"
               fullWidth
               value={dealForm?.columnId || ""}
-              onChange={(event) =>
-                setDealForm((prev) =>
+              onChange={event =>
+                setDealForm(prev =>
                   prev ? { ...prev, columnId: event.target.value } : prev
                 )
               }
             >
-              {columns.map((column) => (
+              {columns.map(column => (
                 <MenuItem key={column.id} value={column.id}>
                   {column.title}
                 </MenuItem>
@@ -541,19 +579,28 @@ export default function PipelineData() {
               label="Valor"
               fullWidth
               value={dealForm?.value || ""}
-              onChange={(event) =>
-                setDealForm((prev) => (prev ? { ...prev, value: event.target.value } : prev))
+              onChange={event =>
+                setDealForm(prev =>
+                  prev ? { ...prev, value: event.target.value } : prev
+                )
               }
             />
             <TextField
               label="Responsavel"
               fullWidth
               value={dealForm?.owner || ""}
-              onChange={(event) =>
-                setDealForm((prev) => (prev ? { ...prev, owner: event.target.value } : prev))
+              onChange={event =>
+                setDealForm(prev =>
+                  prev ? { ...prev, owner: event.target.value } : prev
+                )
               }
             />
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button variant="outlined" onClick={() => setEditingDeal(null)}>
                 Cancelar
               </Button>

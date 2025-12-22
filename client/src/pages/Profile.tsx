@@ -1618,7 +1618,12 @@ export default function Profile() {
                 ) : null}
               </Stack>
             ) : null}
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button variant="outlined" onClick={() => setModuleDialog(null)}>
                 Cancelar
               </Button>
@@ -1657,7 +1662,12 @@ export default function Profile() {
               Deseja alterar o idioma para{" "}
               {getLanguageLabel(pendingLanguage || languageDraft)}?
             </Typography>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button variant="outlined" onClick={handleLanguageCancel}>
                 Cancelar
               </Button>
@@ -1799,7 +1809,12 @@ export default function Profile() {
                 </Typography>
               ) : null}
             </Stack>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button
                 variant="outlined"
                 onClick={() => setSwitchDialogOpen(false)}

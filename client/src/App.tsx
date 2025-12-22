@@ -761,9 +761,20 @@ function App() {
             </Box>
           </Box>
 
-          <Box component="main" sx={{ flex: 1, px: { xs: 2, md: 3 }, py: 6 }}>
+          <Box
+            component="main"
+            sx={{
+              flex: 1,
+              px: { xs: 2, md: 3 },
+              pt: { xs: 3, sm: 4, md: 6 },
+              pb: { xs: 4, md: 6 },
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+            }}
+          >
             {showBreadcrumbs ? (
-              <Box sx={{ maxWidth: 1200, mx: "auto" }}>
+              <Box sx={{ maxWidth: 1200, mx: "auto", width: "100%" }}>
                 <Breadcrumbs
                   aria-label="breadcrumb"
                   separator="›"
@@ -771,6 +782,8 @@ function App() {
                     mb: 1,
                     color: "text.secondary",
                     display: "flex",
+                    width: "100%",
+                    justifyContent: "flex-start",
                     alignItems: "center",
                     flexWrap: "nowrap",
                     whiteSpace: "nowrap",
@@ -791,32 +804,41 @@ function App() {
                 </Breadcrumbs>
               </Box>
             ) : null}
-            <Switch>
-              <Route path="/" component={Login} />
-              <Route path="/login" component={Login} />
-              <Route path="/signup" component={Login} />
-              <Route path="/home" component={Dashboard} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/access" component={AccessManagement} />
-              <Route path="/support" component={Support} />
-              <Route path="/pipeline/dados" component={PipelineData} />
-              <Route path="/pipeline" component={Pipeline} />
-              <Route path="/financas" component={Financas} />
-              <Route path="/contatos" component={Contacts} />
-              <Route
-                path="/calendario/concluidas"
-                component={CalendarCompleted}
-              />
-              <Route path="/calendario" component={Calendar} />
-              <Route path="/notas/arquivo/:noteId" component={Notes} />
-              <Route path="/notas/arquivo" component={Notes} />
-              <Route path="/notas/:noteId" component={Notes} />
-              <Route path="/notas" component={Notes} />
-              <Route path="/notifications" component={Notifications} />
-              <Route>
-                <NotFound />
-              </Route>
-            </Switch>
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Switch>
+                <Route path="/" component={Login} />
+                <Route path="/login" component={Login} />
+                <Route path="/signup" component={Login} />
+                <Route path="/home" component={Dashboard} />
+                <Route path="/profile" component={Profile} />
+                <Route path="/access" component={AccessManagement} />
+                <Route path="/support" component={Support} />
+                <Route path="/pipeline/dados" component={PipelineData} />
+                <Route path="/pipeline" component={Pipeline} />
+                <Route path="/financas" component={Financas} />
+                <Route path="/contatos" component={Contacts} />
+                <Route
+                  path="/calendario/concluidas"
+                  component={CalendarCompleted}
+                />
+                <Route path="/calendario" component={Calendar} />
+                <Route path="/notas/arquivo/:noteId" component={Notes} />
+                <Route path="/notas/arquivo" component={Notes} />
+                <Route path="/notas/:noteId" component={Notes} />
+                <Route path="/notas" component={Notes} />
+                <Route path="/notifications" component={Notifications} />
+                <Route>
+                  <NotFound />
+                </Route>
+              </Switch>
+            </Box>
           </Box>
 
           <Box

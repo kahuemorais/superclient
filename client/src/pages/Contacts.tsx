@@ -1298,7 +1298,12 @@ export default function Contacts() {
                 )}
               </Stack>
             ) : null}
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button
                 color="error"
                 variant="outlined"
@@ -1779,7 +1784,12 @@ export default function Contacts() {
               </Button>
             </Stack>
 
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button color="error" variant="outlined" onClick={removeContact}>
                 Remover
               </Button>
@@ -1824,7 +1834,12 @@ export default function Contacts() {
               Você confirma a exclusão deste contato? Essa ação não pode ser
               desfeita.
             </Typography>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button
                 variant="outlined"
                 onClick={() => setRemoveContactOpen(false)}
@@ -2277,7 +2292,12 @@ export default function Contacts() {
               </AccordionDetails>
             </Accordion>
 
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button
                 variant="outlined"
                 onClick={handleRestoreContactsDefaults}

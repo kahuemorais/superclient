@@ -992,30 +992,53 @@ export default function Notes() {
       }}
     >
       <Stack spacing={3}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Stack direction="row" spacing={1} alignItems="center">
+        <Stack spacing={1.5}>
+          <Box sx={{ minWidth: 0 }}>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               {isArchiveView ? "Arquivo" : "Notas"}
             </Typography>
-          </Stack>
-          <Stack direction="row" spacing={1} alignItems="center">
+          </Box>
+
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            justifyContent="flex-end"
+            sx={{
+              width: "100%",
+              flexWrap: "nowrap",
+              overflow: "hidden",
+            }}
+          >
             <Button
               component={RouterLink}
               href={archiveLink.href}
               variant="outlined"
-              sx={{ textTransform: "none", fontWeight: 600 }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                minWidth: 0,
+                px: { xs: 1.25, sm: 1.75 },
+              }}
             >
               {archiveLink.label}
             </Button>
             <Button
               variant="outlined"
-              startIcon={<AddRoundedIcon />}
+              startIcon={
+                <Box sx={{ display: { xs: "none", sm: "inline-flex" } }}>
+                  <AddRoundedIcon />
+                </Box>
+              }
               onClick={addNote}
-              sx={{ textTransform: "none", fontWeight: 600 }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                minWidth: 0,
+                px: { xs: 1.25, sm: 1.75 },
+              }}
             >
               Nova nota
             </Button>
@@ -2059,7 +2082,12 @@ export default function Notes() {
                 </Stack>
               </AccordionDetails>
             </Accordion>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button
                 variant="outlined"
                 onClick={handleRestoreNoteDefaults}
@@ -2182,7 +2210,12 @@ function ConfirmDialog({
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
             {description}
           </Typography>
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            alignItems={{ xs: "stretch", sm: "center" }}
+            justifyContent="flex-end"
+          >
             <Button variant="outlined" onClick={onCancel}>
               Cancelar
             </Button>

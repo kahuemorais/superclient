@@ -55,7 +55,9 @@ export default function Login() {
   const [loginError, setLoginError] = useState("");
   const [signupError, setSignupError] = useState("");
   const [recoveryOpen, setRecoveryOpen] = useState(false);
-  const [recoveryStep, setRecoveryStep] = useState<"request" | "reset">("request");
+  const [recoveryStep, setRecoveryStep] = useState<"request" | "reset">(
+    "request"
+  );
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [recoveryToken, setRecoveryToken] = useState("");
   const [recoveryPassword, setRecoveryPassword] = useState("");
@@ -85,8 +87,10 @@ export default function Login() {
       token: token || "",
     };
     try {
-      const parsed = stored ? (JSON.parse(stored) as typeof nextAccount[]) : [];
-      const deduped = parsed.filter((account) => account.email !== user.email);
+      const parsed = stored
+        ? (JSON.parse(stored) as (typeof nextAccount)[])
+        : [];
+      const deduped = parsed.filter(account => account.email !== user.email);
       const nextAccounts = [nextAccount, ...deduped].slice(0, 3);
       window.localStorage.setItem("sc_accounts", JSON.stringify(nextAccounts));
     } catch {
@@ -97,8 +101,9 @@ export default function Login() {
   const getErrorDetails = (
     error: unknown
   ): { status?: number; code?: string } => {
-    const response = (error as { response?: { status?: number; data?: { error?: string } } })
-      ?.response;
+    const response = (
+      error as { response?: { status?: number; data?: { error?: string } } }
+    )?.response;
     return { status: response?.status, code: response?.data?.error };
   };
 
@@ -255,9 +260,12 @@ export default function Login() {
           <Typography variant="h3" sx={{ fontWeight: 700 }}>
             Centralize agenda, tarefas, finanças e suporte em um unico lugar.
           </Typography>
-          <Typography variant="body1" sx={{ color: "text.secondary", fontSize: 18 }}>
-            O Superclient conecta calendario, pipeline e gestao com visao clara do que
-            acontece no dia a dia e o que vem a seguir.
+          <Typography
+            variant="body1"
+            sx={{ color: "text.secondary", fontSize: 18 }}
+          >
+            O Superclient conecta calendario, pipeline e gestao com visao clara
+            do que acontece no dia a dia e o que vem a seguir.
           </Typography>
           <Box
             sx={{
@@ -267,7 +275,7 @@ export default function Login() {
               gap: 2,
             }}
           >
-            {highlights.map((item) => (
+            {highlights.map(item => (
               <Paper
                 key={item}
                 elevation={0}
@@ -312,7 +320,7 @@ export default function Login() {
               Comece agora e evolua quando precisar
             </Typography>
             <Stack spacing={2}>
-              {plans.map((plan) => (
+              {plans.map(plan => (
                 <Paper
                   key={plan.title}
                   elevation={0}
@@ -325,10 +333,16 @@ export default function Login() {
                   <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                     {plan.title}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "text.secondary", mt: 0.5 }}
+                  >
                     {plan.description}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
                     {plan.detail}
                   </Typography>
                 </Paper>
@@ -349,7 +363,7 @@ export default function Login() {
         <Stack
           spacing={3}
           component="form"
-          onSubmit={(event) => {
+          onSubmit={event => {
             event.preventDefault();
             if (mode === "login") {
               void handleLogin();
@@ -388,7 +402,7 @@ export default function Login() {
                   fullWidth
                   variant="outlined"
                   value={loginEmail}
-                  onChange={(event) => setLoginEmail(event.target.value)}
+                  onChange={event => setLoginEmail(event.target.value)}
                 />
                 <TextField
                   label="Senha"
@@ -396,7 +410,7 @@ export default function Login() {
                   fullWidth
                   variant="outlined"
                   value={loginPassword}
-                  onChange={(event) => setLoginPassword(event.target.value)}
+                  onChange={event => setLoginPassword(event.target.value)}
                 />
                 <Stack
                   direction="row"
@@ -408,7 +422,7 @@ export default function Login() {
                       <Checkbox
                         size="small"
                         checked={rememberMe}
-                        onChange={(event) => setRememberMe(event.target.checked)}
+                        onChange={event => setRememberMe(event.target.checked)}
                       />
                     }
                     label="Manter conectado"
@@ -418,7 +432,11 @@ export default function Login() {
                     variant="text"
                     size="small"
                     onClick={handleRecoveryOpen}
-                    sx={{ textTransform: "none", fontWeight: 600, color: "text.secondary" }}
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: 600,
+                      color: "text.secondary",
+                    }}
                   >
                     Recuperar senha
                   </Button>
@@ -466,28 +484,28 @@ export default function Login() {
                   label="Nome completo"
                   fullWidth
                   value={signupName}
-                  onChange={(event) => setSignupName(event.target.value)}
+                  onChange={event => setSignupName(event.target.value)}
                 />
                 <TextField
                   label="Email"
                   type="email"
                   fullWidth
                   value={signupEmail}
-                  onChange={(event) => setSignupEmail(event.target.value)}
+                  onChange={event => setSignupEmail(event.target.value)}
                 />
                 <TextField
                   label="Senha"
                   type="password"
                   fullWidth
                   value={signupPassword}
-                  onChange={(event) => setSignupPassword(event.target.value)}
+                  onChange={event => setSignupPassword(event.target.value)}
                 />
                 <TextField
                   label="Confirmar senha"
                   type="password"
                   fullWidth
                   value={signupConfirm}
-                  onChange={(event) => setSignupConfirm(event.target.value)}
+                  onChange={event => setSignupConfirm(event.target.value)}
                 />
               </Stack>
 
@@ -524,10 +542,21 @@ export default function Login() {
         </Stack>
       </Paper>
 
-      <Dialog open={recoveryOpen} onClose={handleRecoveryClose} maxWidth="xs" fullWidth>
+      <Dialog
+        open={recoveryOpen}
+        onClose={handleRecoveryClose}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogContent>
           <Stack spacing={2}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Typography variant="h6">Recuperar senha</Typography>
               <Button
                 variant="text"
@@ -547,7 +576,7 @@ export default function Login() {
                   type="email"
                   fullWidth
                   value={recoveryEmail}
-                  onChange={(event) => setRecoveryEmail(event.target.value)}
+                  onChange={event => setRecoveryEmail(event.target.value)}
                 />
                 {recoveryError ? (
                   <Typography variant="caption" color="error">
@@ -555,11 +584,19 @@ export default function Login() {
                   </Typography>
                 ) : null}
                 {recoveryNotice ? (
-                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
                     {recoveryNotice}
                   </Typography>
                 ) : null}
-                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "stretch", sm: "center" }}
+                  justifyContent="flex-end"
+                >
                   <Button variant="outlined" onClick={handleRecoveryClose}>
                     Cancelar
                   </Button>
@@ -577,21 +614,21 @@ export default function Login() {
                   label="Codigo"
                   fullWidth
                   value={recoveryToken}
-                  onChange={(event) => setRecoveryToken(event.target.value)}
+                  onChange={event => setRecoveryToken(event.target.value)}
                 />
                 <TextField
                   label="Nova senha"
                   type="password"
                   fullWidth
                   value={recoveryPassword}
-                  onChange={(event) => setRecoveryPassword(event.target.value)}
+                  onChange={event => setRecoveryPassword(event.target.value)}
                 />
                 <TextField
                   label="Confirmar senha"
                   type="password"
                   fullWidth
                   value={recoveryConfirm}
-                  onChange={(event) => setRecoveryConfirm(event.target.value)}
+                  onChange={event => setRecoveryConfirm(event.target.value)}
                 />
                 {recoveryError ? (
                   <Typography variant="caption" color="error">
@@ -599,11 +636,19 @@ export default function Login() {
                   </Typography>
                 ) : null}
                 {recoveryNotice ? (
-                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
                     {recoveryNotice}
                   </Typography>
                 ) : null}
-                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "stretch", sm: "center" }}
+                  justifyContent="flex-end"
+                >
                   <Button variant="outlined" onClick={handleRecoveryClose}>
                     Cancelar
                   </Button>
@@ -619,4 +664,3 @@ export default function Login() {
     </Box>
   );
 }
-

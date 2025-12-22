@@ -94,7 +94,9 @@ const invites = [
 ];
 
 export default function AccessManagement() {
-  const [moduleStates, setModuleStates] = useState(() => modules.map(() => true));
+  const [moduleStates, setModuleStates] = useState(() =>
+    modules.map(() => true)
+  );
   const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
   const [activeRole, setActiveRole] = useState<string | null>(null);
   const [moduleConfirm, setModuleConfirm] = useState<{
@@ -104,12 +106,14 @@ export default function AccessManagement() {
   const [expandedAccordion, setExpandedAccordion] = useState<
     "users" | "modules" | "invites" | "recent" | false
   >("users");
-  const [rolePermissions, setRolePermissions] = useState<Record<string, RolePermissionMap>>({});
+  const [rolePermissions, setRolePermissions] = useState<
+    Record<string, RolePermissionMap>
+  >({});
   const [users, setUsers] = useState<AccessUser[]>([]);
   const [userRoles, setUserRoles] = useState<Record<string, string>>({});
   const [userFilter, setUserFilter] = useState("");
   const toggleModule = (index: number) => {
-    setModuleStates((prev) => {
+    setModuleStates(prev => {
       const next = [...prev];
       next[index] = !next[index];
       return next;
@@ -118,7 +122,7 @@ export default function AccessManagement() {
 
   const defaultRolePermissions = useMemo(() => {
     const defaultMap: Record<string, RolePermissionMap> = {};
-    roles.forEach((role) => {
+    roles.forEach(role => {
       const permissions = rolePermissionItems.reduce((acc, item) => {
         acc[item.key] = true;
         return acc;
@@ -129,10 +133,15 @@ export default function AccessManagement() {
   }, []);
 
   useEffect(() => {
-    const storedRoles = window.localStorage.getItem(ROLE_PERMISSION_STORAGE_KEY);
+    const storedRoles = window.localStorage.getItem(
+      ROLE_PERMISSION_STORAGE_KEY
+    );
     if (storedRoles) {
       try {
-        const parsed = JSON.parse(storedRoles) as Record<string, RolePermissionMap>;
+        const parsed = JSON.parse(storedRoles) as Record<
+          string,
+          RolePermissionMap
+        >;
         if (parsed) {
           setRolePermissions({ ...defaultRolePermissions, ...parsed });
         }
@@ -166,7 +175,10 @@ export default function AccessManagement() {
   }, [rolePermissions]);
 
   useEffect(() => {
-    window.localStorage.setItem(USER_ROLE_STORAGE_KEY, JSON.stringify(userRoles));
+    window.localStorage.setItem(
+      USER_ROLE_STORAGE_KEY,
+      JSON.stringify(userRoles)
+    );
     window.dispatchEvent(new Event("roles-change"));
   }, [userRoles]);
 
@@ -190,7 +202,7 @@ export default function AccessManagement() {
     if (!term) {
       return users;
     }
-    return users.filter((user) => {
+    return users.filter(user => {
       const name = user.name?.toLowerCase() || "";
       return name.includes(term) || user.email.toLowerCase().includes(term);
     });
@@ -217,7 +229,7 @@ export default function AccessManagement() {
     if (!activeRole) {
       return;
     }
-    setRolePermissions((prev) => {
+    setRolePermissions(prev => {
       const current = prev[activeRole] || defaultRolePermissions[activeRole];
       if (!current) {
         return prev;
@@ -240,7 +252,7 @@ export default function AccessManagement() {
     <Box sx={{ maxWidth: 1100, mx: "auto" }}>
       <Stack spacing={3}>
         <Stack spacing={1}>
-        <Typography variant="h4">Gestão de acessos e convites</Typography>
+          <Typography variant="h4">Gestão de acessos e convites</Typography>
         </Stack>
 
         <Paper
@@ -248,7 +260,7 @@ export default function AccessManagement() {
           sx={{
             p: { xs: 3, md: 4 },
             border: 1,
-                      borderColor: "divider",
+            borderColor: "divider",
             backgroundColor: "background.paper",
           }}
         >
@@ -260,14 +272,14 @@ export default function AccessManagement() {
               useFlexGap
               sx={{ flexWrap: "wrap" }}
             >
-              {roles.map((role) => (
+              {roles.map(role => (
                 <Paper
                   key={role.name}
                   elevation={0}
                   sx={{
                     p: 2.5,
                     border: 1,
-                      borderColor: "divider",
+                    borderColor: "divider",
                     minWidth: 200,
                   }}
                 >
@@ -310,7 +322,7 @@ export default function AccessManagement() {
                 label="Buscar usuario"
                 fullWidth
                 value={userFilter}
-                onChange={(event) => setUserFilter(event.target.value)}
+                onChange={event => setUserFilter(event.target.value)}
                 InputProps={{
                   endAdornment: userFilter ? (
                     <InputAdornment position="end">
@@ -330,8 +342,11 @@ export default function AccessManagement() {
                   Nenhum usuario encontrado.
                 </Typography>
               ) : (
-                <Stack spacing={1.5} sx={{ maxHeight: 360, overflowY: "auto", pr: 1 }}>
-                  {filteredUsers.map((user) => (
+                <Stack
+                  spacing={1.5}
+                  sx={{ maxHeight: 360, overflowY: "auto", pr: 1 }}
+                >
+                  {filteredUsers.map(user => (
                     <Paper
                       key={user.id}
                       elevation={0}
@@ -349,10 +364,16 @@ export default function AccessManagement() {
                         justifyContent="space-between"
                       >
                         <Box>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          {user.name || "Usuário"}
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            {user.name || "Usuário"}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "text.secondary" }}
+                          >
                             {user.email}
                           </Typography>
                         </Box>
@@ -360,15 +381,15 @@ export default function AccessManagement() {
                           select
                           label="Papel"
                           value={userRoles[user.email] || "Administrador"}
-                          onChange={(event) =>
-                            setUserRoles((prev) => ({
+                          onChange={event =>
+                            setUserRoles(prev => ({
                               ...prev,
                               [user.email]: event.target.value,
                             }))
                           }
                           sx={{ minWidth: 200 }}
                         >
-                          {roles.map((role) => (
+                          {roles.map(role => (
                             <MenuItem key={role.name} value={role.name}>
                               {role.name}
                             </MenuItem>
@@ -405,7 +426,7 @@ export default function AccessManagement() {
                   key={module.name}
                   elevation={0}
                   onClick={() => requestModuleToggle(index)}
-                  sx={(theme) => ({
+                  sx={theme => ({
                     p: 2.5,
                     border: 1,
                     borderColor: "divider",
@@ -429,10 +450,13 @@ export default function AccessManagement() {
                       <ToggleCheckbox
                         checked={moduleStates[index]}
                         onChange={() => requestModuleToggle(index)}
-                        onClick={(event) => event.stopPropagation()}
+                        onClick={event => event.stopPropagation()}
                       />
                     </Box>
-                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
                       {module.description}
                     </Typography>
                   </Stack>
@@ -454,7 +478,7 @@ export default function AccessManagement() {
             sx: {
               backgroundColor: "background.paper",
               border: 1,
-                      borderColor: "divider",
+              borderColor: "divider",
             },
           }}
         >
@@ -471,7 +495,9 @@ export default function AccessManagement() {
                 <Box>
                   <Typography variant="h6">Editar permissões</Typography>
                   <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    {activeRole ? `Papel: ${activeRole}` : "Selecione um papel."}
+                    {activeRole
+                      ? `Papel: ${activeRole}`
+                      : "Selecione um papel."}
                   </Typography>
                 </Box>
                 <IconButton
@@ -496,7 +522,7 @@ export default function AccessManagement() {
                     key={permission.key}
                     elevation={0}
                     onClick={() => toggleRolePermission(index)}
-                    sx={(theme) => ({
+                    sx={theme => ({
                       p: 2.5,
                       border: 1,
                       borderColor: "divider",
@@ -514,28 +540,41 @@ export default function AccessManagement() {
                           gap: 2,
                         }}
                       >
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 600 }}
+                        >
                           {permission.title}
                         </Typography>
                         <ToggleCheckbox
                           checked={
                             activeRole
-                              ? rolePermissions[activeRole]?.[permission.key] ?? true
+                              ? (rolePermissions[activeRole]?.[
+                                  permission.key
+                                ] ?? true)
                               : true
                           }
                           onChange={() => toggleRolePermission(index)}
-                          onClick={(event) => event.stopPropagation()}
+                          onClick={event => event.stopPropagation()}
                           disabled={!activeRole}
                         />
                       </Box>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "text.secondary" }}
+                      >
                         {permission.description}
                       </Typography>
                     </Stack>
                   </Paper>
                 ))}
               </Box>
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="flex-end"
+              >
                 <Button
                   variant="outlined"
                   onClick={() => {
@@ -570,11 +609,13 @@ export default function AccessManagement() {
               >
                 <TextField label="Email" type="email" fullWidth />
                 <TextField label="Papel" select fullWidth defaultValue="Gestor">
-                  {["Administrador", "Gestor", "Analista", "Leitor"].map((role) => (
-                    <MenuItem key={role} value={role}>
-                      {role}
-                    </MenuItem>
-                  ))}
+                  {["Administrador", "Gestor", "Analista", "Leitor"].map(
+                    role => (
+                      <MenuItem key={role} value={role}>
+                        {role}
+                      </MenuItem>
+                    )
+                  )}
                 </TextField>
                 <TextField
                   label="Mensagem personalizada"
@@ -584,19 +625,30 @@ export default function AccessManagement() {
                   sx={{ gridColumn: { xs: "auto", md: "1 / -1" } }}
                 />
               </Box>
-              <Button variant="outlined" size="large" sx={{ alignSelf: "flex-start" }}>
+              <Button
+                variant="outlined"
+                size="large"
+                sx={{ alignSelf: "flex-start" }}
+              >
                 Enviar convite
               </Button>
             </Stack>
           </AccordionDetails>
         </Accordion>
 
-        <Dialog open={Boolean(moduleConfirm)} onClose={() => setModuleConfirm(null)} maxWidth="xs" fullWidth>
+        <Dialog
+          open={Boolean(moduleConfirm)}
+          onClose={() => setModuleConfirm(null)}
+          maxWidth="xs"
+          fullWidth
+        >
           <DialogContent>
             <Stack spacing={2}>
               <Box>
                 <Typography variant="h6">
-                  {moduleConfirm?.nextValue ? "Ativar módulo" : "Desativar módulo"}
+                  {moduleConfirm?.nextValue
+                    ? "Ativar módulo"
+                    : "Desativar módulo"}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
                   {moduleConfirm
@@ -606,8 +658,16 @@ export default function AccessManagement() {
                     : ""}
                 </Typography>
               </Box>
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
-                <Button variant="outlined" onClick={() => setModuleConfirm(null)}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="flex-end"
+              >
+                <Button
+                  variant="outlined"
+                  onClick={() => setModuleConfirm(null)}
+                >
                   Cancelar
                 </Button>
                 <Button variant="contained" onClick={confirmModuleToggle}>
@@ -644,14 +704,19 @@ export default function AccessManagement() {
                       <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                         {invite.email}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "text.secondary" }}
+                      >
                         Papel: {invite.role}
                       </Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Chip
                         label={invite.status}
-                        color={invite.status === "Aceito" ? "secondary" : "default"}
+                        color={
+                          invite.status === "Aceito" ? "secondary" : "default"
+                        }
                         size="small"
                       />
                       <Button variant="text" size="small">

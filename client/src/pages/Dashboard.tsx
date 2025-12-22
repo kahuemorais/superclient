@@ -12,6 +12,7 @@ import {
   Paper,
   Snackbar,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "wouter";
@@ -19,7 +20,10 @@ import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import SettingsIconButton from "../components/SettingsIconButton";
+import PageContainer from "../components/layout/PageContainer";
+import AppCard from "../components/layout/AppCard";
 import { interactiveCardSx } from "../styles/interactiveCard";
 
 type Deal = {
@@ -316,15 +320,16 @@ export default function Dashboard() {
   }, [roles, modules, invites]);
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto" }}>
+    <PageContainer>
       <Stack spacing={3}>
         <Stack
-          direction={{ xs: "column", sm: "row" }}
+          direction="row"
           spacing={2}
-          alignItems={{ xs: "flex-start", sm: "center" }}
+          alignItems="center"
           justifyContent="space-between"
+          sx={{ width: "100%" }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
             Home
           </Typography>
           <SettingsIconButton
@@ -334,15 +339,7 @@ export default function Dashboard() {
         </Stack>
 
         {sections.pipeline ? (
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 3, md: 4 },
-              border: 1,
-              borderColor: "divider",
-              backgroundColor: "background.paper",
-            }}
-          >
+          <AppCard sx={{ p: { xs: 3, md: 4 } }}>
             <Stack spacing={2.5}>
               <Box
                 sx={{
@@ -352,27 +349,23 @@ export default function Dashboard() {
                 }}
               >
                 <Typography variant="h6">Pipeline</Typography>
-                <Button
-                  component={RouterLink}
-                  href="/pipeline"
-                  variant="outlined"
-                  sx={{ textTransform: "none", fontWeight: 600 }}
-                >
-                  Ver pipeline
-                </Button>
+                <Tooltip title="Ir para Pipeline" placement="top">
+                  <IconButton
+                    component={RouterLink}
+                    href="/pipeline"
+                    aria-label="Ir para Pipeline"
+                    sx={{
+                      border: 1,
+                      borderColor: "divider",
+                    }}
+                  >
+                    <ArrowForwardRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                 {items.pipeline.totalCards ? (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.5,
-                      flex: 1,
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                    }}
-                  >
+                  <AppCard sx={{ p: 2.5, flex: 1 }}>
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "text.secondary" }}
@@ -382,20 +375,11 @@ export default function Dashboard() {
                     <Typography variant="h5" sx={{ fontWeight: 700 }}>
                       {pipelineSummary.totalCount}
                     </Typography>
-                  </Paper>
+                  </AppCard>
                 ) : null}
 
                 {items.pipeline.totalValue ? (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.5,
-                      flex: 1,
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                    }}
-                  >
+                  <AppCard sx={{ p: 2.5, flex: 1 }}>
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "text.secondary" }}
@@ -405,20 +389,11 @@ export default function Dashboard() {
                     <Typography variant="h5" sx={{ fontWeight: 700 }}>
                       {formatValue(pipelineSummary.totalValue)}
                     </Typography>
-                  </Paper>
+                  </AppCard>
                 ) : null}
 
                 {items.pipeline.avgTicket ? (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.5,
-                      flex: 1,
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                    }}
-                  >
+                  <AppCard sx={{ p: 2.5, flex: 1 }}>
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "text.secondary" }}
@@ -436,23 +411,15 @@ export default function Dashboard() {
                         ? `Maior etapa: ${pipelineSummary.topStage.title}`
                         : "Sem dados"}
                     </Typography>
-                  </Paper>
+                  </AppCard>
                 ) : null}
               </Stack>
             </Stack>
-          </Paper>
+          </AppCard>
         ) : null}
 
         {sections.finance ? (
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 3, md: 4 },
-              border: 1,
-              borderColor: "divider",
-              backgroundColor: "background.paper",
-            }}
-          >
+          <AppCard sx={{ p: { xs: 3, md: 4 } }}>
             <Stack spacing={2.5}>
               <Box
                 sx={{
@@ -462,27 +429,23 @@ export default function Dashboard() {
                 }}
               >
                 <Typography variant="h6">Finanças</Typography>
-                <Button
-                  component={RouterLink}
-                  href="/financas"
-                  variant="outlined"
-                  sx={{ textTransform: "none", fontWeight: 600 }}
-                >
-                  Ver financas
-                </Button>
+                <Tooltip title="Ir para Finanças" placement="top">
+                  <IconButton
+                    component={RouterLink}
+                    href="/financas"
+                    aria-label="Ir para Finanças"
+                    sx={{
+                      border: 1,
+                      borderColor: "divider",
+                    }}
+                  >
+                    <ArrowForwardRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                 {items.finance.totalSpend ? (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.5,
-                      flex: 1,
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                    }}
-                  >
+                  <AppCard sx={{ p: 2.5, flex: 1 }}>
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "text.secondary" }}
@@ -492,20 +455,11 @@ export default function Dashboard() {
                     <Typography variant="h5" sx={{ fontWeight: 700 }}>
                       R$ {financeSummary.totalSpend.toLocaleString("pt-BR")}
                     </Typography>
-                  </Paper>
+                  </AppCard>
                 ) : null}
 
                 {items.finance.topCategory ? (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.5,
-                      flex: 1,
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                    }}
-                  >
+                  <AppCard sx={{ p: 2.5, flex: 1 }}>
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "text.secondary" }}
@@ -523,23 +477,15 @@ export default function Dashboard() {
                         ? `R$ ${financeSummary.topCategoryValue.toLocaleString("pt-BR")} em gastos`
                         : "Sem gastos registrados"}
                     </Typography>
-                  </Paper>
+                  </AppCard>
                 ) : null}
               </Stack>
             </Stack>
-          </Paper>
+          </AppCard>
         ) : null}
 
         {sections.access ? (
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 3, md: 4 },
-              border: 1,
-              borderColor: "divider",
-              backgroundColor: "background.paper",
-            }}
-          >
+          <AppCard sx={{ p: { xs: 3, md: 4 } }}>
             <Stack spacing={2.5}>
               <Box
                 sx={{
@@ -549,27 +495,23 @@ export default function Dashboard() {
                 }}
               >
                 <Typography variant="h6">Gestão</Typography>
-                <Button
-                  component={RouterLink}
-                  href="/access"
-                  variant="outlined"
-                  sx={{ textTransform: "none", fontWeight: 600 }}
-                >
-                  Ver gestao
-                </Button>
+                <Tooltip title="Ir para Gestão" placement="top">
+                  <IconButton
+                    component={RouterLink}
+                    href="/access"
+                    aria-label="Ir para Gestão"
+                    sx={{
+                      border: 1,
+                      borderColor: "divider",
+                    }}
+                  >
+                    <ArrowForwardRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                 {items.access.roles ? (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.5,
-                      flex: 1,
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                    }}
-                  >
+                  <AppCard sx={{ p: 2.5, flex: 1 }}>
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "text.secondary" }}
@@ -585,20 +527,11 @@ export default function Dashboard() {
                     >
                       {accessSummary.membersCount} membros no total
                     </Typography>
-                  </Paper>
+                  </AppCard>
                 ) : null}
 
                 {items.access.modules ? (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2.5,
-                      flex: 1,
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                    }}
-                  >
+                  <AppCard sx={{ p: 2.5, flex: 1 }}>
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "text.secondary" }}
@@ -614,11 +547,11 @@ export default function Dashboard() {
                     >
                       {accessSummary.pendingInvites} convites pendentes
                     </Typography>
-                  </Paper>
+                  </AppCard>
                 ) : null}
               </Stack>
             </Stack>
-          </Paper>
+          </AppCard>
         ) : null}
       </Stack>
 
@@ -1028,7 +961,12 @@ export default function Dashboard() {
                 );
               })}
             </Stack>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
               <Button
                 variant="outlined"
                 onClick={handleRestoreDashboardDefaults}
@@ -1078,6 +1016,6 @@ export default function Dashboard() {
           Configurações restauradas.
         </Alert>
       </Snackbar>
-    </Box>
+    </PageContainer>
   );
 }

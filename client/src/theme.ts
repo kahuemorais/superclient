@@ -22,6 +22,17 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiDialog: {
+      styleOverrides: {
+        paper: ({ theme }) => ({
+          [theme.breakpoints.down("sm")]: {
+            margin: theme.spacing(2),
+            width: `calc(100% - ${theme.spacing(4)})`,
+            maxWidth: `calc(100% - ${theme.spacing(4)})`,
+          },
+        }),
+      },
+    },
     MuiButton: {
       defaultProps: {
         disableElevation: true,

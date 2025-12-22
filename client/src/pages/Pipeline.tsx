@@ -51,6 +51,7 @@ import SettingsIconButton from "../components/SettingsIconButton";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
+import PageContainer from "../components/layout/PageContainer";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import {
   DndContext,
@@ -1992,24 +1993,32 @@ export default function Pipeline() {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto" }}>
-      <Stack spacing={3}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
+    <PageContainer>
+      <Stack spacing={3} sx={{ flex: 1, minHeight: 0 }}>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
+          alignItems={{ xs: "stretch", md: "center" }}
+          justifyContent="space-between"
+        >
+          <Box sx={{ minWidth: 0 }}>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
               Pipeline
             </Typography>
           </Box>
+
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={2}
             alignItems={{ xs: "stretch", sm: "center" }}
+            sx={{ width: { xs: "100%", md: "auto" }, minWidth: 0 }}
           >
             <TextField
               label="Buscar tasks"
               value={taskQuery}
               onChange={event => setTaskQuery(event.target.value)}
-              sx={{ minWidth: { xs: "100%", sm: 280 } }}
+              fullWidth
+              sx={{ width: { xs: "100%", sm: 280 }, minWidth: 0 }}
               InputProps={{
                 endAdornment: taskQuery ? (
                   <InputAdornment position="end">
@@ -2025,6 +2034,7 @@ export default function Pipeline() {
               }}
             />
             <Autocomplete
+              fullWidth
               multiple
               options={categories}
               value={categories.filter(cat => categoryFilters.includes(cat.id))}
@@ -2041,7 +2051,7 @@ export default function Pipeline() {
                 </li>
               )}
               renderInput={params => (
-                <TextField {...params} label="Filtrar categorias" />
+                <TextField {...params} label="Filtrar categorias" fullWidth />
               )}
               renderTags={(value, getTagProps) => {
                 const visible = value.slice(0, 2);
@@ -2081,22 +2091,25 @@ export default function Pipeline() {
                 );
               }}
               sx={{
-                minWidth: { xs: "100%", sm: 280 },
+                width: { xs: "100%", sm: 280 },
+                minWidth: 0,
                 "& .MuiAutocomplete-inputRoot": { minHeight: 44 },
               }}
             />
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: { xs: "flex-end", sm: "initial" },
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
+              <SettingsIconButton
+                onClick={() => setTaskFieldSettingsOpen(true)}
+                disabled={!permissions.pipeline_edit_tasks}
+              />
+            </Box>
           </Stack>
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{ width: { xs: "100%", sm: "auto" } }}
-          >
-            <SettingsIconButton
-              onClick={() => setTaskFieldSettingsOpen(true)}
-              disabled={!permissions.pipeline_edit_tasks}
-            />
-          </Stack>
-        </Box>
+        </Stack>
 
         <DndContext
           sensors={sensors}
@@ -2127,7 +2140,15 @@ export default function Pipeline() {
             items={columnItems}
             strategy={horizontalListSortingStrategy}
           >
-            <Box sx={{ position: "relative" }}>
+            <Box
+              sx={{
+                position: "relative",
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <IconButton
                 onClick={() => scrollColumnsBy("left")}
                 sx={{
@@ -2152,6 +2173,7 @@ export default function Pipeline() {
               >
                 <ChevronLeftRoundedIcon fontSize="large" />
               </IconButton>
+
               <IconButton
                 onClick={() => scrollColumnsBy("right")}
                 sx={{
@@ -2176,18 +2198,34 @@ export default function Pipeline() {
               >
                 <ChevronRightRoundedIcon fontSize="large" />
               </IconButton>
+
               <Box
                 ref={scrollRef}
                 onPointerDown={handleScrollPointerDown}
                 onPointerMove={handleScrollPointerMove}
                 onPointerUp={handleScrollPointerUp}
                 onPointerLeave={handleScrollPointerUp}
-                sx={{
+                sx={theme => ({
                   overflowX: "auto",
                   pb: 4,
                   cursor: "grab",
                   "&:active": { cursor: "grabbing" },
-                }}
+                  scrollbarWidth: "thin",
+                  scrollbarColor: `${theme.palette.divider} transparent`,
+                  "&::-webkit-scrollbar": {
+                    height: 10,
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "transparent",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: theme.palette.divider,
+                    borderRadius: 999,
+                  },
+                  "&::-webkit-scrollbar-thumb:hover": {
+                    backgroundColor: theme.palette.text.secondary,
+                  },
+                })}
               >
                 <Stack
                   direction="row"
@@ -2524,6 +2562,12 @@ export default function Pipeline() {
           onClose={handleViewClose}
           maxWidth="sm"
           fullWidth
+          PaperProps={{
+            sx: {
+              m: { xs: 2, sm: 3 },
+              width: { xs: "calc(100% - 32px)", sm: "auto" },
+            },
+          }}
         >
           <DialogContent>
             <Stack spacing={2.5}>
@@ -2673,12 +2717,18 @@ export default function Pipeline() {
                   }}
                 />
               </Stack>
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="flex-end"
+              >
                 {permissions.pipeline_edit_tasks ? (
                   <Button
                     color="error"
                     variant="outlined"
                     onClick={() => setRemoveDealOpen(true)}
+                    sx={{ width: { xs: "100%", sm: "auto" } }}
                   >
                     Remover
                   </Button>
@@ -2693,6 +2743,7 @@ export default function Pipeline() {
                       handleDuplicateDeal(viewingDeal);
                     }}
                     startIcon={<FileCopyRoundedIcon fontSize="small" />}
+                    sx={{ width: { xs: "100%", sm: "auto" } }}
                   >
                     Duplicar
                   </Button>
@@ -2707,11 +2758,16 @@ export default function Pipeline() {
                       handleEditOpen(viewingDeal);
                       setViewingDeal(null);
                     }}
+                    sx={{ width: { xs: "100%", sm: "auto" } }}
                   >
                     Editar
                   </Button>
                 ) : null}
-                <Button variant="contained" onClick={handleViewClose}>
+                <Button
+                  variant="contained"
+                  onClick={handleViewClose}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                >
                   Fechar
                 </Button>
               </Stack>
@@ -3660,7 +3716,12 @@ export default function Pipeline() {
                   </Stack>
                 </AccordionDetails>
               </Accordion>
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="flex-end"
+              >
                 <Button
                   variant="outlined"
                   onClick={handleRestorePipelineDefaults}
@@ -3687,6 +3748,12 @@ export default function Pipeline() {
           onClose={() => setRemoveDealOpen(false)}
           maxWidth="xs"
           fullWidth
+          PaperProps={{
+            sx: {
+              m: { xs: 2, sm: 3 },
+              width: { xs: "calc(100% - 32px)", sm: "auto" },
+            },
+          }}
         >
           <DialogContent>
             <Stack spacing={2}>
@@ -3709,10 +3776,16 @@ export default function Pipeline() {
                 Você confirma a exclusão desta tarefa? Essa ação não pode ser
                 desfeita.
               </Typography>
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="flex-end"
+              >
                 <Button
                   variant="outlined"
                   onClick={() => setRemoveDealOpen(false)}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Cancelar
                 </Button>
@@ -3734,6 +3807,7 @@ export default function Pipeline() {
                     setViewingDeal(null);
                     setRemoveDealOpen(false);
                   }}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Remover
                 </Button>
@@ -3749,6 +3823,12 @@ export default function Pipeline() {
           }}
           maxWidth="xs"
           fullWidth
+          PaperProps={{
+            sx: {
+              m: { xs: 2, sm: 3 },
+              width: { xs: "calc(100% - 32px)", sm: "auto" },
+            },
+          }}
         >
           <DialogContent>
             <Stack spacing={2}>
@@ -3775,13 +3855,19 @@ export default function Pipeline() {
                 {removeColumnTarget?.title || ""}? Todas as tarefas nela serao
                 removidas.
               </Typography>
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="flex-end"
+              >
                 <Button
                   variant="outlined"
                   onClick={() => {
                     setRemoveColumnOpen(false);
                     setRemoveColumnTarget(null);
                   }}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Cancelar
                 </Button>
@@ -3789,6 +3875,7 @@ export default function Pipeline() {
                   color="error"
                   variant="contained"
                   onClick={handleConfirmRemoveColumn}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Remover
                 </Button>
@@ -3801,6 +3888,12 @@ export default function Pipeline() {
           onClose={handleEditClose}
           maxWidth="sm"
           fullWidth
+          PaperProps={{
+            sx: {
+              m: { xs: 2, sm: 3 },
+              width: { xs: "calc(100% - 32px)", sm: "auto" },
+            },
+          }}
         >
           <DialogContent>
             <Stack spacing={2.5}>
@@ -3922,18 +4015,28 @@ export default function Pipeline() {
                   onChange={setEditDescription}
                 />
               </Stack>
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="flex-end"
+              >
                 <Button
                   color="error"
                   variant="outlined"
                   onClick={handleDealRemove}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Remover
                 </Button>
                 <Button variant="outlined" onClick={handleEditClose}>
                   Cancelar
                 </Button>
-                <Button variant="contained" onClick={handleEditSave}>
+                <Button
+                  variant="contained"
+                  onClick={handleEditSave}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                >
                   Salvar
                 </Button>
               </Stack>
@@ -4007,6 +4110,12 @@ export default function Pipeline() {
           onClose={handleColumnEditClose}
           maxWidth="sm"
           fullWidth
+          PaperProps={{
+            sx: {
+              m: { xs: 2, sm: 3 },
+              width: { xs: "calc(100% - 32px)", sm: "auto" },
+            },
+          }}
         >
           <DialogContent>
             <Stack spacing={2.5}>
@@ -4030,7 +4139,12 @@ export default function Pipeline() {
                 value={editColumnDescription}
                 onChange={event => setEditColumnDescription(event.target.value)}
               />
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="flex-end"
+              >
                 <Button
                   color="error"
                   variant="outlined"
@@ -4039,6 +4153,7 @@ export default function Pipeline() {
                       handleRequestRemoveColumn(editingColumn);
                     }
                   }}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Remover
                 </Button>
@@ -4053,7 +4168,7 @@ export default function Pipeline() {
           </DialogContent>
         </Dialog>
       </Stack>
-    </Box>
+    </PageContainer>
   );
 }
 
