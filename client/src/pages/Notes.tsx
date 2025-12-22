@@ -993,11 +993,18 @@ export default function Notes() {
     >
       <Stack spacing={3}>
         <Stack spacing={1.5}>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ width: "100%" }}
+          >
+            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               {isArchiveView ? "Arquivo" : "Notas"}
             </Typography>
-          </Box>
+            <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+          </Stack>
 
           <Stack
             direction="row"
@@ -1042,7 +1049,6 @@ export default function Notes() {
             >
               Nova nota
             </Button>
-            <SettingsIconButton onClick={() => setSettingsOpen(true)} />
           </Stack>
         </Stack>
 

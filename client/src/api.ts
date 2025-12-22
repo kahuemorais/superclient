@@ -14,6 +14,8 @@ const api = axios.create({
   withCredentials: true,
 });
 
+let lastAuthFailureAt = 0;
+
 api.interceptors.request.use(config => {
   const token = window.localStorage.getItem("sc_active_session");
   if (token) {
@@ -22,5 +24,21 @@ api.interceptors.request.use(config => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    const status = error?.response?.status;
+    if (status === 401) {
+      const now = Date.now();
+      if (now - lastAuthFailureAt > 1000) {
+        lastAuthFailureAt = now;
+        window.localStorage.removeItem("sc_active_session");
+        window.dispatchEvent(new Event("auth-change"));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;
