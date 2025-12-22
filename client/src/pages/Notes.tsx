@@ -903,7 +903,14 @@ export default function Notes() {
     : { label: "Arquivo", href: "/notas/arquivo" };
 
   return (
-    <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
+    <Box
+      sx={{
+        maxWidth: 1200,
+        mx: "auto",
+        px: { xs: 2, md: 3 },
+        py: { xs: 2, md: 3 },
+      }}
+    >
       <Stack spacing={3}>
         <Stack
           direction="row"

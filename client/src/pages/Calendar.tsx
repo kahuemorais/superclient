@@ -175,9 +175,18 @@ const darkenColor = (value: string, factor: number) => {
   if (color.length !== 6) {
     return value;
   }
-  const r = Math.max(0, Math.min(255, Math.floor(parseInt(color.slice(0, 2), 16) * factor)));
-  const g = Math.max(0, Math.min(255, Math.floor(parseInt(color.slice(2, 4), 16) * factor)));
-  const b = Math.max(0, Math.min(255, Math.floor(parseInt(color.slice(4, 6), 16) * factor)));
+  const r = Math.max(
+    0,
+    Math.min(255, Math.floor(parseInt(color.slice(0, 2), 16) * factor))
+  );
+  const g = Math.max(
+    0,
+    Math.min(255, Math.floor(parseInt(color.slice(2, 4), 16) * factor))
+  );
+  const b = Math.max(
+    0,
+    Math.min(255, Math.floor(parseInt(color.slice(4, 6), 16) * factor))
+  );
   return `#${r.toString(16).padStart(2, "0")}${g
     .toString(16)
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
@@ -391,7 +400,9 @@ export default function Calendar() {
   const [users, setUsers] = useState<PipelineUser[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [calendarSettingsOpen, setCalendarSettingsOpen] = useState(false);
-  const [configAccordion, setConfigAccordion] = useState<"fields" | "categories" | false>(false);
+  const [configAccordion, setConfigAccordion] = useState<
+    "fields" | "categories" | false
+  >(false);
   const [calendarSettings, setCalendarSettings] = useState({
     showAllDay: true,
     showTime: true,
@@ -408,9 +419,13 @@ export default function Calendar() {
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
   const [editingCategoryName, setEditingCategoryName] = useState("");
-  const [editingCategoryColor, setEditingCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [editingCategoryColor, setEditingCategoryColor] = useState(
+    DEFAULT_COLORS[0]
+  );
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
@@ -427,8 +442,13 @@ export default function Calendar() {
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
   const datePickerAnchorRef = useRef<HTMLButtonElement | null>(null);
-  const pipelineSnapshotRef = useRef<{ columns: unknown[]; sprints?: unknown } | null>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 3 } }));
+  const pipelineSnapshotRef = useRef<{
+    columns: unknown[];
+    sprints?: unknown;
+  } | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 3 } })
+  );
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_TASKS);
@@ -487,7 +507,10 @@ export default function Calendar() {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_CALENDARS, JSON.stringify(calendarSources));
+    window.localStorage.setItem(
+      STORAGE_CALENDARS,
+      JSON.stringify(calendarSources)
+    );
   }, [calendarSources]);
 
   useEffect(() => {
@@ -500,7 +523,10 @@ export default function Calendar() {
           : [];
         if (nextCategories.length) {
           setCategories(nextCategories);
-          window.localStorage.setItem(STORAGE_CATEGORIES, JSON.stringify(nextCategories));
+          window.localStorage.setItem(
+            STORAGE_CATEGORIES,
+            JSON.stringify(nextCategories)
+          );
         }
         pipelineSnapshotRef.current = {
           columns: Array.isArray(pipeline?.columns) ? pipeline.columns : [],
@@ -561,22 +587,44 @@ export default function Calendar() {
     try {
       const parsed = JSON.parse(stored) as Partial<typeof calendarSettings>;
       setCalendarSettings({
-        showAllDay: parsed.showAllDay !== undefined ? Boolean(parsed.showAllDay) : true,
-        showTime: parsed.showTime !== undefined ? Boolean(parsed.showTime) : true,
-        showLocation: parsed.showLocation !== undefined ? Boolean(parsed.showLocation) : true,
+        showAllDay:
+          parsed.showAllDay !== undefined ? Boolean(parsed.showAllDay) : true,
+        showTime:
+          parsed.showTime !== undefined ? Boolean(parsed.showTime) : true,
+        showLocation:
+          parsed.showLocation !== undefined
+            ? Boolean(parsed.showLocation)
+            : true,
         showParticipants:
-          parsed.showParticipants !== undefined ? Boolean(parsed.showParticipants) : true,
-        showReminders: parsed.showReminders !== undefined ? Boolean(parsed.showReminders) : true,
-        showRepeat: parsed.showRepeat !== undefined ? Boolean(parsed.showRepeat) : true,
-        showCategories: parsed.showCategories !== undefined ? Boolean(parsed.showCategories) : true,
+          parsed.showParticipants !== undefined
+            ? Boolean(parsed.showParticipants)
+            : true,
+        showReminders:
+          parsed.showReminders !== undefined
+            ? Boolean(parsed.showReminders)
+            : true,
+        showRepeat:
+          parsed.showRepeat !== undefined ? Boolean(parsed.showRepeat) : true,
+        showCategories:
+          parsed.showCategories !== undefined
+            ? Boolean(parsed.showCategories)
+            : true,
         showDescription:
-          parsed.showDescription !== undefined ? Boolean(parsed.showDescription) : true,
+          parsed.showDescription !== undefined
+            ? Boolean(parsed.showDescription)
+            : true,
         showMeetingLink:
-          parsed.showMeetingLink !== undefined ? Boolean(parsed.showMeetingLink) : true,
+          parsed.showMeetingLink !== undefined
+            ? Boolean(parsed.showMeetingLink)
+            : true,
         showVisibility:
-          parsed.showVisibility !== undefined ? Boolean(parsed.showVisibility) : true,
+          parsed.showVisibility !== undefined
+            ? Boolean(parsed.showVisibility)
+            : true,
         showNotifications:
-          parsed.showNotifications !== undefined ? Boolean(parsed.showNotifications) : true,
+          parsed.showNotifications !== undefined
+            ? Boolean(parsed.showNotifications)
+            : true,
       });
     } catch {
       window.localStorage.removeItem("sc_calendar_settings");
@@ -584,7 +632,10 @@ export default function Calendar() {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("sc_calendar_settings", JSON.stringify(calendarSettings));
+    window.localStorage.setItem(
+      "sc_calendar_settings",
+      JSON.stringify(calendarSettings)
+    );
     window.dispatchEvent(new Event("task-fields-change"));
   }, [calendarSettings]);
 
@@ -604,17 +655,20 @@ export default function Calendar() {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_CATEGORY_FILTER, JSON.stringify(categoryFilter));
+    window.localStorage.setItem(
+      STORAGE_CATEGORY_FILTER,
+      JSON.stringify(categoryFilter)
+    );
   }, [categoryFilter]);
 
   const personOptions = useMemo<PersonOption[]>(() => {
-    const userOptions = users.map((user) => ({
+    const userOptions = users.map(user => ({
       id: `user:${user.id}`,
       name: user.name?.trim() ? user.name : user.email,
       email: user.email,
       type: "user" as const,
     }));
-    const contactOptions = contacts.map((contact) => ({
+    const contactOptions = contacts.map(contact => ({
       id: `contact:${contact.id}`,
       name: contact.name || contact.emails?.[0] || "Contato",
       email: contact.emails?.[0],
@@ -632,21 +686,24 @@ export default function Calendar() {
 
   const calendarMap = useMemo(() => {
     const map = new Map<string, CalendarSource>();
-    calendarSources.forEach((source) => map.set(source.id, source));
+    calendarSources.forEach(source => map.set(source.id, source));
     return map;
   }, [calendarSources]);
 
   const selectPersonsByIds = (ids?: string[]) =>
-    personOptions.filter((person) => ids?.includes(person.id));
+    personOptions.filter(person => ids?.includes(person.id));
 
   const activeCalendarIds = useMemo(
-    () => new Set(calendarSources.filter((item) => item.enabled).map((item) => item.id)),
+    () =>
+      new Set(
+        calendarSources.filter(item => item.enabled).map(item => item.id)
+      ),
     [calendarSources]
   );
 
   const tasksByDate = useMemo(() => {
     const map = new Map<string, CalendarTask[]>();
-    tasks.forEach((task) => {
+    tasks.forEach(task => {
       if (task.calendarId && !activeCalendarIds.has(task.calendarId)) {
         return;
       }
@@ -655,7 +712,7 @@ export default function Calendar() {
       }
       if (categoryFilter.length) {
         const taskCategories = task.categoryIds || [];
-        const hasMatch = taskCategories.some((id) => categoryFilter.includes(id));
+        const hasMatch = taskCategories.some(id => categoryFilter.includes(id));
         if (!hasMatch) {
           return;
         }
@@ -666,8 +723,10 @@ export default function Calendar() {
       }
       map.get(key)?.push(task);
     });
-    map.forEach((list) =>
-      list.sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }))
+    map.forEach(list =>
+      list.sort((a, b) =>
+        a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
+      )
     );
     return map;
   }, [tasks, activeCalendarIds, categoryFilter]);
@@ -675,13 +734,13 @@ export default function Calendar() {
   const statusCounts = useMemo(() => {
     let pending = 0;
     let done = 0;
-    tasks.forEach((task) => {
+    tasks.forEach(task => {
       if (task.calendarId && !activeCalendarIds.has(task.calendarId)) {
         return;
       }
       if (categoryFilter.length) {
         const taskCategories = task.categoryIds || [];
-        const hasMatch = taskCategories.some((id) => categoryFilter.includes(id));
+        const hasMatch = taskCategories.some(id => categoryFilter.includes(id));
         if (!hasMatch) {
           return;
         }
@@ -696,11 +755,23 @@ export default function Calendar() {
   }, [tasks, activeCalendarIds, categoryFilter]);
 
   const agendaDays = useMemo(() => {
-    const monthStart = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
-    const monthEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+    const monthStart = new Date(
+      selectedMonth.getFullYear(),
+      selectedMonth.getMonth(),
+      1
+    );
+    const monthEnd = new Date(
+      selectedMonth.getFullYear(),
+      selectedMonth.getMonth() + 1,
+      0
+    );
     const days: Date[] = [];
     for (let day = 1; day <= monthEnd.getDate(); day += 1) {
-      const date = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
+      const date = new Date(
+        monthStart.getFullYear(),
+        monthStart.getMonth(),
+        day
+      );
       const key = formatDateKey(date);
       if (tasksByDate.has(key) || key === formatDateKey(selectedDate)) {
         days.push(date);
@@ -709,7 +780,10 @@ export default function Calendar() {
     return days;
   }, [selectedMonth, selectedDate, tasksByDate]);
 
-  const totalAgendaPages = Math.max(1, Math.ceil(agendaDays.length / agendaPerPage));
+  const totalAgendaPages = Math.max(
+    1,
+    Math.ceil(agendaDays.length / agendaPerPage)
+  );
 
   useEffect(() => {
     if (agendaPage > totalAgendaPages) {
@@ -728,8 +802,10 @@ export default function Calendar() {
     if (!taskId || !nextDate) {
       return;
     }
-    setTasks((prev) =>
-      prev.map((task) => (task.id === taskId ? { ...task, date: nextDate } : task))
+    setTasks(prev =>
+      prev.map(task =>
+        task.id === taskId ? { ...task, date: nextDate } : task
+      )
     );
   };
 
@@ -742,10 +818,11 @@ export default function Calendar() {
     onClick: () => void;
     children: ReactNode;
   }) => {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-      id: taskId,
-      data: { taskId },
-    });
+    const { attributes, listeners, setNodeRef, transform, isDragging } =
+      useDraggable({
+        id: taskId,
+        data: { taskId },
+      });
     return (
       <Paper
         ref={setNodeRef}
@@ -753,7 +830,7 @@ export default function Calendar() {
         onClick={onClick}
         {...attributes}
         {...listeners}
-        sx={(theme) => ({
+        sx={theme => ({
           p: 1.5,
           borderRadius: "var(--radius-card)",
           border: 1,
@@ -802,7 +879,8 @@ export default function Calendar() {
 
   const handleCreateTask = (date?: Date) => {
     const targetDate = date || selectedDate;
-    const defaultCalendar = calendarSources.find((item) => item.enabled) || calendarSources[0];
+    const defaultCalendar =
+      calendarSources.find(item => item.enabled) || calendarSources[0];
     const newTask: CalendarTask = {
       id: `cal-${Date.now()}`,
       name: "Nova tarefa",
@@ -859,10 +937,10 @@ export default function Calendar() {
     if (!draftTask) {
       return;
     }
-    setTasks((prev) => {
-      const exists = prev.some((item) => item.id === draftTask.id);
+    setTasks(prev => {
+      const exists = prev.some(item => item.id === draftTask.id);
       if (exists) {
-        return prev.map((item) => (item.id === draftTask.id ? draftTask : item));
+        return prev.map(item => (item.id === draftTask.id ? draftTask : item));
       }
       return [draftTask, ...prev];
     });
@@ -873,13 +951,16 @@ export default function Calendar() {
     if (!draftTask) {
       return;
     }
-    setTasks((prev) => prev.filter((item) => item.id !== draftTask.id));
+    setTasks(prev => prev.filter(item => item.id !== draftTask.id));
     handleCloseEdit();
   };
 
   const handleSaveCategories = (nextCategories: Category[]) => {
     setCategories(nextCategories);
-    window.localStorage.setItem(STORAGE_CATEGORIES, JSON.stringify(nextCategories));
+    window.localStorage.setItem(
+      STORAGE_CATEGORIES,
+      JSON.stringify(nextCategories)
+    );
     if (pipelineSnapshotRef.current) {
       void api.put("/api/pipeline/board", {
         data: {
@@ -926,7 +1007,7 @@ export default function Calendar() {
     if (!name) {
       return;
     }
-    const nextCategories = categories.map((cat) =>
+    const nextCategories = categories.map(cat =>
       cat.id === editingCategoryId
         ? { ...cat, name, color: editingCategoryColor }
         : cat
@@ -936,12 +1017,12 @@ export default function Calendar() {
   };
 
   const handleRemoveCategory = (id: string) => {
-    const nextCategories = categories.filter((cat) => cat.id !== id);
+    const nextCategories = categories.filter(cat => cat.id !== id);
     handleSaveCategories(nextCategories);
-    setTasks((prev) =>
-      prev.map((task) => ({
+    setTasks(prev =>
+      prev.map(task => ({
         ...task,
-        categoryIds: (task.categoryIds || []).filter((catId) => catId !== id),
+        categoryIds: (task.categoryIds || []).filter(catId => catId !== id),
       }))
     );
   };
@@ -951,7 +1032,7 @@ export default function Calendar() {
       elevation={0}
       variant="outlined"
       onClick={() => handleCreateTask(date)}
-      sx={(theme) => ({
+      sx={theme => ({
         p: 1.5,
         borderRadius: "var(--radius-card)",
         border: 1,
@@ -972,7 +1053,14 @@ export default function Calendar() {
   );
 
   return (
-    <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
+    <Box
+      sx={{
+        maxWidth: 1200,
+        mx: "auto",
+        px: { xs: 2, md: 3 },
+        py: { xs: 2, md: 3 },
+      }}
+    >
       <Stack spacing={3}>
         <Stack
           direction={{ xs: "column", md: "row" }}
@@ -999,7 +1087,9 @@ export default function Calendar() {
               onClick={() => {
                 const today = new Date();
                 setSelectedDate(today);
-                setSelectedMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+                setSelectedMonth(
+                  new Date(today.getFullYear(), today.getMonth(), 1)
+                );
               }}
               sx={{ textTransform: "none", fontWeight: 600 }}
             >
@@ -1020,9 +1110,13 @@ export default function Calendar() {
             <Autocomplete
               multiple
               options={categories}
-              value={categories.filter((item) => categoryFilter.includes(item.id))}
-              onChange={(_, value) => setCategoryFilter(value.map((item) => item.id))}
-              getOptionLabel={(option) => option.name}
+              value={categories.filter(item =>
+                categoryFilter.includes(item.id)
+              )}
+              onChange={(_, value) =>
+                setCategoryFilter(value.map(item => item.id))
+              }
+              getOptionLabel={option => option.name}
               noOptionsText="Sem categorias"
               renderOption={(props, option, { selected }) => (
                 <li {...props}>
@@ -1030,7 +1124,7 @@ export default function Calendar() {
                   {option.name}
                 </li>
               )}
-              renderInput={(params) => (
+              renderInput={params => (
                 <TextField {...params} label="Filtrar categorias" fullWidth />
               )}
               renderTags={(value, getTagProps) =>
@@ -1046,25 +1140,38 @@ export default function Calendar() {
             />
             <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
               <Stack spacing={2}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
                   <IconButton
                     size="small"
                     onClick={() =>
                       setSelectedMonth(
-                        new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1)
+                        new Date(
+                          selectedMonth.getFullYear(),
+                          selectedMonth.getMonth() - 1,
+                          1
+                        )
                       )
                     }
                   >
                     <ChevronLeftRoundedIcon fontSize="small" />
                   </IconButton>
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    {monthLabels[selectedMonth.getMonth()]} {selectedMonth.getFullYear()}
+                    {monthLabels[selectedMonth.getMonth()]}{" "}
+                    {selectedMonth.getFullYear()}
                   </Typography>
                   <IconButton
                     size="small"
                     onClick={() =>
                       setSelectedMonth(
-                        new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1)
+                        new Date(
+                          selectedMonth.getFullYear(),
+                          selectedMonth.getMonth() + 1,
+                          1
+                        )
                       )
                     }
                   >
@@ -1078,7 +1185,7 @@ export default function Calendar() {
                     gap: 0.5,
                   }}
                 >
-                  {weekLabels.map((label) => (
+                  {weekLabels.map(label => (
                     <Typography
                       key={label}
                       variant="caption"
@@ -1088,10 +1195,15 @@ export default function Calendar() {
                     </Typography>
                   ))}
                   {getCalendarDays(selectedMonth).map((day, index) => {
-                    const isToday = day ? formatDateKey(day) === formatDateKey(new Date()) : false;
-                    const isSelected =
-                      day ? formatDateKey(day) === formatDateKey(selectedDate) : false;
-                    const hasTasks = day ? tasksByDate.has(formatDateKey(day)) : false;
+                    const isToday = day
+                      ? formatDateKey(day) === formatDateKey(new Date())
+                      : false;
+                    const isSelected = day
+                      ? formatDateKey(day) === formatDateKey(selectedDate)
+                      : false;
+                    const hasTasks = day
+                      ? tasksByDate.has(formatDateKey(day))
+                      : false;
                     return (
                       <Box
                         key={`${day ? day.toISOString() : "empty"}-${index}`}
@@ -1100,16 +1212,20 @@ export default function Calendar() {
                             return;
                           }
                           setSelectedDate(day);
-                          setSelectedMonth(new Date(day.getFullYear(), day.getMonth(), 1));
+                          setSelectedMonth(
+                            new Date(day.getFullYear(), day.getMonth(), 1)
+                          );
                         }}
-                        sx={(theme) => ({
+                        sx={theme => ({
                           height: 36,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           borderRadius: "12px",
                           border: isSelected ? 1 : "1px solid transparent",
-                          borderColor: isSelected ? "primary.main" : "transparent",
+                          borderColor: isSelected
+                            ? "primary.main"
+                            : "transparent",
                           cursor: day ? "pointer" : "default",
                           color: isSelected
                             ? "primary.main"
@@ -1147,19 +1263,19 @@ export default function Calendar() {
                   Calendários
                 </Typography>
                 <Stack spacing={1.5}>
-                  {calendarSources.map((source) => (
+                  {calendarSources.map(source => (
                     <Box
                       key={source.id}
                       onClick={() =>
-                        setCalendarSources((prev) =>
-                          prev.map((item) =>
+                        setCalendarSources(prev =>
+                          prev.map(item =>
                             item.id === source.id
                               ? { ...item, enabled: !item.enabled }
                               : item
                           )
                         )
                       }
-                      sx={(theme) => ({
+                      sx={theme => ({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -1183,10 +1299,10 @@ export default function Calendar() {
                       </Stack>
                       <Checkbox
                         checked={source.enabled}
-                        onClick={(event) => event.stopPropagation()}
-                        onChange={(event) =>
-                          setCalendarSources((prev) =>
-                            prev.map((item) =>
+                        onClick={event => event.stopPropagation()}
+                        onChange={event =>
+                          setCalendarSources(prev =>
+                            prev.map(item =>
                               item.id === source.id
                                 ? { ...item, enabled: event.target.checked }
                                 : item
@@ -1214,13 +1330,13 @@ export default function Calendar() {
                   select
                   label="Itens por pagina"
                   value={agendaPerPage}
-                  onChange={(event) => {
+                  onChange={event => {
                     setAgendaPerPage(Number(event.target.value));
                     setAgendaPage(1);
                   }}
                   sx={{ minWidth: 180 }}
                 >
-                  {[3, 5, 7, 10].map((value) => (
+                  {[3, 5, 7, 10].map(value => (
                     <MenuItem key={value} value={value}>
                       {value} dias
                     </MenuItem>
@@ -1246,22 +1362,32 @@ export default function Calendar() {
               ) : (
                 <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
                   <Stack spacing={2}>
-                    {pagedAgendaDays.map((day) => {
+                    {pagedAgendaDays.map(day => {
                       const dateKey = formatDateKey(day);
                       const dayTasks = tasksByDate.get(dateKey) || [];
                       return (
                         <DroppableDay key={dateKey} dateKey={dateKey}>
                           <Stack spacing={1.5}>
-                            <Stack direction="row" alignItems="center" justifyContent="space-between">
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              justifyContent="space-between"
+                            >
                               <Stack>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{ fontWeight: 700 }}
+                                >
                                   {day.toLocaleDateString("pt-BR", {
                                     weekday: "short",
                                     day: "2-digit",
                                     month: "short",
                                   })}
                                 </Typography>
-                                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: "text.secondary" }}
+                                >
                                   {dayTasks.length} tarefas
                                 </Typography>
                               </Stack>
@@ -1278,7 +1404,7 @@ export default function Calendar() {
                               renderCreateReminderCard(day)
                             ) : (
                               <Stack spacing={1.5}>
-                                {dayTasks.map((task) => (
+                                {dayTasks.map(task => (
                                   <DraggableTaskCard
                                     key={task.id}
                                     taskId={task.id}
@@ -1287,11 +1413,18 @@ export default function Calendar() {
                                     <Stack
                                       direction={{ xs: "column", sm: "row" }}
                                       spacing={1.5}
-                                      alignItems={{ xs: "flex-start", sm: "center" }}
+                                      alignItems={{
+                                        xs: "flex-start",
+                                        sm: "center",
+                                      }}
                                       justifyContent="space-between"
                                     >
                                       <Stack spacing={0.5}>
-                                        <Stack direction="row" spacing={1} alignItems="center">
+                                        <Stack
+                                          direction="row"
+                                          spacing={1}
+                                          alignItems="center"
+                                        >
                                           <Box
                                             sx={{
                                               width: 8,
@@ -1299,11 +1432,16 @@ export default function Calendar() {
                                               borderRadius: "50%",
                                               backgroundColor:
                                                 calendarSources.find(
-                                                  (source) => source.id === task.calendarId
+                                                  source =>
+                                                    source.id ===
+                                                    task.calendarId
                                                 )?.color || "primary.main",
                                             }}
                                           />
-                                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                          <Typography
+                                            variant="subtitle2"
+                                            sx={{ fontWeight: 600 }}
+                                          >
                                             {task.name}
                                           </Typography>
                                         </Stack>
@@ -1316,10 +1454,12 @@ export default function Calendar() {
                                               ? "Dia todo"
                                               : [task.startTime, task.endTime]
                                                   .filter(Boolean)
-                                                  .join(" - ") || "Horário livre"}
+                                                  .join(" - ") ||
+                                                "Horário livre"}
                                           </Typography>
                                         ) : null}
-                                        {calendarSettings.showLocation && task.location ? (
+                                        {calendarSettings.showLocation &&
+                                        task.location ? (
                                           <Typography
                                             variant="caption"
                                             sx={{ color: "text.secondary" }}
@@ -1328,12 +1468,20 @@ export default function Calendar() {
                                           </Typography>
                                         ) : null}
                                       </Stack>
-                                      <Stack direction="row" spacing={1} alignItems="center">
+                                      <Stack
+                                        direction="row"
+                                        spacing={1}
+                                        alignItems="center"
+                                      >
                                         {calendarSettings.showCategories
                                           ? (task.categoryIds || [])
-                                              .map((id) => categories.find((cat) => cat.id === id))
+                                              .map(id =>
+                                                categories.find(
+                                                  cat => cat.id === id
+                                                )
+                                              )
                                               .filter(Boolean)
-                                              .map((cat) => (
+                                              .map(cat => (
                                                 <Chip
                                                   key={cat?.id}
                                                   label={cat?.name}
@@ -1341,7 +1489,10 @@ export default function Calendar() {
                                                   sx={{
                                                     color: "#e6edf3",
                                                     backgroundColor: cat
-                                                      ? darkenColor(cat.color, 0.5)
+                                                      ? darkenColor(
+                                                          cat.color,
+                                                          0.5
+                                                        )
                                                       : "transparent",
                                                   }}
                                                 />
@@ -1349,12 +1500,18 @@ export default function Calendar() {
                                           : null}
                                         <Checkbox
                                           checked={Boolean(task.done)}
-                                          onClick={(event) => event.stopPropagation()}
-                                          onChange={(event) =>
-                                            setTasks((prev) =>
-                                              prev.map((item) =>
+                                          onClick={event =>
+                                            event.stopPropagation()
+                                          }
+                                          onChange={event =>
+                                            setTasks(prev =>
+                                              prev.map(item =>
                                                 item.id === task.id
-                                                  ? { ...item, done: event.target.checked }
+                                                  ? {
+                                                      ...item,
+                                                      done: event.target
+                                                        .checked,
+                                                    }
                                                   : item
                                               )
                                             )
@@ -1380,12 +1537,26 @@ export default function Calendar() {
         </Box>
       </Stack>
 
-      <Dialog open={Boolean(viewingTask)} onClose={handleCloseView} maxWidth="sm" fullWidth>
+      <Dialog
+        open={Boolean(viewingTask)}
+        onClose={handleCloseView}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogContent>
           <Stack spacing={2.5}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Typography variant="h6">Detalhes do lembrete</Typography>
-              <IconButton onClick={handleCloseView} sx={{ color: "text.secondary" }}>
+              <IconButton
+                onClick={handleCloseView}
+                sx={{ color: "text.secondary" }}
+              >
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -1394,7 +1565,8 @@ export default function Calendar() {
                 {viewingTask?.name || ""}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {calendarMap.get(viewingTask?.calendarId || "")?.name || "Calendário"}
+                {calendarMap.get(viewingTask?.calendarId || "")?.name ||
+                  "Calendário"}
               </Typography>
             </Stack>
             <Divider />
@@ -1415,17 +1587,24 @@ export default function Calendar() {
                   <Stack direction="row" spacing={1.5} alignItems="center">
                     <Checkbox
                       checked={Boolean(viewingTask.done)}
-                      onChange={(event) => {
+                      onChange={event => {
                         const nextDone = event.target.checked;
-                        setTasks((prev) =>
-                          prev.map((item) =>
-                            item.id === viewingTask.id ? { ...item, done: nextDone } : item
+                        setTasks(prev =>
+                          prev.map(item =>
+                            item.id === viewingTask.id
+                              ? { ...item, done: nextDone }
+                              : item
                           )
                         );
-                        setViewingTask((prev) => (prev ? { ...prev, done: nextDone } : prev));
+                        setViewingTask(prev =>
+                          prev ? { ...prev, done: nextDone } : prev
+                        );
                       }}
                     />
-                    <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary", fontWeight: 600 }}
+                    >
                       Marcar como feita
                     </Typography>
                   </Stack>
@@ -1488,25 +1667,29 @@ export default function Calendar() {
                   Notificação: {viewingTask?.notification || "app"}
                 </Typography>
               ) : null}
-              {calendarSettings.showCategories && viewingTask?.categoryIds?.length ? (
+              {calendarSettings.showCategories &&
+              viewingTask?.categoryIds?.length ? (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {viewingTask.categoryIds
-                    .map((id) => categories.find((cat) => cat.id === id))
+                    .map(id => categories.find(cat => cat.id === id))
                     .filter(Boolean)
-                    .map((cat) => (
+                    .map(cat => (
                       <Chip
                         key={cat?.id}
                         label={cat?.name}
                         size="small"
                         sx={{
                           color: "#e6edf3",
-                          backgroundColor: cat ? darkenColor(cat.color, 0.5) : "transparent",
+                          backgroundColor: cat
+                            ? darkenColor(cat.color, 0.5)
+                            : "transparent",
                         }}
                       />
                     ))}
                 </Stack>
               ) : null}
-              {calendarSettings.showDescription && viewingTask?.descriptionHtml ? (
+              {calendarSettings.showDescription &&
+              viewingTask?.descriptionHtml ? (
                 <Box
                   sx={{
                     borderRadius: "var(--radius-card)",
@@ -1516,7 +1699,9 @@ export default function Calendar() {
                     backgroundColor: "background.paper",
                     "& p": { margin: 0 },
                   }}
-                  dangerouslySetInnerHTML={{ __html: viewingTask.descriptionHtml }}
+                  dangerouslySetInnerHTML={{
+                    __html: viewingTask.descriptionHtml,
+                  }}
                 />
               ) : null}
             </Stack>
@@ -1535,9 +1720,18 @@ export default function Calendar() {
       <Dialog open={editOpen} onClose={handleCloseEdit} maxWidth="sm" fullWidth>
         <DialogContent>
           <Stack spacing={2.5}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Typography variant="h6">Editar tarefa</Typography>
-              <IconButton onClick={handleCloseEdit} sx={{ color: "text.secondary" }}>
+              <IconButton
+                onClick={handleCloseEdit}
+                sx={{ color: "text.secondary" }}
+              >
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -1545,8 +1739,10 @@ export default function Calendar() {
               label="Titulo"
               fullWidth
               value={draftTask?.name || ""}
-              onChange={(event) =>
-                setDraftTask((prev) => (prev ? { ...prev, name: event.target.value } : prev))
+              onChange={event =>
+                setDraftTask(prev =>
+                  prev ? { ...prev, name: event.target.value } : prev
+                )
               }
             />
             <TextField
@@ -1554,19 +1750,19 @@ export default function Calendar() {
               label="Calendário"
               fullWidth
               value={draftTask?.calendarId || ""}
-              onChange={(event) => {
+              onChange={event => {
                 const nextId = event.target.value;
-                setDraftTask((prev) =>
+                setDraftTask(prev =>
                   prev ? { ...prev, calendarId: nextId } : prev
                 );
-                setCalendarSources((prev) =>
-                  prev.map((item) =>
+                setCalendarSources(prev =>
+                  prev.map(item =>
                     item.id === nextId ? { ...item, enabled: true } : item
                   )
                 );
               }}
             >
-              {calendarSources.map((source) => (
+              {calendarSources.map(source => (
                 <MenuItem key={source.id} value={source.id}>
                   {source.name}
                 </MenuItem>
@@ -1579,13 +1775,18 @@ export default function Calendar() {
                   options={personOptions}
                   value={selectPersonsByIds(draftTask?.responsibleIds)}
                   onChange={(_, value) =>
-                    setDraftTask((prev) =>
-                      prev ? { ...prev, responsibleIds: value.map((person) => person.id) } : prev
+                    setDraftTask(prev =>
+                      prev
+                        ? {
+                            ...prev,
+                            responsibleIds: value.map(person => person.id),
+                          }
+                        : prev
                     )
                   }
-                  getOptionLabel={(option) => formatPersonLabel(option)}
+                  getOptionLabel={option => formatPersonLabel(option)}
                   noOptionsText="Nenhum usuario"
-                  renderInput={(params) => (
+                  renderInput={params => (
                     <TextField {...params} label="Responsaveis" fullWidth />
                   )}
                   renderTags={(value, getTagProps) =>
@@ -1604,14 +1805,20 @@ export default function Calendar() {
                   options={personOptions}
                   value={selectPersonsByIds(draftTask?.workerIds)}
                   onChange={(_, value) =>
-                    setDraftTask((prev) =>
-                      prev ? { ...prev, workerIds: value.map((person) => person.id) } : prev
+                    setDraftTask(prev =>
+                      prev
+                        ? { ...prev, workerIds: value.map(person => person.id) }
+                        : prev
                     )
                   }
-                  getOptionLabel={(option) => formatPersonLabel(option)}
+                  getOptionLabel={option => formatPersonLabel(option)}
                   noOptionsText="Nenhum usuario"
-                  renderInput={(params) => (
-                    <TextField {...params} label="Pessoas na tarefa" fullWidth />
+                  renderInput={params => (
+                    <TextField
+                      {...params}
+                      label="Pessoas na tarefa"
+                      fullWidth
+                    />
                   )}
                   renderTags={(value, getTagProps) =>
                     value.map((option, index) => (
@@ -1631,8 +1838,10 @@ export default function Calendar() {
                 label="Link da reuniao"
                 fullWidth
                 value={draftTask?.link || ""}
-                onChange={(event) =>
-                  setDraftTask((prev) => (prev ? { ...prev, link: event.target.value } : prev))
+                onChange={event =>
+                  setDraftTask(prev =>
+                    prev ? { ...prev, link: event.target.value } : prev
+                  )
                 }
               />
             ) : null}
@@ -1641,8 +1850,8 @@ export default function Calendar() {
                 label="Local"
                 fullWidth
                 value={draftTask?.location || ""}
-                onChange={(event) =>
-                  setDraftTask((prev) =>
+                onChange={event =>
+                  setDraftTask(prev =>
                     prev ? { ...prev, location: event.target.value } : prev
                   )
                 }
@@ -1652,13 +1861,17 @@ export default function Calendar() {
               <Autocomplete
                 multiple
                 options={categories}
-                value={categories.filter((cat) => (draftTask?.categoryIds || []).includes(cat.id))}
+                value={categories.filter(cat =>
+                  (draftTask?.categoryIds || []).includes(cat.id)
+                )}
                 onChange={(_, value) =>
-                  setDraftTask((prev) =>
-                    prev ? { ...prev, categoryIds: value.map((cat) => cat.id) } : prev
+                  setDraftTask(prev =>
+                    prev
+                      ? { ...prev, categoryIds: value.map(cat => cat.id) }
+                      : prev
                   )
                 }
-                getOptionLabel={(option) => option.name}
+                getOptionLabel={option => option.name}
                 disableCloseOnSelect
                 renderOption={(props, option, { selected }) => (
                   <li {...props}>
@@ -1666,7 +1879,9 @@ export default function Calendar() {
                     {option.name}
                   </li>
                 )}
-                renderInput={(params) => <TextField {...params} label="Categorias" fullWidth />}
+                renderInput={params => (
+                  <TextField {...params} label="Categorias" fullWidth />
+                )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
                     <Chip
@@ -1713,9 +1928,11 @@ export default function Calendar() {
                   select
                   label="Dia todo"
                   value={draftTask?.allDay ? "sim" : "nao"}
-                  onChange={(event) =>
-                    setDraftTask((prev) =>
-                      prev ? { ...prev, allDay: event.target.value === "sim" } : prev
+                  onChange={event =>
+                    setDraftTask(prev =>
+                      prev
+                        ? { ...prev, allDay: event.target.value === "sim" }
+                        : prev
                     )
                   }
                   fullWidth
@@ -1731,8 +1948,8 @@ export default function Calendar() {
                   label="Inicio"
                   type="time"
                   value={draftTask?.startTime || ""}
-                  onChange={(event) =>
-                    setDraftTask((prev) =>
+                  onChange={event =>
+                    setDraftTask(prev =>
                       prev ? { ...prev, startTime: event.target.value } : prev
                     )
                   }
@@ -1744,8 +1961,8 @@ export default function Calendar() {
                   label="Fim"
                   type="time"
                   value={draftTask?.endTime || ""}
-                  onChange={(event) =>
-                    setDraftTask((prev) =>
+                  onChange={event =>
+                    setDraftTask(prev =>
                       prev ? { ...prev, endTime: event.target.value } : prev
                     )
                   }
@@ -1761,12 +1978,13 @@ export default function Calendar() {
                 label="Lembrete"
                 fullWidth
                 value={draftTask?.reminder || "none"}
-                onChange={(event) =>
-                  setDraftTask((prev) =>
+                onChange={event =>
+                  setDraftTask(prev =>
                     prev
                       ? {
                           ...prev,
-                          reminder: event.target.value as CalendarTask["reminder"],
+                          reminder: event.target
+                            .value as CalendarTask["reminder"],
                         }
                       : prev
                   )
@@ -1785,8 +2003,8 @@ export default function Calendar() {
                 label="Repetir"
                 fullWidth
                 value={draftTask?.repeat || "none"}
-                onChange={(event) =>
-                  setDraftTask((prev) =>
+                onChange={event =>
+                  setDraftTask(prev =>
                     prev
                       ? {
                           ...prev,
@@ -1809,12 +2027,13 @@ export default function Calendar() {
                 label="Visibilidade"
                 fullWidth
                 value={draftTask?.visibility || "private"}
-                onChange={(event) =>
-                  setDraftTask((prev) =>
+                onChange={event =>
+                  setDraftTask(prev =>
                     prev
                       ? {
                           ...prev,
-                          visibility: event.target.value as CalendarTask["visibility"],
+                          visibility: event.target
+                            .value as CalendarTask["visibility"],
                         }
                       : prev
                   )
@@ -1830,12 +2049,13 @@ export default function Calendar() {
                 label="Notificar por"
                 fullWidth
                 value={draftTask?.notification || "app"}
-                onChange={(event) =>
-                  setDraftTask((prev) =>
+                onChange={event =>
+                  setDraftTask(prev =>
                     prev
                       ? {
                           ...prev,
-                          notification: event.target.value as CalendarTask["notification"],
+                          notification: event.target
+                            .value as CalendarTask["notification"],
                         }
                       : prev
                   )
@@ -1848,13 +2068,16 @@ export default function Calendar() {
             ) : null}
             {calendarSettings.showDescription ? (
               <Stack spacing={1}>
-                <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ color: "text.secondary" }}
+                >
                   Descrição
                 </Typography>
                 <RichTextEditor
                   value={draftTask?.descriptionHtml || ""}
-                  onChange={(nextValue) =>
-                    setDraftTask((prev) =>
+                  onChange={nextValue =>
+                    setDraftTask(prev =>
                       prev ? { ...prev, descriptionHtml: nextValue } : prev
                     )
                   }
@@ -1862,7 +2085,11 @@ export default function Calendar() {
               </Stack>
             ) : null}
             <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button color="error" variant="outlined" onClick={removeDraftTask}>
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={removeDraftTask}
+              >
                 Remover
               </Button>
               <Button variant="outlined" onClick={handleCloseEdit}>
@@ -1883,25 +2110,38 @@ export default function Calendar() {
       >
         <Box sx={{ p: 2, width: 280 }}>
           <Stack spacing={2}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+            >
               <IconButton
                 size="small"
                 onClick={() =>
                   setDatePickerMonth(
-                    new Date(datePickerMonth.getFullYear(), datePickerMonth.getMonth() - 1, 1)
+                    new Date(
+                      datePickerMonth.getFullYear(),
+                      datePickerMonth.getMonth() - 1,
+                      1
+                    )
                   )
                 }
               >
                 <ChevronLeftRoundedIcon fontSize="small" />
               </IconButton>
               <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                {monthLabels[datePickerMonth.getMonth()]} {datePickerMonth.getFullYear()}
+                {monthLabels[datePickerMonth.getMonth()]}{" "}
+                {datePickerMonth.getFullYear()}
               </Typography>
               <IconButton
                 size="small"
                 onClick={() =>
                   setDatePickerMonth(
-                    new Date(datePickerMonth.getFullYear(), datePickerMonth.getMonth() + 1, 1)
+                    new Date(
+                      datePickerMonth.getFullYear(),
+                      datePickerMonth.getMonth() + 1,
+                      1
+                    )
                   )
                 }
               >
@@ -1915,7 +2155,7 @@ export default function Calendar() {
                 gap: 0.5,
               }}
             >
-              {weekLabels.map((label) => (
+              {weekLabels.map(label => (
                 <Typography
                   key={`picker-${label}`}
                   variant="caption"
@@ -1936,12 +2176,12 @@ export default function Calendar() {
                       if (!day) {
                         return;
                       }
-                      setDraftTask((prev) =>
+                      setDraftTask(prev =>
                         prev ? { ...prev, date: formatDateKey(day) } : prev
                       );
                       setDatePickerOpen(false);
                     }}
-                    sx={(theme) => ({
+                    sx={theme => ({
                       height: 32,
                       display: "flex",
                       alignItems: "center",
@@ -1972,7 +2212,13 @@ export default function Calendar() {
       >
         <DialogContent>
           <Stack spacing={2.5}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Typography variant="h6">Configurações do calendário</Typography>
               <IconButton onClick={() => setCalendarSettingsOpen(false)}>
                 <CloseRoundedIcon fontSize="small" />
@@ -1981,7 +2227,9 @@ export default function Calendar() {
             <Accordion
               elevation={0}
               expanded={configAccordion === "fields"}
-              onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "fields" : false)}
+              onChange={(_, isExpanded) =>
+                setConfigAccordion(isExpanded ? "fields" : false)
+              }
               sx={{
                 border: 1,
                 borderColor: "divider",
@@ -2015,10 +2263,10 @@ export default function Calendar() {
                     { key: "showDescription", label: "Descrição" },
                     { key: "showVisibility", label: "Visibilidade" },
                     { key: "showNotifications", label: "Notificações" },
-                  ].map((item) => (
+                  ].map(item => (
                     <Box
                       key={item.key}
-                      sx={(theme) => ({
+                      sx={theme => ({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -2031,22 +2279,27 @@ export default function Calendar() {
                         ...interactiveCardSx(theme),
                       })}
                       onClick={() =>
-                        setCalendarSettings((prev) => ({
+                        setCalendarSettings(prev => ({
                           ...prev,
-                          [item.key]: !prev[item.key as keyof typeof calendarSettings],
+                          [item.key]:
+                            !prev[item.key as keyof typeof calendarSettings],
                         }))
                       }
                     >
                       <Typography variant="subtitle2">{item.label}</Typography>
                       <ToggleCheckbox
-                        checked={Boolean(calendarSettings[item.key as keyof typeof calendarSettings])}
-                        onChange={(event) =>
-                          setCalendarSettings((prev) => ({
+                        checked={Boolean(
+                          calendarSettings[
+                            item.key as keyof typeof calendarSettings
+                          ]
+                        )}
+                        onChange={event =>
+                          setCalendarSettings(prev => ({
                             ...prev,
                             [item.key]: event.target.checked,
                           }))
                         }
-                        onClick={(event) => event.stopPropagation()}
+                        onClick={event => event.stopPropagation()}
                       />
                     </Box>
                   ))}
@@ -2056,7 +2309,9 @@ export default function Calendar() {
             <Accordion
               elevation={0}
               expanded={configAccordion === "categories"}
-              onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "categories" : false)}
+              onChange={(_, isExpanded) =>
+                setConfigAccordion(isExpanded ? "categories" : false)
+              }
               sx={{
                 border: 1,
                 borderColor: "divider",
@@ -2083,17 +2338,27 @@ export default function Calendar() {
                       }}
                     >
                       <Stack spacing={1.5}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 600 }}
+                        >
                           Editar categoria
                         </Typography>
                         <TextField
                           label="Nome"
                           fullWidth
                           value={editingCategoryName}
-                          onChange={(event) => setEditingCategoryName(event.target.value)}
+                          onChange={event =>
+                            setEditingCategoryName(event.target.value)
+                          }
                         />
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {DEFAULT_COLORS.map((color) => (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {DEFAULT_COLORS.map(color => (
                             <Box
                               key={color}
                               onClick={() => setEditingCategoryColor(color)}
@@ -2103,15 +2368,23 @@ export default function Calendar() {
                                 borderRadius: 1,
                                 backgroundColor: color,
                                 borderStyle: "solid",
-                                borderWidth: editingCategoryColor === color ? 2 : 1,
+                                borderWidth:
+                                  editingCategoryColor === color ? 2 : 1,
                                 borderColor: "divider",
                                 cursor: "pointer",
                               }}
                             />
                           ))}
                         </Stack>
-                        <Stack direction="row" spacing={2} justifyContent="flex-end">
-                          <Button variant="outlined" onClick={cancelEditCategory}>
+                        <Stack
+                          direction="row"
+                          spacing={2}
+                          justifyContent="flex-end"
+                        >
+                          <Button
+                            variant="outlined"
+                            onClick={cancelEditCategory}
+                          >
                             Cancelar
                           </Button>
                           <Button variant="contained" onClick={saveCategory}>
@@ -2122,7 +2395,7 @@ export default function Calendar() {
                     </Box>
                   ) : null}
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {categories.map((cat) => (
+                    {categories.map(cat => (
                       <Chip
                         key={cat.id}
                         label={cat.name}
@@ -2137,7 +2410,10 @@ export default function Calendar() {
                   </Stack>
                   {editingCategoryId ? null : (
                     <Box>
-                      <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary", mb: 1 }}
+                      >
                         Nova categoria
                       </Typography>
                       <Stack spacing={1.5}>
@@ -2145,10 +2421,17 @@ export default function Calendar() {
                           label="Nome"
                           fullWidth
                           value={newCategoryName}
-                          onChange={(event) => setNewCategoryName(event.target.value)}
+                          onChange={event =>
+                            setNewCategoryName(event.target.value)
+                          }
                         />
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {DEFAULT_COLORS.map((color) => (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {DEFAULT_COLORS.map(color => (
                             <Box
                               key={color}
                               onClick={() => setNewCategoryColor(color)}
@@ -2169,7 +2452,11 @@ export default function Calendar() {
                           variant="outlined"
                           onClick={handleAddCategory}
                           startIcon={<AddRoundedIcon />}
-                          sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                          sx={{
+                            alignSelf: "flex-start",
+                            textTransform: "none",
+                            fontWeight: 600,
+                          }}
                         >
                           Criar categoria
                         </Button>
@@ -2212,13 +2499,13 @@ function RichTextEditor({
         if (moved) {
           return false;
         }
-        const files = Array.from(event.dataTransfer?.files || []).filter((file) =>
+        const files = Array.from(event.dataTransfer?.files || []).filter(file =>
           file.type.startsWith("image/")
         );
         if (!files.length) {
           return false;
         }
-        files.forEach((file) => {
+        files.forEach(file => {
           const reader = new FileReader();
           reader.onload = () => {
             const src = String(reader.result || "");
@@ -2230,11 +2517,11 @@ function RichTextEditor({
       },
       handlePaste: (_view, event) => {
         const items = Array.from(event.clipboardData?.items || []);
-        const imageItems = items.filter((item) => item.type.startsWith("image/"));
+        const imageItems = items.filter(item => item.type.startsWith("image/"));
         if (!imageItems.length) {
           return false;
         }
-        imageItems.forEach((item) => {
+        imageItems.forEach(item => {
           const file = item.getAsFile();
           if (!file) {
             return;
@@ -2296,8 +2583,12 @@ function RichTextEditor({
         <Tooltip title="Titulo 1" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-            color={editor?.isActive("heading", { level: 1 }) ? "primary" : "default"}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 1 }).run()
+            }
+            color={
+              editor?.isActive("heading", { level: 1 }) ? "primary" : "default"
+            }
             aria-label="Titulo 1"
           >
             <LooksOneRoundedIcon fontSize="small" />
@@ -2306,8 +2597,12 @@ function RichTextEditor({
         <Tooltip title="Titulo 2" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-            color={editor?.isActive("heading", { level: 2 }) ? "primary" : "default"}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            color={
+              editor?.isActive("heading", { level: 2 }) ? "primary" : "default"
+            }
             aria-label="Titulo 2"
           >
             <LooksTwoRoundedIcon fontSize="small" />
@@ -2316,8 +2611,12 @@ function RichTextEditor({
         <Tooltip title="Titulo 3" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-            color={editor?.isActive("heading", { level: 3 }) ? "primary" : "default"}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+            color={
+              editor?.isActive("heading", { level: 3 }) ? "primary" : "default"
+            }
             aria-label="Titulo 3"
           >
             <Looks3RoundedIcon fontSize="small" />
@@ -2356,7 +2655,9 @@ function RichTextEditor({
         <Tooltip title="Limpar formatação" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()}
+            onClick={() =>
+              editor?.chain().focus().unsetAllMarks().clearNodes().run()
+            }
             aria-label="Limpar formatação"
           >
             <BackspaceRoundedIcon fontSize="small" />
@@ -2397,9 +2698,3 @@ function RichTextEditor({
     </Stack>
   );
 }
-
-
-
-
-
-
