@@ -294,9 +294,7 @@ function App() {
   const normalizeBreadcrumbLabel = (value: string) =>
     value.replace(/\s+/g, " ").trim();
 
-  const showBreadcrumbs = !["/", "/login", "/signup", "/home"].includes(
-    location
-  );
+  const showBreadcrumbs = !["/", "/login", "/signup"].includes(location);
   const currentLabel = normalizeBreadcrumbLabel(
     breadcrumbMap[location] ?? "Página"
   );
@@ -375,67 +373,73 @@ function App() {
   })();
 
   const breadcrumbItems =
-    location === "/pipeline/dados"
+    location === "/home"
       ? [
-          <Link
-            key="pipeline"
-            component={RouterLink}
-            href="/pipeline"
-            underline="hover"
-            color="inherit"
-          >
-            Pipeline
-          </Link>,
-          <Typography key="dados" color="text.primary">
-            Dados
+          <Typography key="home" color="text.primary">
+            Home
           </Typography>,
         ]
-      : location === "/calendario/concluidas"
+      : location === "/pipeline/dados"
         ? [
             <Link
-              key="calendario"
+              key="pipeline"
               component={RouterLink}
-              href="/calendario"
+              href="/pipeline"
               underline="hover"
               color="inherit"
             >
-              Calendário
+              Pipeline
             </Link>,
-            <Typography key="concluidas" color="text.primary">
-              Tarefas feitas
+            <Typography key="dados" color="text.primary">
+              Dados
             </Typography>,
           ]
-        : location === "/notas/arquivo"
+        : location === "/calendario/concluidas"
           ? [
               <Link
-                key="notas"
+                key="calendario"
                 component={RouterLink}
-                href="/notas"
+                href="/calendario"
                 underline="hover"
                 color="inherit"
               >
-                Notas
+                Calendário
               </Link>,
-              <Typography key="arquivo" color="text.primary">
-                Arquivo
+              <Typography key="concluidas" color="text.primary">
+                Tarefas feitas
               </Typography>,
             ]
-          : notesBreadcrumb
-            ? notesBreadcrumb
-            : [
+          : location === "/notas/arquivo"
+            ? [
                 <Link
-                  key="home"
+                  key="notas"
                   component={RouterLink}
-                  href="/home"
+                  href="/notas"
                   underline="hover"
                   color="inherit"
                 >
-                  Home
+                  Notas
                 </Link>,
-                <Typography key="current" color="text.primary">
-                  {currentLabel}
+                <Typography key="arquivo" color="text.primary">
+                  Arquivo
                 </Typography>,
-              ];
+              ]
+            : notesBreadcrumb
+              ? notesBreadcrumb
+              : [
+                  <Link
+                    key="home"
+                    component={RouterLink}
+                    href="/home"
+                    underline="hover"
+                    color="inherit"
+                  >
+                    Home
+                  </Link>,
+                  <Typography key="current" color="text.primary">
+                    {currentLabel}
+                  </Typography>,
+                ];
   const avatarInitial = userName.trim().charAt(0).toUpperCase() || "U";
   const mobileMenuOpen = Boolean(mobileAnchorEl);
 
@@ -757,7 +761,7 @@ function App() {
             </Box>
           </Box>
 
-          <Box component="main" sx={{ flex: 1, px: { xs: 2, md: 6 }, py: 6 }}>
+          <Box component="main" sx={{ flex: 1, px: { xs: 2, md: 3 }, py: 6 }}>
             {showBreadcrumbs ? (
               <Box sx={{ maxWidth: 1200, mx: "auto" }}>
                 <Breadcrumbs
