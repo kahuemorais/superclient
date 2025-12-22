@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -15,6 +18,7 @@ import { Link as RouterLink } from "wouter";
 import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import SettingsIconButton from "../components/SettingsIconButton";
 import { interactiveCardSx } from "../styles/interactiveCard";
 
@@ -84,10 +88,28 @@ const formatValue = (value: number) => {
 
 const DASHBOARD_SECTIONS_KEY = "dashboard_sections_v1";
 
+const DASHBOARD_ITEMS_KEY = "dashboard_items_v1";
+
 const defaultDashboardSections = {
   pipeline: true,
   finance: true,
   access: true,
+};
+
+const defaultDashboardItems = {
+  pipeline: {
+    totalCards: true,
+    totalValue: true,
+    avgTicket: true,
+  },
+  finance: {
+    totalSpend: true,
+    topCategory: true,
+  },
+  access: {
+    roles: true,
+    modules: true,
+  },
 };
 
 export default function Dashboard() {
@@ -100,16 +122,24 @@ export default function Dashboard() {
   const [sections, setSections] = useState({
     ...defaultDashboardSections,
   });
+  const [items, setItems] = useState({
+    ...defaultDashboardItems,
+  });
   const [sectionsDialogOpen, setSectionsDialogOpen] = useState(false);
+  const [homeConfigAccordion, setHomeConfigAccordion] = useState<
+    false | "pipeline" | "finance" | "access"
+  >(false);
   const restoreDefaultsSnapshotRef = useRef<{
     sections: typeof sections;
+    items: typeof items;
   } | null>(null);
   const [restoreDefaultsSnackbarOpen, setRestoreDefaultsSnackbarOpen] =
     useState(false);
 
   const handleRestoreDashboardDefaults = () => {
-    restoreDefaultsSnapshotRef.current = { sections };
+    restoreDefaultsSnapshotRef.current = { sections, items };
     setSections({ ...defaultDashboardSections });
+    setItems({ ...defaultDashboardItems });
     setRestoreDefaultsSnackbarOpen(true);
   };
 
@@ -120,6 +150,7 @@ export default function Dashboard() {
       return;
     }
     setSections(snapshot.sections);
+    setItems(snapshot.items);
     restoreDefaultsSnapshotRef.current = null;
     setRestoreDefaultsSnackbarOpen(false);
   };
@@ -192,11 +223,34 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    const stored = window.localStorage.getItem(DASHBOARD_ITEMS_KEY);
+    if (!stored) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(stored) as Partial<typeof items>;
+      setItems(prev => ({
+        ...prev,
+        ...parsed,
+        pipeline: { ...prev.pipeline, ...(parsed.pipeline || {}) },
+        finance: { ...prev.finance, ...(parsed.finance || {}) },
+        access: { ...prev.access, ...(parsed.access || {}) },
+      }));
+    } catch {
+      window.localStorage.removeItem(DASHBOARD_ITEMS_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
     window.localStorage.setItem(
       DASHBOARD_SECTIONS_KEY,
       JSON.stringify(sections)
     );
   }, [sections]);
+
+  useEffect(() => {
+    window.localStorage.setItem(DASHBOARD_ITEMS_KEY, JSON.stringify(items));
+  }, [items]);
 
   const pipelineSummary = useMemo(() => {
     const totalCount = columns.reduce(
@@ -308,74 +362,82 @@ export default function Dashboard() {
                 </Button>
               </Box>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2.5,
-                    flex: 1,
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ color: "text.secondary" }}
+                {items.pipeline.totalCards ? (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      flex: 1,
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
+                    }}
                   >
-                    Total de cards
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {pipelineSummary.totalCount}
-                  </Typography>
-                </Paper>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2.5,
-                    flex: 1,
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ color: "text.secondary" }}
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Total de cards
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {pipelineSummary.totalCount}
+                    </Typography>
+                  </Paper>
+                ) : null}
+
+                {items.pipeline.totalValue ? (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      flex: 1,
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
+                    }}
                   >
-                    Valor total
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {formatValue(pipelineSummary.totalValue)}
-                  </Typography>
-                </Paper>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2.5,
-                    flex: 1,
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ color: "text.secondary" }}
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Valor total
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {formatValue(pipelineSummary.totalValue)}
+                    </Typography>
+                  </Paper>
+                ) : null}
+
+                {items.pipeline.avgTicket ? (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      flex: 1,
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
+                    }}
                   >
-                    Ticket medio
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {formatValue(pipelineSummary.avgTicket)}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    {pipelineSummary.topStage
-                      ? `Maior etapa: ${pipelineSummary.topStage.title}`
-                      : "Sem dados"}
-                  </Typography>
-                </Paper>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Ticket medio
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {formatValue(pipelineSummary.avgTicket)}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {pipelineSummary.topStage
+                        ? `Maior etapa: ${pipelineSummary.topStage.title}`
+                        : "Sem dados"}
+                    </Typography>
+                  </Paper>
+                ) : null}
               </Stack>
             </Stack>
           </Paper>
@@ -410,54 +472,59 @@ export default function Dashboard() {
                 </Button>
               </Box>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2.5,
-                    flex: 1,
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ color: "text.secondary" }}
+                {items.finance.totalSpend ? (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      flex: 1,
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
+                    }}
                   >
-                    Total de gastos
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    R$ {financeSummary.totalSpend.toLocaleString("pt-BR")}
-                  </Typography>
-                </Paper>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2.5,
-                    flex: 1,
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ color: "text.secondary" }}
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Total de gastos
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      R$ {financeSummary.totalSpend.toLocaleString("pt-BR")}
+                    </Typography>
+                  </Paper>
+                ) : null}
+
+                {items.finance.topCategory ? (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      flex: 1,
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
+                    }}
                   >
-                    Categoria em destaque
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {financeSummary.topCategory?.name || "Sem dados"}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    {financeSummary.topCategory
-                      ? `R$ ${financeSummary.topCategoryValue.toLocaleString("pt-BR")} em gastos`
-                      : "Sem gastos registrados"}
-                  </Typography>
-                </Paper>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Categoria em destaque
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {financeSummary.topCategory?.name || "Sem dados"}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {financeSummary.topCategory
+                        ? `R$ ${financeSummary.topCategoryValue.toLocaleString("pt-BR")} em gastos`
+                        : "Sem gastos registrados"}
+                    </Typography>
+                  </Paper>
+                ) : null}
               </Stack>
             </Stack>
           </Paper>
@@ -492,58 +559,63 @@ export default function Dashboard() {
                 </Button>
               </Box>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2.5,
-                    flex: 1,
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ color: "text.secondary" }}
+                {items.access.roles ? (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      flex: 1,
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
+                    }}
                   >
-                    Papéis ativos
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {accessSummary.rolesCount}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Papéis ativos
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {accessSummary.rolesCount}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {accessSummary.membersCount} membros no total
+                    </Typography>
+                  </Paper>
+                ) : null}
+
+                {items.access.modules ? (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      flex: 1,
+                      border: 1,
+                      borderColor: "divider",
+                      backgroundColor: "background.paper",
+                    }}
                   >
-                    {accessSummary.membersCount} membros no total
-                  </Typography>
-                </Paper>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2.5,
-                    flex: 1,
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    Modulos ativos
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {accessSummary.enabledModules}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    {accessSummary.pendingInvites} convites pendentes
-                  </Typography>
-                </Paper>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Modulos ativos
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {accessSummary.enabledModules}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {accessSummary.pendingInvites} convites pendentes
+                    </Typography>
+                  </Paper>
+                ) : null}
               </Stack>
             </Stack>
           </Paper>
@@ -580,39 +652,381 @@ export default function Dashboard() {
                   { key: "finance", label: "Finanças" },
                   { key: "access", label: "Gestão" },
                 ] as const
-              ).map(item => (
-                <Paper
-                  key={item.key}
-                  variant="outlined"
-                  onClick={() =>
-                    setSections(prev => ({
-                      ...prev,
-                      [item.key]: !prev[item.key],
-                    }))
-                  }
-                  sx={theme => ({
-                    p: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    cursor: "pointer",
-                    backgroundColor: "background.paper",
-                    ...interactiveCardSx(theme),
-                  })}
-                >
-                  <Typography variant="subtitle2">{item.label}</Typography>
-                  <ToggleCheckbox
-                    checked={sections[item.key]}
-                    onChange={event =>
-                      setSections(prev => ({
-                        ...prev,
-                        [item.key]: event.target.checked,
-                      }))
+              ).map(section => {
+                const enabled = sections[section.key];
+                return (
+                  <Accordion
+                    key={section.key}
+                    expanded={homeConfigAccordion === section.key}
+                    onChange={(_, expanded) =>
+                      setHomeConfigAccordion(expanded ? section.key : false)
                     }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Paper>
-              ))}
+                    disableGutters
+                    elevation={0}
+                    sx={theme => ({
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: "var(--radius-card)",
+                      backgroundColor: "background.paper",
+                      overflow: "hidden",
+                      "&:before": { display: "none" },
+                      ...interactiveCardSx(theme),
+                      ...(homeConfigAccordion === section.key ? {} : { mb: 0 }),
+                    })}
+                  >
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreRoundedIcon />}
+                      sx={{
+                        px: 2,
+                        py: 0.5,
+                        "& .MuiAccordionSummary-content": {
+                          my: 1,
+                          alignItems: "center",
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          width: "100%",
+                          gap: 2,
+                        }}
+                      >
+                        <Typography variant="subtitle2">
+                          {section.label}
+                        </Typography>
+                        <ToggleCheckbox
+                          checked={enabled}
+                          onChange={event =>
+                            setSections(prev => ({
+                              ...prev,
+                              [section.key]: event.target.checked,
+                            }))
+                          }
+                          onClick={event => event.stopPropagation()}
+                        />
+                      </Box>
+                    </AccordionSummary>
+
+                    <AccordionDetails sx={{ pt: 0, px: 2, pb: 2 }}>
+                      <Stack
+                        spacing={1}
+                        sx={{
+                          opacity: enabled ? 1 : 0.5,
+                        }}
+                      >
+                        {section.key === "pipeline" ? (
+                          <>
+                            <Paper
+                              variant="outlined"
+                              onClick={() =>
+                                enabled
+                                  ? setItems(prev => ({
+                                      ...prev,
+                                      pipeline: {
+                                        ...prev.pipeline,
+                                        totalCards: !prev.pipeline.totalCards,
+                                      },
+                                    }))
+                                  : undefined
+                              }
+                              sx={theme => ({
+                                p: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                cursor: enabled ? "pointer" : "default",
+                                backgroundColor: "background.paper",
+                                ...interactiveCardSx(theme),
+                              })}
+                            >
+                              <Typography variant="body2">
+                                Total de cards
+                              </Typography>
+                              <ToggleCheckbox
+                                checked={items.pipeline.totalCards}
+                                disabled={!enabled}
+                                onChange={event =>
+                                  setItems(prev => ({
+                                    ...prev,
+                                    pipeline: {
+                                      ...prev.pipeline,
+                                      totalCards: event.target.checked,
+                                    },
+                                  }))
+                                }
+                                onClick={event => event.stopPropagation()}
+                              />
+                            </Paper>
+
+                            <Paper
+                              variant="outlined"
+                              onClick={() =>
+                                enabled
+                                  ? setItems(prev => ({
+                                      ...prev,
+                                      pipeline: {
+                                        ...prev.pipeline,
+                                        totalValue: !prev.pipeline.totalValue,
+                                      },
+                                    }))
+                                  : undefined
+                              }
+                              sx={theme => ({
+                                p: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                cursor: enabled ? "pointer" : "default",
+                                backgroundColor: "background.paper",
+                                ...interactiveCardSx(theme),
+                              })}
+                            >
+                              <Typography variant="body2">
+                                Valor total
+                              </Typography>
+                              <ToggleCheckbox
+                                checked={items.pipeline.totalValue}
+                                disabled={!enabled}
+                                onChange={event =>
+                                  setItems(prev => ({
+                                    ...prev,
+                                    pipeline: {
+                                      ...prev.pipeline,
+                                      totalValue: event.target.checked,
+                                    },
+                                  }))
+                                }
+                                onClick={event => event.stopPropagation()}
+                              />
+                            </Paper>
+
+                            <Paper
+                              variant="outlined"
+                              onClick={() =>
+                                enabled
+                                  ? setItems(prev => ({
+                                      ...prev,
+                                      pipeline: {
+                                        ...prev.pipeline,
+                                        avgTicket: !prev.pipeline.avgTicket,
+                                      },
+                                    }))
+                                  : undefined
+                              }
+                              sx={theme => ({
+                                p: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                cursor: enabled ? "pointer" : "default",
+                                backgroundColor: "background.paper",
+                                ...interactiveCardSx(theme),
+                              })}
+                            >
+                              <Typography variant="body2">
+                                Ticket medio
+                              </Typography>
+                              <ToggleCheckbox
+                                checked={items.pipeline.avgTicket}
+                                disabled={!enabled}
+                                onChange={event =>
+                                  setItems(prev => ({
+                                    ...prev,
+                                    pipeline: {
+                                      ...prev.pipeline,
+                                      avgTicket: event.target.checked,
+                                    },
+                                  }))
+                                }
+                                onClick={event => event.stopPropagation()}
+                              />
+                            </Paper>
+                          </>
+                        ) : null}
+
+                        {section.key === "finance" ? (
+                          <>
+                            <Paper
+                              variant="outlined"
+                              onClick={() =>
+                                enabled
+                                  ? setItems(prev => ({
+                                      ...prev,
+                                      finance: {
+                                        ...prev.finance,
+                                        totalSpend: !prev.finance.totalSpend,
+                                      },
+                                    }))
+                                  : undefined
+                              }
+                              sx={theme => ({
+                                p: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                cursor: enabled ? "pointer" : "default",
+                                backgroundColor: "background.paper",
+                                ...interactiveCardSx(theme),
+                              })}
+                            >
+                              <Typography variant="body2">
+                                Total de gastos
+                              </Typography>
+                              <ToggleCheckbox
+                                checked={items.finance.totalSpend}
+                                disabled={!enabled}
+                                onChange={event =>
+                                  setItems(prev => ({
+                                    ...prev,
+                                    finance: {
+                                      ...prev.finance,
+                                      totalSpend: event.target.checked,
+                                    },
+                                  }))
+                                }
+                                onClick={event => event.stopPropagation()}
+                              />
+                            </Paper>
+
+                            <Paper
+                              variant="outlined"
+                              onClick={() =>
+                                enabled
+                                  ? setItems(prev => ({
+                                      ...prev,
+                                      finance: {
+                                        ...prev.finance,
+                                        topCategory: !prev.finance.topCategory,
+                                      },
+                                    }))
+                                  : undefined
+                              }
+                              sx={theme => ({
+                                p: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                cursor: enabled ? "pointer" : "default",
+                                backgroundColor: "background.paper",
+                                ...interactiveCardSx(theme),
+                              })}
+                            >
+                              <Typography variant="body2">
+                                Categoria em destaque
+                              </Typography>
+                              <ToggleCheckbox
+                                checked={items.finance.topCategory}
+                                disabled={!enabled}
+                                onChange={event =>
+                                  setItems(prev => ({
+                                    ...prev,
+                                    finance: {
+                                      ...prev.finance,
+                                      topCategory: event.target.checked,
+                                    },
+                                  }))
+                                }
+                                onClick={event => event.stopPropagation()}
+                              />
+                            </Paper>
+                          </>
+                        ) : null}
+
+                        {section.key === "access" ? (
+                          <>
+                            <Paper
+                              variant="outlined"
+                              onClick={() =>
+                                enabled
+                                  ? setItems(prev => ({
+                                      ...prev,
+                                      access: {
+                                        ...prev.access,
+                                        roles: !prev.access.roles,
+                                      },
+                                    }))
+                                  : undefined
+                              }
+                              sx={theme => ({
+                                p: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                cursor: enabled ? "pointer" : "default",
+                                backgroundColor: "background.paper",
+                                ...interactiveCardSx(theme),
+                              })}
+                            >
+                              <Typography variant="body2">
+                                Papéis ativos
+                              </Typography>
+                              <ToggleCheckbox
+                                checked={items.access.roles}
+                                disabled={!enabled}
+                                onChange={event =>
+                                  setItems(prev => ({
+                                    ...prev,
+                                    access: {
+                                      ...prev.access,
+                                      roles: event.target.checked,
+                                    },
+                                  }))
+                                }
+                                onClick={event => event.stopPropagation()}
+                              />
+                            </Paper>
+
+                            <Paper
+                              variant="outlined"
+                              onClick={() =>
+                                enabled
+                                  ? setItems(prev => ({
+                                      ...prev,
+                                      access: {
+                                        ...prev.access,
+                                        modules: !prev.access.modules,
+                                      },
+                                    }))
+                                  : undefined
+                              }
+                              sx={theme => ({
+                                p: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                cursor: enabled ? "pointer" : "default",
+                                backgroundColor: "background.paper",
+                                ...interactiveCardSx(theme),
+                              })}
+                            >
+                              <Typography variant="body2">
+                                Modulos ativos
+                              </Typography>
+                              <ToggleCheckbox
+                                checked={items.access.modules}
+                                disabled={!enabled}
+                                onChange={event =>
+                                  setItems(prev => ({
+                                    ...prev,
+                                    access: {
+                                      ...prev.access,
+                                      modules: event.target.checked,
+                                    },
+                                  }))
+                                }
+                                onClick={event => event.stopPropagation()}
+                              />
+                            </Paper>
+                          </>
+                        ) : null}
+                      </Stack>
+                    </AccordionDetails>
+                  </Accordion>
+                );
+              })}
             </Stack>
             <Stack direction="row" spacing={2} justifyContent="flex-end">
               <Button

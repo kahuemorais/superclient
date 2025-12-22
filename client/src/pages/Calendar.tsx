@@ -783,20 +783,21 @@ export default function Calendar() {
       selectedMonth.getMonth() + 1,
       0
     );
+    const selectedIsInMonth =
+      selectedDate.getFullYear() === selectedMonth.getFullYear() &&
+      selectedDate.getMonth() === selectedMonth.getMonth();
+    const startDay = selectedIsInMonth ? selectedDate.getDate() : 1;
     const days: Date[] = [];
-    for (let day = 1; day <= monthEnd.getDate(); day += 1) {
+    for (let day = startDay; day <= monthEnd.getDate(); day += 1) {
       const date = new Date(
         monthStart.getFullYear(),
         monthStart.getMonth(),
         day
       );
-      const key = formatDateKey(date);
-      if (tasksByDate.has(key) || key === formatDateKey(selectedDate)) {
-        days.push(date);
-      }
+      days.push(date);
     }
     return days;
-  }, [selectedMonth, selectedDate, tasksByDate]);
+  }, [selectedMonth, selectedDate]);
 
   const totalAgendaPages = Math.max(
     1,
@@ -841,6 +842,11 @@ export default function Calendar() {
         id: taskId,
         data: { taskId },
       });
+
+    const stableTransform = transform
+      ? { ...transform, scaleX: 1, scaleY: 1 }
+      : null;
+
     return (
       <Paper
         ref={setNodeRef}
@@ -856,7 +862,9 @@ export default function Calendar() {
           backgroundColor: "background.paper",
           cursor: isDragging ? "grabbing" : "grab",
           opacity: isDragging ? 0.7 : 1,
-          transform: CSS.Transform.toString(transform),
+          width: "100%",
+          boxSizing: "border-box",
+          transform: CSS.Transform.toString(stableTransform),
           touchAction: "none",
           userSelect: "none",
           ...interactiveCardSx(theme),
@@ -1269,6 +1277,7 @@ export default function Calendar() {
                           setSelectedMonth(
                             new Date(day.getFullYear(), day.getMonth(), 1)
                           );
+                          setAgendaPage(1);
                         }}
                         sx={theme => ({
                           height: 36,
