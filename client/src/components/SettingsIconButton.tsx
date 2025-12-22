@@ -19,7 +19,10 @@ export default function SettingsIconButton({
     <Tooltip title={title} placement="bottom">
       <span>
         <IconButton
-          onClick={onClick}
+          onClick={event => {
+            (event.currentTarget as HTMLElement).blur();
+            onClick();
+          }}
           disabled={disabled}
           size={size}
           sx={theme => ({

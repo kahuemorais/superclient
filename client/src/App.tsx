@@ -444,6 +444,7 @@ function App() {
   const mobileMenuOpen = Boolean(mobileAnchorEl);
 
   const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    (event.currentTarget as HTMLElement).blur();
     setMobileAnchorEl(event.currentTarget);
   };
 
@@ -736,22 +737,32 @@ function App() {
                   {visibleNavItems.map(item => (
                     <MenuItem
                       key={item.href}
-                      component={RouterLink}
-                      href={item.href}
-                      selected={isActive(item.href)}
-                      onClick={handleMobileMenuClose}
-                      sx={{ fontWeight: 600 }}
+                      onClick={() => {
+                        setLocation(item.href);
+                        handleMobileMenuClose();
+                      }}
+                      sx={{
+                        fontWeight: 600,
+                        ...(isActive(item.href)
+                          ? { backgroundColor: "action.selected" }
+                          : null),
+                      }}
                     >
                       {item.label}
                     </MenuItem>
                   ))}
                   {isLoggedIn ? (
                     <MenuItem
-                      component={RouterLink}
-                      href="/profile"
-                      selected={isActive("/profile")}
-                      onClick={handleMobileMenuClose}
-                      sx={{ fontWeight: 600 }}
+                      onClick={() => {
+                        setLocation("/profile");
+                        handleMobileMenuClose();
+                      }}
+                      sx={{
+                        fontWeight: 600,
+                        ...(isActive("/profile")
+                          ? { backgroundColor: "action.selected" }
+                          : null),
+                      }}
                     >
                       Perfil
                     </MenuItem>
