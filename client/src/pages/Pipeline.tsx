@@ -2374,7 +2374,7 @@ export default function Pipeline() {
             </Stack>
             <Stack spacing={0.5}>
               <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                Descricao
+                Descrição
               </Typography>
               <Box
                 sx={{
@@ -2448,7 +2448,7 @@ export default function Pipeline() {
         <DialogContent>
           <Stack spacing={2.5}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Typography variant="h6">Configuracoes</Typography>
+              <Typography variant="h6">Configurações</Typography>
               <IconButton
                 onClick={() => {
                   setTaskFieldSettingsOpen(false);
@@ -3424,7 +3424,7 @@ export default function Pipeline() {
             />
             <Stack spacing={1}>
               <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                Descricao
+                Descrição
               </Typography>
               <RichTextEditor value={editDescription} onChange={setEditDescription} />
             </Stack>
@@ -3492,7 +3492,7 @@ export default function Pipeline() {
               onChange={(event) => setEditColumnTitle(event.target.value)}
             />
             <TextField
-              label="Descricao"
+              label="Descrição"
               fullWidth
               multiline
               minRows={3}
@@ -3948,12 +3948,12 @@ function RichTextEditor({
             <FormatListNumberedRoundedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Citacao" placement="top">
+        <Tooltip title="Citação" placement="top">
           <IconButton
             {...iconButtonProps}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
             color={editor?.isActive("blockquote") ? "primary" : "default"}
-            aria-label="Citacao"
+            aria-label="Citação"
           >
             <FormatQuoteRoundedIcon fontSize="small" />
           </IconButton>

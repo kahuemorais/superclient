@@ -18,9 +18,9 @@ import { useLocation } from "wouter";
 import api from "../api";
 
 const highlights = [
-  "Calendario com agenda diaria e lembretes",
+  "Calendário com agenda diária e lembretes",
   "Pipeline com tarefas por etapa e visao em tempo real",
-  "Financas com categorias, filtros e indicadores",
+  "Finanças com categorias, filtros e indicadores",
   "Suporte com FAQ e contato rapido",
 ];
 
@@ -303,7 +303,7 @@ export default function Login() {
                 - Controle total do trabalho com colunas, filtros e categorias.
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                - Permissoes por papel e modulos sob demanda.
+                - Permissões por papel e módulos sob demanda.
               </Typography>
             </Stack>
           </Box>

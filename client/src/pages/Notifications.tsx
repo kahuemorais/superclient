@@ -64,7 +64,7 @@ export default function Notifications() {
       <Stack spacing={3}>
         <Stack spacing={1}>
           <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Notificacoes
+            Notificações
           </Typography>
         </Stack>
 
@@ -78,7 +78,7 @@ export default function Notifications() {
           }}
         >
           <Stack spacing={2.5}>
-            <Typography variant="h6">Aniversarios da semana</Typography>
+            <Typography variant="h6">Aniversários da semana</Typography>
             {upcoming.length === 0 ? (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Nenhum aniversario nos proximos dias.

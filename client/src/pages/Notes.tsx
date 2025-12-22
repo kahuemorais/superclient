@@ -90,7 +90,7 @@ const DEFAULT_COLORS = [
 
 const defaultCategories: NoteCategory[] = [
   { id: "note-cat-estrategia", name: "Estrategia", color: DEFAULT_COLORS[0] },
-  { id: "note-cat-reunioes", name: "Reunioes", color: DEFAULT_COLORS[1] },
+  { id: "note-cat-reunioes", name: "Reuniões", color: DEFAULT_COLORS[1] },
   { id: "note-cat-projeto", name: "Projeto", color: DEFAULT_COLORS[2] },
   { id: "note-cat-aprendizado", name: "Aprendizado", color: DEFAULT_COLORS[3] },
 ];
@@ -988,7 +988,7 @@ export default function Notes() {
       <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} maxWidth="sm" fullWidth>
         <DialogContent>
           <Stack spacing={2.5}>
-            <Typography variant="h6">Configuracoes de notas</Typography>
+            <Typography variant="h6">Configurações de notas</Typography>
             <Accordion
               elevation={0}
               expanded={settingsAccordion === "categories"}
@@ -1471,12 +1471,12 @@ function RichTextEditor({
             <FormatListNumberedRoundedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Citacao" placement="top">
+        <Tooltip title="Citação" placement="top">
           <IconButton
             {...iconButtonProps}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
             color={editor?.isActive("blockquote") ? "primary" : "default"}
-            aria-label="Citacao"
+            aria-label="Citação"
           >
             <FormatQuoteRoundedIcon fontSize="small" />
           </IconButton>

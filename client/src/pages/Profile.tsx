@@ -63,7 +63,7 @@ const coreModuleLabels = {
   modulePipeline: {
     title: "Pipeline",
     price: "R$ 89/mes",
-    description: "Gestao de oportunidades e tasks.",
+    description: "Gestão de oportunidades e tasks.",
     features: [
       "Quadro kanban com etapas personalizadas",
       "Sprints, backlog e historico",
@@ -72,7 +72,7 @@ const coreModuleLabels = {
     ],
   },
   moduleFinance: {
-    title: "Financas",
+    title: "Finanças",
     price: "R$ 79/mes",
     description: "Controle de gastos e categorias.",
     features: [
@@ -85,7 +85,7 @@ const coreModuleLabels = {
   moduleContacts: {
     title: "Contatos",
     price: "R$ 39/mes",
-    description: "Gestao de contatos e categorias.",
+    description: "Gestão de contatos e categorias.",
     features: [
       "Campos e categorias personalizadas",
       "Filtros por tags e pesquisa rapida",
@@ -94,7 +94,7 @@ const coreModuleLabels = {
     ],
   },
   moduleCalendar: {
-    title: "Calendario",
+    title: "Calendário",
     price: "R$ 49/mes",
     description: "Agenda visual e lembretes de tarefas.",
     features: [
