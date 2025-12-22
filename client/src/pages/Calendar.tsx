@@ -1297,7 +1297,7 @@ export default function Calendar() {
 
   return (
     <PageContainer>
-      <Stack spacing={3}>
+      <Stack spacing={{ xs: 2.5, md: 3 }}>
         <Stack spacing={2}>
           <Stack
             direction="row"
@@ -1317,38 +1317,42 @@ export default function Calendar() {
             spacing={1.5}
             alignItems="center"
           >
-            <Button
-              variant="outlined"
-              component={RouterLink}
-              href="/calendario/concluidas"
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                flex: { xs: 1, sm: "0 0 auto" },
-                minWidth: 0,
-              }}
-            >
-              tarefas feitas
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                const today = new Date();
-                setSelectedDate(today);
-                setSelectedMonth(
-                  new Date(today.getFullYear(), today.getMonth(), 1)
-                );
-                setAgendaPage(1);
-              }}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                flex: { xs: 1, sm: "0 0 auto" },
-                minWidth: 0,
-              }}
-            >
-              Hoje
-            </Button>
+            {!isSmDown ? (
+              <Button
+                variant="outlined"
+                component={RouterLink}
+                href="/calendario/concluidas"
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                  flex: { xs: 1, sm: "0 0 auto" },
+                  minWidth: 0,
+                }}
+              >
+                tarefas feitas
+              </Button>
+            ) : null}
+            {!isSmDown ? (
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  const today = new Date();
+                  setSelectedDate(today);
+                  setSelectedMonth(
+                    new Date(today.getFullYear(), today.getMonth(), 1)
+                  );
+                  setAgendaPage(1);
+                }}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                  flex: { xs: 1, sm: "0 0 auto" },
+                  minWidth: 0,
+                }}
+              >
+                Hoje
+              </Button>
+            ) : null}
           </Stack>
         </Stack>
 
@@ -1572,14 +1576,15 @@ export default function Calendar() {
             </Paper>
           </Stack>
 
-          <Stack spacing={2.5}>
+          <Stack spacing={{ xs: 2, md: 2.5 }}>
             {isSmDown ? (
-              <AppCard sx={{ p: 2 }}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
                 <Button
                   variant="outlined"
                   onClick={() => setMobileSidebarOpen(true)}
                   sx={{
-                    width: "100%",
+                    flex: 1,
+                    minWidth: 0,
                     textTransform: "none",
                     fontWeight: 600,
                     justifyContent: "space-between",
@@ -1589,7 +1594,25 @@ export default function Calendar() {
                   {monthLabels[selectedMonth.getMonth()]}{" "}
                   {selectedMonth.getFullYear()}
                 </Button>
-              </AppCard>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    const today = new Date();
+                    setSelectedDate(today);
+                    setSelectedMonth(
+                      new Date(today.getFullYear(), today.getMonth(), 1)
+                    );
+                    setAgendaPage(1);
+                  }}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Hoje
+                </Button>
+              </Stack>
             ) : null}
             <Stack spacing={2}>
               <Stack
@@ -1846,6 +1869,16 @@ export default function Calendar() {
                     },
                   }}
                 />
+
+                <Button
+                  variant="outlined"
+                  component={RouterLink}
+                  href="/calendario/concluidas"
+                  fullWidth
+                  sx={{ textTransform: "none", fontWeight: 600 }}
+                >
+                  tarefas feitas
+                </Button>
               </Stack>
             </Stack>
           </Stack>
