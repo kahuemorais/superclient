@@ -305,6 +305,8 @@ export default function Notes() {
             }
           });
           setNotes(merged);
+        } else {
+          setNotes(defaultNotes);
         }
       } catch {
         window.localStorage.removeItem(STORAGE_NOTES);
@@ -724,22 +726,31 @@ export default function Notes() {
                   <AccordionDetails>
                     <Stack spacing={2}>
                       {activeSubcategories.length ? (
-                        <Stack spacing={1}>
-                          {activeSubcategories.map((subcategory) => (
-                            <Chip
-                              key={subcategory.id}
-                              label={subcategory.name}
-                              sx={{
-                                maxWidth: 220,
-                                minHeight: 32,
-                                "& .MuiChip-label": {
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                },
-                              }}
-                            />
-                          ))}
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {activeSubcategories.map((subcategory) => {
+                            const parentCategory = categories.find(
+                              (category) => category.id === subcategory.categoryId
+                            );
+                            return (
+                              <Chip
+                                key={subcategory.id}
+                                label={subcategory.name}
+                                sx={{
+                                  maxWidth: 220,
+                                  minHeight: 32,
+                                  color: "#e6edf3",
+                                  backgroundColor: parentCategory
+                                    ? darkenColor(parentCategory.color, 0.7)
+                                    : "rgba(15, 23, 42, 0.6)",
+                                  "& .MuiChip-label": {
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  },
+                                }}
+                              />
+                            );
+                          })}
                         </Stack>
                       ) : (
                         <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -816,22 +827,30 @@ export default function Notes() {
                                 ))
                               : null}
                             {fieldSettings.showSubcategories
-                              ? noteSubcategories.slice(0, 1).map((subcategory) => (
-                                  <Chip
-                                    key={subcategory.id}
-                                    label={subcategory.name}
-                                    variant="outlined"
-                                    sx={{
-                                      maxWidth: 200,
-                                      minHeight: 32,
-                                      "& .MuiChip-label": {
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
-                                      },
-                                    }}
-                                  />
-                                ))
+                              ? noteSubcategories.slice(0, 1).map((subcategory) => {
+                                  const parentCategory = categories.find(
+                                    (category) => category.id === subcategory.categoryId
+                                  );
+                                  return (
+                                    <Chip
+                                      key={subcategory.id}
+                                      label={subcategory.name}
+                                      sx={{
+                                        maxWidth: 200,
+                                        minHeight: 32,
+                                        color: "#e6edf3",
+                                        backgroundColor: parentCategory
+                                          ? darkenColor(parentCategory.color, 0.7)
+                                          : "rgba(15, 23, 42, 0.6)",
+                                        "& .MuiChip-label": {
+                                          overflow: "hidden",
+                                          textOverflow: "ellipsis",
+                                          whiteSpace: "nowrap",
+                                        },
+                                      }}
+                                    />
+                                  );
+                                })
                               : null}
                             {fieldSettings.showUpdatedAt ? (
                               <Typography variant="caption" sx={{ color: "text.secondary" }}>
@@ -1276,26 +1295,35 @@ export default function Notes() {
                       </Stack>
                     </Box>
                   ) : null}
-                  <Stack spacing={1}>
-                    {subcategories.map((subcategory) => (
-                      <Chip
-                        key={subcategory.id}
-                        label={`${categories.find((cat) => cat.id === subcategory.categoryId)?.name || "Categoria"} - ${subcategory.name}`}
-                        onClick={() => startEditSubcategory(subcategory)}
-                        onDelete={() =>
-                          setConfirmRemove({ type: "subcategory", id: subcategory.id })
-                        }
-                        sx={{
-                          maxWidth: 320,
-                          minHeight: 32,
-                          "& .MuiChip-label": {
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          },
-                        }}
-                      />
-                    ))}
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {subcategories.map((subcategory) => {
+                      const parentCategory = categories.find(
+                        (category) => category.id === subcategory.categoryId
+                      );
+                      return (
+                        <Chip
+                          key={subcategory.id}
+                          label={`${parentCategory?.name || "Categoria"} - ${subcategory.name}`}
+                          onClick={() => startEditSubcategory(subcategory)}
+                          onDelete={() =>
+                            setConfirmRemove({ type: "subcategory", id: subcategory.id })
+                          }
+                          sx={{
+                            maxWidth: 320,
+                            minHeight: 32,
+                            color: "#e6edf3",
+                            backgroundColor: parentCategory
+                              ? darkenColor(parentCategory.color, 0.7)
+                              : "rgba(15, 23, 42, 0.6)",
+                            "& .MuiChip-label": {
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            },
+                          }}
+                        />
+                      );
+                    })}
                     {!subcategories.length ? (
                       <Typography variant="body2" sx={{ color: "text.secondary" }}>
                         Nenhuma subcategoria criada.
