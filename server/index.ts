@@ -1,7 +1,11 @@
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
-import express, { type Request, type Response, type NextFunction } from "express";
+import express, {
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import bcrypt from "bcryptjs";
@@ -25,9 +29,12 @@ const app = express();
 const port = Number(process.env.PORT || 3001);
 const isProduction = process.env.NODE_ENV === "production";
 
-const allowlist = (process.env.CORS_ORIGIN || "http://localhost:3000")
+const allowlist = (
+  process.env.CORS_ORIGIN ||
+  "http://localhost:3000,http://localhost:5173,http://localhost:5174"
+)
   .split(",")
-  .map((value) => value.trim())
+  .map(value => value.trim())
   .filter(Boolean);
 
 app.use(
@@ -147,12 +154,14 @@ const roleCount = db.prepare("SELECT COUNT(*) as count FROM roles").get() as {
 };
 if (roleCount.count === 0) {
   const insertRole = db.prepare("INSERT INTO roles (name) VALUES (?)");
-  ["Administrador", "Gestor", "Analista", "Leitor"].forEach((role) =>
+  ["Administrador", "Gestor", "Analista", "Leitor"].forEach(role =>
     insertRole.run(role)
   );
 }
 
-const moduleCount = db.prepare("SELECT COUNT(*) as count FROM modules").get() as {
+const moduleCount = db
+  .prepare("SELECT COUNT(*) as count FROM modules")
+  .get() as {
   count: number;
 };
 if (moduleCount.count === 0) {
@@ -164,43 +173,63 @@ if (moduleCount.count === 0) {
     ["Gestao de usuarios", "Perfis, roles e permissao.", 1],
     ["Convites e onboarding", "Fluxos de entrada.", 1],
     ["Relatorios", "Exportacao e auditoria.", 1],
-  ].forEach((module) => insertModule.run(...module));
+  ].forEach(module => insertModule.run(...module));
 }
 
 const ensureUserPreferencesColumns = () => {
   const columns = db.prepare("PRAGMA table_info(user_preferences)").all() as {
     name: string;
   }[];
-  const names = new Set(columns.map((column) => column.name));
+  const names = new Set(columns.map(column => column.name));
   if (!names.has("module_pipeline")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN module_pipeline INTEGER NOT NULL DEFAULT 1").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN module_pipeline INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
   if (!names.has("module_finance")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN module_finance INTEGER NOT NULL DEFAULT 1").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN module_finance INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
   if (!names.has("module_contacts")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN module_contacts INTEGER NOT NULL DEFAULT 1").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN module_contacts INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
   if (!names.has("module_calendar")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN module_calendar INTEGER NOT NULL DEFAULT 1").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN module_calendar INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
   if (!names.has("language")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN language TEXT NOT NULL DEFAULT 'pt-BR'").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN language TEXT NOT NULL DEFAULT 'pt-BR'"
+    ).run();
   }
   if (!names.has("notify_mentions")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN notify_mentions INTEGER NOT NULL DEFAULT 1").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN notify_mentions INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
   if (!names.has("notify_pipeline_updates")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN notify_pipeline_updates INTEGER NOT NULL DEFAULT 1").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN notify_pipeline_updates INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
   if (!names.has("notify_finance_alerts")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN notify_finance_alerts INTEGER NOT NULL DEFAULT 1").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN notify_finance_alerts INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
   if (!names.has("notify_weekly_summary")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN notify_weekly_summary INTEGER NOT NULL DEFAULT 1").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN notify_weekly_summary INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
   if (!names.has("notify_product_updates")) {
-    db.prepare("ALTER TABLE user_preferences ADD COLUMN notify_product_updates INTEGER NOT NULL DEFAULT 1").run();
+    db.prepare(
+      "ALTER TABLE user_preferences ADD COLUMN notify_product_updates INTEGER NOT NULL DEFAULT 1"
+    ).run();
   }
 };
 
@@ -210,7 +239,7 @@ const ensureUserProfileColumns = () => {
   const columns = db.prepare("PRAGMA table_info(user_profiles)").all() as {
     name: string;
   }[];
-  const names = new Set(columns.map((column) => column.name));
+  const names = new Set(columns.map(column => column.name));
   if (!names.has("phones")) {
     db.prepare("ALTER TABLE user_profiles ADD COLUMN phones TEXT").run();
   }
@@ -284,7 +313,13 @@ const getUserFromRequest = (req: Request): AuthUser | null => {
       "SELECT sessions.id, sessions.user_id, sessions.expires_at, users.email, users.name FROM sessions JOIN users ON users.id = sessions.user_id WHERE token_hash = ?"
     )
     .get(tokenHash) as
-    | { id: number; user_id: number; expires_at: string; email: string; name: string | null }
+    | {
+        id: number;
+        user_id: number;
+        expires_at: string;
+        email: string;
+        name: string | null;
+      }
     | undefined;
   if (!session) {
     return null;
@@ -309,8 +344,11 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
 app.post("/api/auth/signup", (req, res) => {
   const name = typeof req.body.name === "string" ? req.body.name.trim() : null;
   const email =
-    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  const password = typeof req.body.password === "string" ? req.body.password : "";
+    typeof req.body.email === "string"
+      ? req.body.email.trim().toLowerCase()
+      : "";
+  const password =
+    typeof req.body.password === "string" ? req.body.password : "";
 
   if (!email || !password) {
     res.status(400).json({ error: "email_and_password_required" });
@@ -338,10 +376,9 @@ app.post("/api/auth/signup", (req, res) => {
     .prepare("SELECT id FROM roles WHERE name = ?")
     .get("Administrador") as { id: number } | undefined;
   if (defaultRole) {
-    db.prepare("INSERT OR IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)").run(
-      userId,
-      defaultRole.id
-    );
+    db.prepare(
+      "INSERT OR IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)"
+    ).run(userId, defaultRole.id);
   }
 
   const session = issueSession(userId);
@@ -351,8 +388,11 @@ app.post("/api/auth/signup", (req, res) => {
 
 app.post("/api/auth/login", (req, res) => {
   const email =
-    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  const password = typeof req.body.password === "string" ? req.body.password : "";
+    typeof req.body.email === "string"
+      ? req.body.email.trim().toLowerCase()
+      : "";
+  const password =
+    typeof req.body.password === "string" ? req.body.password : "";
 
   if (!email || !password) {
     res.status(400).json({ error: "email_and_password_required" });
@@ -381,13 +421,18 @@ app.post("/api/auth/login", (req, res) => {
 
   const session = issueSession(user.id);
   setSessionCookie(res, session.token, session.expires);
-  res.json({ user: { id: user.id, email: user.email, name: user.name }, token: session.token });
+  res.json({
+    user: { id: user.id, email: user.email, name: user.name },
+    token: session.token,
+  });
 });
 
 app.post("/api/auth/logout", (req, res) => {
   const token = getTokenFromRequest(req);
   if (token) {
-    db.prepare("DELETE FROM sessions WHERE token_hash = ?").run(hashToken(token));
+    db.prepare("DELETE FROM sessions WHERE token_hash = ?").run(
+      hashToken(token)
+    );
   }
   clearSessionCookie(res);
   res.json({ ok: true });
@@ -400,7 +445,9 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 app.patch("/api/auth/me", requireAuth, (req, res) => {
   const name = typeof req.body.name === "string" ? req.body.name.trim() : null;
   const email =
-    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    typeof req.body.email === "string"
+      ? req.body.email.trim().toLowerCase()
+      : "";
 
   if (email) {
     const existing = db
@@ -412,11 +459,9 @@ app.patch("/api/auth/me", requireAuth, (req, res) => {
     }
   }
 
-  db.prepare("UPDATE users SET name = ?, email = COALESCE(?, email) WHERE id = ?").run(
-    name,
-    email || null,
-    req.user?.id
-  );
+  db.prepare(
+    "UPDATE users SET name = ?, email = COALESCE(?, email) WHERE id = ?"
+  ).run(name, email || null, req.user?.id);
 
   const updated = db
     .prepare("SELECT id, email, name FROM users WHERE id = ?")
@@ -479,7 +524,7 @@ app.get("/api/profile", requireAuth, (req, res) => {
       }
       return parsed
         .filter((item): item is string => typeof item === "string")
-        .map((item) => item.trim())
+        .map(item => item.trim())
         .filter(Boolean);
     } catch {
       return [];
@@ -488,7 +533,9 @@ app.get("/api/profile", requireAuth, (req, res) => {
 
   const phones = profile?.phones ? parseStringList(profile.phones) : [];
   const emails = profile?.emails ? parseStringList(profile.emails) : [];
-  const addresses = profile?.addresses ? parseStringList(profile.addresses) : [];
+  const addresses = profile?.addresses
+    ? parseStringList(profile.addresses)
+    : [];
   const comments = profile?.comments ? parseStringList(profile.comments) : [];
 
   res.json({
@@ -504,7 +551,9 @@ app.get("/api/profile", requireAuth, (req, res) => {
       comments,
     },
     preferences: {
-      emailNotifications: preferences ? Boolean(preferences.email_notifications) : true,
+      emailNotifications: preferences
+        ? Boolean(preferences.email_notifications)
+        : true,
       singleSession: preferences ? Boolean(preferences.single_session) : false,
       modulePipeline: preferences ? Boolean(preferences.module_pipeline) : true,
       moduleFinance: preferences ? Boolean(preferences.module_finance) : true,
@@ -512,10 +561,18 @@ app.get("/api/profile", requireAuth, (req, res) => {
       moduleCalendar: preferences ? Boolean(preferences.module_calendar) : true,
       language: preferences?.language || "pt-BR",
       notifyMentions: preferences ? Boolean(preferences.notify_mentions) : true,
-      notifyPipelineUpdates: preferences ? Boolean(preferences.notify_pipeline_updates) : true,
-      notifyFinanceAlerts: preferences ? Boolean(preferences.notify_finance_alerts) : true,
-      notifyWeeklySummary: preferences ? Boolean(preferences.notify_weekly_summary) : true,
-      notifyProductUpdates: preferences ? Boolean(preferences.notify_product_updates) : true,
+      notifyPipelineUpdates: preferences
+        ? Boolean(preferences.notify_pipeline_updates)
+        : true,
+      notifyFinanceAlerts: preferences
+        ? Boolean(preferences.notify_finance_alerts)
+        : true,
+      notifyWeeklySummary: preferences
+        ? Boolean(preferences.notify_weekly_summary)
+        : true,
+      notifyProductUpdates: preferences
+        ? Boolean(preferences.notify_product_updates)
+        : true,
     },
   });
 });
@@ -524,7 +581,9 @@ app.put("/api/profile", requireAuth, (req, res) => {
   const userId = req.user?.id;
   const name = typeof req.body.name === "string" ? req.body.name.trim() : null;
   const email =
-    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    typeof req.body.email === "string"
+      ? req.body.email.trim().toLowerCase()
+      : "";
 
   if (!email) {
     res.status(400).json({ error: "email_required" });
@@ -551,7 +610,7 @@ app.put("/api/profile", requireAuth, (req, res) => {
     }
     return value
       .filter((item): item is string => typeof item === "string")
-      .map((item) => item.trim())
+      .map(item => item.trim())
       .filter(Boolean);
   };
 
@@ -560,7 +619,9 @@ app.put("/api/profile", requireAuth, (req, res) => {
   const addresses = normalizeStringList(req.body.addresses);
   const comments = normalizeStringList(req.body.comments);
   const phone =
-    typeof req.body.phone === "string" ? req.body.phone.trim() : phones[0] || "";
+    typeof req.body.phone === "string"
+      ? req.body.phone.trim()
+      : phones[0] || "";
   const team = typeof req.body.team === "string" ? req.body.team.trim() : "";
   const role = typeof req.body.role === "string" ? req.body.role.trim() : "";
   const timezone =
@@ -576,10 +637,18 @@ app.put("/api/profile", requireAuth, (req, res) => {
       ? req.body.preferences.language.trim()
       : "pt-BR";
   const notifyMentions = Boolean(req.body.preferences?.notifyMentions);
-  const notifyPipelineUpdates = Boolean(req.body.preferences?.notifyPipelineUpdates);
-  const notifyFinanceAlerts = Boolean(req.body.preferences?.notifyFinanceAlerts);
-  const notifyWeeklySummary = Boolean(req.body.preferences?.notifyWeeklySummary);
-  const notifyProductUpdates = Boolean(req.body.preferences?.notifyProductUpdates);
+  const notifyPipelineUpdates = Boolean(
+    req.body.preferences?.notifyPipelineUpdates
+  );
+  const notifyFinanceAlerts = Boolean(
+    req.body.preferences?.notifyFinanceAlerts
+  );
+  const notifyWeeklySummary = Boolean(
+    req.body.preferences?.notifyWeeklySummary
+  );
+  const notifyProductUpdates = Boolean(
+    req.body.preferences?.notifyProductUpdates
+  );
   const now = new Date().toISOString();
 
   db.prepare(
@@ -666,7 +735,16 @@ app.put("/api/profile", requireAuth, (req, res) => {
 
   res.json({
     user: updated,
-    profile: { phone, team, role, timezone, phones, emails, addresses, comments },
+    profile: {
+      phone,
+      team,
+      role,
+      timezone,
+      phones,
+      emails,
+      addresses,
+      comments,
+    },
     preferences: {
       emailNotifications,
       singleSession,
@@ -686,11 +764,13 @@ app.put("/api/profile", requireAuth, (req, res) => {
 
 app.post("/api/auth/forgot-password", (req, res) => {
   const email =
-    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    typeof req.body.email === "string"
+      ? req.body.email.trim().toLowerCase()
+      : "";
 
-  const user = db
-    .prepare("SELECT id FROM users WHERE email = ?")
-    .get(email) as { id: number } | undefined;
+  const user = db.prepare("SELECT id FROM users WHERE email = ?").get(email) as
+    | { id: number }
+    | undefined;
 
   if (!user) {
     res.json({ ok: true });
@@ -710,7 +790,8 @@ app.post("/api/auth/forgot-password", (req, res) => {
 
 app.post("/api/auth/reset-password", (req, res) => {
   const token = typeof req.body.token === "string" ? req.body.token.trim() : "";
-  const password = typeof req.body.password === "string" ? req.body.password : "";
+  const password =
+    typeof req.body.password === "string" ? req.body.password : "";
 
   if (!token || !password) {
     res.status(400).json({ error: "token_and_password_required" });
@@ -723,7 +804,12 @@ app.post("/api/auth/reset-password", (req, res) => {
       "SELECT id, user_id, expires_at, used_at FROM password_resets WHERE token_hash = ?"
     )
     .get(tokenHash) as
-    | { id: number; user_id: number; expires_at: string; used_at: string | null }
+    | {
+        id: number;
+        user_id: number;
+        expires_at: string;
+        used_at: string | null;
+      }
     | undefined;
 
   if (!reset || reset.used_at || new Date(reset.expires_at) < new Date()) {
@@ -793,9 +879,14 @@ app.delete("/api/access/roles/:id", requireAuth, (req, res) => {
 app.get("/api/access/modules", requireAuth, (req, res) => {
   const rows = db
     .prepare("SELECT id, name, description, enabled FROM modules ORDER BY id")
-    .all() as { id: number; name: string; description: string; enabled: number }[];
+    .all() as {
+    id: number;
+    name: string;
+    description: string;
+    enabled: number;
+  }[];
   res.json({
-    modules: rows.map((module) => ({
+    modules: rows.map(module => ({
       ...module,
       enabled: Boolean(module.enabled),
     })),
@@ -809,10 +900,18 @@ app.patch("/api/access/modules/:id", requireAuth, (req, res) => {
     res.status(400).json({ error: "invalid_request" });
     return;
   }
-  db.prepare("UPDATE modules SET enabled = ? WHERE id = ?").run(enabled ? 1 : 0, id);
+  db.prepare("UPDATE modules SET enabled = ? WHERE id = ?").run(
+    enabled ? 1 : 0,
+    id
+  );
   const updated = db
     .prepare("SELECT id, name, description, enabled FROM modules WHERE id = ?")
-    .get(id) as { id: number; name: string; description: string; enabled: number };
+    .get(id) as {
+    id: number;
+    name: string;
+    description: string;
+    enabled: number;
+  };
   res.json({ module: { ...updated, enabled: Boolean(updated.enabled) } });
 });
 
@@ -930,7 +1029,9 @@ app.get("/api/access/invites", requireAuth, (req, res) => {
 
 app.post("/api/access/invites", requireAuth, (req, res) => {
   const email =
-    typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    typeof req.body.email === "string"
+      ? req.body.email.trim().toLowerCase()
+      : "";
   const roleId = Number(req.body.roleId) || null;
   if (!email) {
     res.status(400).json({ error: "email_required" });
@@ -938,7 +1039,9 @@ app.post("/api/access/invites", requireAuth, (req, res) => {
   }
   const createdAt = new Date().toISOString();
   const result = db
-    .prepare("INSERT INTO invites (email, role_id, status, created_at) VALUES (?, ?, ?, ?)")
+    .prepare(
+      "INSERT INTO invites (email, role_id, status, created_at) VALUES (?, ?, ?, ?)"
+    )
     .run(email, roleId, "Pendente", createdAt);
   res.json({
     invite: {
@@ -953,7 +1056,8 @@ app.post("/api/access/invites", requireAuth, (req, res) => {
 
 app.patch("/api/access/invites/:id", requireAuth, (req, res) => {
   const id = Number(req.params.id);
-  const status = typeof req.body.status === "string" ? req.body.status.trim() : "";
+  const status =
+    typeof req.body.status === "string" ? req.body.status.trim() : "";
   if (!id || !status) {
     res.status(400).json({ error: "invalid_request" });
     return;

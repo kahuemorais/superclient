@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -19,7 +19,10 @@ import {
   Typography,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import ArchiveRoundedIcon from "@mui/icons-material/ArchiveRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import FormatBoldRoundedIcon from "@mui/icons-material/FormatBoldRounded";
 import FormatItalicRoundedIcon from "@mui/icons-material/FormatItalicRounded";
@@ -29,6 +32,7 @@ import FormatQuoteRoundedIcon from "@mui/icons-material/FormatQuoteRounded";
 import LooksOneRoundedIcon from "@mui/icons-material/LooksOneRounded";
 import LooksTwoRoundedIcon from "@mui/icons-material/LooksTwoRounded";
 import Looks3RoundedIcon from "@mui/icons-material/Looks3Rounded";
+import UnarchiveRoundedIcon from "@mui/icons-material/UnarchiveRounded";
 import BackspaceRoundedIcon from "@mui/icons-material/BackspaceRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -37,7 +41,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import SettingsIconButton from "../components/SettingsIconButton";
 import ToggleCheckbox from "../components/ToggleCheckbox";
-import { useLocation } from "wouter";
+import { Link as RouterLink, useLocation } from "wouter";
 
 type NoteCategory = {
   id: string;
@@ -49,6 +53,7 @@ type NoteSubcategory = {
   id: string;
   name: string;
   categoryId: string;
+  color: string;
 };
 
 type NoteLink = {
@@ -65,6 +70,7 @@ type Note = {
   contentHtml: string;
   links: NoteLink[];
   updatedAt: string;
+  archived: boolean;
   isDraft?: boolean;
   parentId?: string;
   relatedNoteIds?: string[];
@@ -96,12 +102,42 @@ const defaultCategories: NoteCategory[] = [
 ];
 
 const defaultSubcategories: NoteSubcategory[] = [
-  { id: "note-sub-plano", name: "Plano de ação", categoryId: "note-cat-estrategia" },
-  { id: "note-sub-kpis", name: "KPIs", categoryId: "note-cat-estrategia" },
-  { id: "note-sub-ata", name: "Ata", categoryId: "note-cat-reunioes" },
-  { id: "note-sub-followup", name: "Follow-up", categoryId: "note-cat-reunioes" },
-  { id: "note-sub-fluxos", name: "Fluxos", categoryId: "note-cat-projeto" },
-  { id: "note-sub-research", name: "Pesquisa", categoryId: "note-cat-aprendizado" },
+  {
+    id: "note-sub-plano",
+    name: "Plano de ação",
+    categoryId: "note-cat-estrategia",
+    color: DEFAULT_COLORS[0],
+  },
+  {
+    id: "note-sub-kpis",
+    name: "KPIs",
+    categoryId: "note-cat-estrategia",
+    color: DEFAULT_COLORS[1],
+  },
+  {
+    id: "note-sub-ata",
+    name: "Ata",
+    categoryId: "note-cat-reunioes",
+    color: DEFAULT_COLORS[2],
+  },
+  {
+    id: "note-sub-followup",
+    name: "Follow-up",
+    categoryId: "note-cat-reunioes",
+    color: DEFAULT_COLORS[3],
+  },
+  {
+    id: "note-sub-fluxos",
+    name: "Fluxos",
+    categoryId: "note-cat-projeto",
+    color: DEFAULT_COLORS[4],
+  },
+  {
+    id: "note-sub-research",
+    name: "Pesquisa",
+    categoryId: "note-cat-aprendizado",
+    color: DEFAULT_COLORS[5],
+  },
 ];
 
 const defaultNotes: Note[] = [
@@ -113,9 +149,14 @@ const defaultNotes: Note[] = [
     contentHtml:
       "<p>Mapear entregas por etapa e alinhar milestones com o time.</p><ul><li>Kickoff</li><li>Design sprint</li><li>Entrega beta</li></ul>",
     links: [
-      { id: "note-link-1", label: "Board do projeto", url: "https://trello.com" },
+      {
+        id: "note-link-1",
+        label: "Board do projeto",
+        url: "https://trello.com",
+      },
     ],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
   {
@@ -125,8 +166,11 @@ const defaultNotes: Note[] = [
     subcategoryIds: ["note-sub-ata"],
     contentHtml:
       "<p>Principais alinhamentos:</p><ol><li>Priorizar backlog A</li><li>Revisar riscos da entrega</li></ol>",
-    links: [{ id: "note-link-2", label: "Gravação", url: "https://meet.google.com" }],
+    links: [
+      { id: "note-link-2", label: "Gravação", url: "https://meet.google.com" },
+    ],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
   {
@@ -137,6 +181,7 @@ const defaultNotes: Note[] = [
     contentHtml: "<p>Listar riscos e planos de mitigação.</p>",
     links: [],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
   {
@@ -144,9 +189,11 @@ const defaultNotes: Note[] = [
     title: "Checklist de kickoff",
     categoryIds: ["note-cat-reunioes"],
     subcategoryIds: ["note-sub-followup"],
-    contentHtml: "<ul><li>Alinhar objetivos</li><li>Definir stakeholders</li></ul>",
+    contentHtml:
+      "<ul><li>Alinhar objetivos</li><li>Definir stakeholders</li></ul>",
     links: [],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
   {
@@ -157,6 +204,7 @@ const defaultNotes: Note[] = [
     contentHtml: "<p>Resumo das entrevistas e principais insights.</p>",
     links: [],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
   {
@@ -167,6 +215,7 @@ const defaultNotes: Note[] = [
     contentHtml: "<p>OKRs e metas do time.</p>",
     links: [],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
   {
@@ -177,6 +226,7 @@ const defaultNotes: Note[] = [
     contentHtml: "<p>Prioridades e entregas da semana.</p>",
     links: [],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
   {
@@ -187,6 +237,7 @@ const defaultNotes: Note[] = [
     contentHtml: "<p>Fases, dependências e entregas.</p>",
     links: [],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
   {
@@ -197,6 +248,7 @@ const defaultNotes: Note[] = [
     contentHtml: "<p>O que funcionou e o que melhorar.</p>",
     links: [],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
   {
@@ -207,6 +259,7 @@ const defaultNotes: Note[] = [
     contentHtml: "<p>Links e referências para estudo.</p>",
     links: [],
     updatedAt: new Date().toISOString(),
+    archived: false,
     relatedNoteIds: [],
   },
 ];
@@ -216,9 +269,18 @@ const darkenColor = (value: string, factor: number) => {
   if (color.length !== 6) {
     return value;
   }
-  const r = Math.max(0, Math.min(255, Math.floor(parseInt(color.slice(0, 2), 16) * factor)));
-  const g = Math.max(0, Math.min(255, Math.floor(parseInt(color.slice(2, 4), 16) * factor)));
-  const b = Math.max(0, Math.min(255, Math.floor(parseInt(color.slice(4, 6), 16) * factor)));
+  const r = Math.max(
+    0,
+    Math.min(255, Math.floor(parseInt(color.slice(0, 2), 16) * factor))
+  );
+  const g = Math.max(
+    0,
+    Math.min(255, Math.floor(parseInt(color.slice(2, 4), 16) * factor))
+  );
+  const b = Math.max(
+    0,
+    Math.min(255, Math.floor(parseInt(color.slice(4, 6), 16) * factor))
+  );
   return `#${r.toString(16).padStart(2, "0")}${g
     .toString(16)
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
@@ -232,30 +294,51 @@ const emptyNote = (categoryId: string): Note => ({
   contentHtml: "",
   links: [],
   updatedAt: new Date().toISOString(),
+  archived: false,
   isDraft: true,
   relatedNoteIds: [],
 });
 
 export default function Notes() {
   const [location, setLocation] = useLocation();
-  const [categories, setCategories] = useState<NoteCategory[]>(defaultCategories);
-  const [subcategories, setSubcategories] = useState<NoteSubcategory[]>(defaultSubcategories);
+  const isArchiveView = location.startsWith("/notas/arquivo");
+  const [categories, setCategories] =
+    useState<NoteCategory[]>(defaultCategories);
+  const [subcategories, setSubcategories] =
+    useState<NoteSubcategory[]>(defaultSubcategories);
   const [notes, setNotes] = useState<Note[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>(defaultCategories[0]?.id || "");
+  const [activeCategory, setActiveCategory] = useState<string>(
+    defaultCategories[0]?.id || ""
+  );
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [activeSubcategory, setActiveSubcategory] = useState<string | null>(
+    null
+  );
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
   const [editingCategoryName, setEditingCategoryName] = useState("");
-  const [editingCategoryColor, setEditingCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [editingCategoryColor, setEditingCategoryColor] = useState(
+    DEFAULT_COLORS[0]
+  );
   const [newSubcategoryName, setNewSubcategoryName] = useState("");
   const [newSubcategoryCategory, setNewSubcategoryCategory] = useState(
     defaultCategories[0]?.id || ""
   );
-  const [editingSubcategoryId, setEditingSubcategoryId] = useState<string | null>(null);
+  const [editingSubcategoryId, setEditingSubcategoryId] = useState<
+    string | null
+  >(null);
   const [editingSubcategoryName, setEditingSubcategoryName] = useState("");
   const [editingSubcategoryCategory, setEditingSubcategoryCategory] = useState(
     defaultCategories[0]?.id || ""
+  );
+  const [editingSubcategoryColor, setEditingSubcategoryColor] = useState(
+    DEFAULT_COLORS[0]
+  );
+  const [newSubcategoryColor, setNewSubcategoryColor] = useState(
+    DEFAULT_COLORS[0]
   );
   const [noteQuery, setNoteQuery] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -267,12 +350,21 @@ export default function Notes() {
     showSubcategories: true,
     showLinks: true,
     showUpdatedAt: true,
+    showCategoryCounts: true,
   });
   const [subcategoriesExpanded, setSubcategoriesExpanded] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<{
     type: "category" | "subcategory";
     id: string;
   } | null>(null);
+  const [noteConfirm, setNoteConfirm] = useState<{
+    type: "archive" | "restore" | "delete";
+    id: string;
+  } | null>(null);
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>(
+    defaultCategories[0]?.id || ""
+  );
+  const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
 
   useEffect(() => {
     const storedNotes = window.localStorage.getItem(STORAGE_NOTES);
@@ -282,7 +374,7 @@ export default function Notes() {
           Note & { categoryId?: string; subcategoryId?: string }
         >;
         if (Array.isArray(parsed) && parsed.length) {
-          const normalized = parsed.map((note) => ({
+          const normalized = parsed.map(note => ({
             ...note,
             categoryIds: note.categoryIds?.length
               ? note.categoryIds
@@ -294,12 +386,15 @@ export default function Notes() {
               : note.subcategoryId
                 ? [note.subcategoryId]
                 : [],
+            archived: Boolean(note.archived),
             isDraft: Boolean(note.isDraft),
-            relatedNoteIds: Array.isArray(note.relatedNoteIds) ? note.relatedNoteIds : [],
+            relatedNoteIds: Array.isArray(note.relatedNoteIds)
+              ? note.relatedNoteIds
+              : [],
           }));
-          const existingIds = new Set(normalized.map((note) => note.id));
+          const existingIds = new Set(normalized.map(note => note.id));
           const merged = [...normalized];
-          defaultNotes.forEach((note) => {
+          defaultNotes.forEach(note => {
             if (!existingIds.has(note.id)) {
               merged.push(note);
             }
@@ -315,7 +410,9 @@ export default function Notes() {
       setNotes(defaultNotes);
     }
 
-    const storedCategories = window.localStorage.getItem(STORAGE_NOTE_CATEGORIES);
+    const storedCategories = window.localStorage.getItem(
+      STORAGE_NOTE_CATEGORIES
+    );
     if (storedCategories) {
       try {
         const parsed = JSON.parse(storedCategories) as NoteCategory[];
@@ -328,7 +425,9 @@ export default function Notes() {
       }
     }
 
-    const storedSubcategories = window.localStorage.getItem(STORAGE_NOTE_SUBCATEGORIES);
+    const storedSubcategories = window.localStorage.getItem(
+      STORAGE_NOTE_SUBCATEGORIES
+    );
     if (storedSubcategories) {
       try {
         const parsed = JSON.parse(storedSubcategories) as NoteSubcategory[];
@@ -348,50 +447,124 @@ export default function Notes() {
     }
     try {
       const parsed = JSON.parse(stored) as Partial<typeof fieldSettings>;
-      setFieldSettings((prev) => ({ ...prev, ...parsed }));
+      setFieldSettings(prev => ({ ...prev, ...parsed }));
     } catch {
       window.localStorage.removeItem(STORAGE_NOTE_FIELDS);
     }
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_NOTE_FIELDS, JSON.stringify(fieldSettings));
+    window.localStorage.setItem(
+      STORAGE_NOTE_FIELDS,
+      JSON.stringify(fieldSettings)
+    );
   }, [fieldSettings]);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_NOTE_CATEGORIES, JSON.stringify(categories));
+    window.localStorage.setItem(
+      STORAGE_NOTE_CATEGORIES,
+      JSON.stringify(categories)
+    );
   }, [categories]);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_NOTE_SUBCATEGORIES, JSON.stringify(subcategories));
+    window.localStorage.setItem(
+      STORAGE_NOTE_SUBCATEGORIES,
+      JSON.stringify(subcategories)
+    );
   }, [subcategories]);
 
+  useEffect(() => {
+    if (!categories.length) {
+      return;
+    }
+    if (!categories.some(category => category.id === subcategoryFilter)) {
+      setSubcategoryFilter(categories[0].id);
+    }
+  }, [categories, subcategoryFilter]);
+
+  useEffect(() => {
+    if (!activeSubcategory) {
+      return;
+    }
+    const belongsToActive = subcategories.some(
+      subcategory =>
+        subcategory.id === activeSubcategory &&
+        subcategory.categoryId === activeCategory
+    );
+    if (!belongsToActive) {
+      setActiveSubcategory(null);
+    }
+  }, [activeCategory, activeSubcategory, subcategories]);
+
   const activeSubcategories = useMemo(
-    () => subcategories.filter((item) => item.categoryId === activeCategory),
+    () => subcategories.filter(item => item.categoryId === activeCategory),
     [subcategories, activeCategory]
   );
 
   const stripHtml = (value: string) => value.replace(/<[^>]+>/g, " ");
 
+  const categoryMap = useMemo(
+    () => new Map(categories.map(category => [category.id, category])),
+    [categories]
+  );
+  const subcategoryMap = useMemo(
+    () =>
+      new Map(subcategories.map(subcategory => [subcategory.id, subcategory])),
+    [subcategories]
+  );
+
   const filteredNotes = useMemo(() => {
     const term = noteQuery.trim().toLowerCase();
-    return notes.filter((note) => {
+    return notes.filter(note => {
+      if (note.archived !== isArchiveView) {
+        return false;
+      }
       if (!note.categoryIds.includes(activeCategory)) {
+        return false;
+      }
+      if (
+        activeSubcategory &&
+        !note.subcategoryIds.includes(activeSubcategory)
+      ) {
         return false;
       }
       if (!term) {
         return true;
       }
-      const haystack = `${note.title} ${stripHtml(note.contentHtml || "")}`.toLowerCase();
+      const categoryNames = note.categoryIds
+        .map(id => categoryMap.get(id)?.name || "")
+        .join(" ");
+      const subcategoryNames = note.subcategoryIds
+        .map(id => subcategoryMap.get(id)?.name || "")
+        .join(" ");
+      const haystack =
+        `${note.title} ${stripHtml(note.contentHtml || "")} ${categoryNames} ${subcategoryNames}`.toLowerCase();
       return haystack.includes(term);
     });
-  }, [notes, activeCategory, noteQuery]);
+  }, [
+    notes,
+    activeCategory,
+    activeSubcategory,
+    noteQuery,
+    isArchiveView,
+    categoryMap,
+    subcategoryMap,
+  ]);
 
-  const noteIdFromRoute =
-    location.startsWith("/notas/") && location.split("/")[2]
-      ? location.split("/")[2]
-      : null;
-  const selectedNote = notes.find((note) => note.id === selectedNoteId) || null;
+  const noteIdFromRoute = (() => {
+    if (location.startsWith("/notas/arquivo/")) {
+      return location.split("/")[3] || null;
+    }
+    if (
+      location.startsWith("/notas/") &&
+      location.split("/")[2] !== "arquivo"
+    ) {
+      return location.split("/")[2] || null;
+    }
+    return null;
+  })();
+  const selectedNote = notes.find(note => note.id === selectedNoteId) || null;
 
   const isPristineDraft = (note: Note) =>
     note.isDraft &&
@@ -408,30 +581,47 @@ export default function Notes() {
     if (!noteId) {
       return;
     }
-    const note = notes.find((item) => item.id === noteId);
+    const note = notes.find(item => item.id === noteId);
     if (note && isPristineDraft(note)) {
-      setNotes((prev) => prev.filter((item) => item.id !== noteId));
+      setNotes(prev => prev.filter(item => item.id !== noteId));
     }
   };
 
+  const prevSelectedNoteIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (noteIdFromRoute && noteIdFromRoute !== selectedNoteId) {
-      const exists = notes.some((note) => note.id === noteIdFromRoute);
-      if (exists) {
-        const match = notes.find((note) => note.id === noteIdFromRoute);
-        if (match?.categoryIds?.length) {
+      const match = notes.find(note => note.id === noteIdFromRoute);
+      if (match) {
+        if (match.archived !== isArchiveView) {
+          setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
+          return;
+        }
+        if (match.categoryIds?.length) {
           setActiveCategory(match.categoryIds[0]);
         }
         setSelectedNoteId(noteIdFromRoute);
+        prevSelectedNoteIdRef.current = noteIdFromRoute;
         return;
       }
     }
     if (!filteredNotes.length) {
       setSelectedNoteId(null);
+      prevSelectedNoteIdRef.current = null;
       return;
     }
-    if (!selectedNoteId || !filteredNotes.some((note) => note.id === selectedNoteId)) {
-      setSelectedNoteId(filteredNotes[0].id);
+    // Only auto-select if there's no previous selection
+    if (
+      !selectedNoteId ||
+      !filteredNotes.some(note => note.id === selectedNoteId)
+    ) {
+      const nextNoteId = filteredNotes[0]?.id || null;
+      if (nextNoteId !== prevSelectedNoteIdRef.current) {
+        setSelectedNoteId(nextNoteId);
+        prevSelectedNoteIdRef.current = nextNoteId;
+      }
+    } else {
+      prevSelectedNoteIdRef.current = selectedNoteId;
     }
   }, [filteredNotes, selectedNoteId, noteIdFromRoute, notes]);
 
@@ -441,12 +631,14 @@ export default function Notes() {
     if (note.categoryIds?.length) {
       setActiveCategory(note.categoryIds[0]);
     }
-    setLocation(`/notas/${note.id}`);
+    setLocation(
+      isArchiveView ? `/notas/arquivo/${note.id}` : `/notas/${note.id}`
+    );
   };
 
   const updateNote = (next: Note) => {
-    setNotes((prev) =>
-      prev.map((note) =>
+    setNotes(prev =>
+      prev.map(note =>
         note.id === next.id ? { ...next, isDraft: false } : note
       )
     );
@@ -458,7 +650,7 @@ export default function Notes() {
     }
     discardIfPristine(selectedNoteId);
     const next = emptyNote(activeCategory);
-    setNotes((prev) => [next, ...prev]);
+    setNotes(prev => [next, ...prev]);
     setSelectedNoteId(next.id);
     setNoteQuery("");
     setLocation(`/notas/${next.id}`);
@@ -474,7 +666,7 @@ export default function Notes() {
       name,
       color: newCategoryColor,
     };
-    setCategories((prev) => [...prev, next]);
+    setCategories(prev => [...prev, next]);
     setNewCategoryName("");
     setNewCategoryColor(DEFAULT_COLORS[0]);
     setActiveCategory(next.id);
@@ -482,24 +674,29 @@ export default function Notes() {
   };
 
   const removeCategory = (categoryId: string) => {
-    const remaining = categories.filter((category) => category.id !== categoryId);
+    const remaining = categories.filter(category => category.id !== categoryId);
     if (!remaining.length) {
       return;
     }
     const nextActive = remaining[0].id;
     setCategories(remaining);
-    setSubcategories((prev) => prev.filter((item) => item.categoryId !== categoryId));
-    setNotes((prev) =>
-      prev.map((note) =>
+    setSubcategories(prev =>
+      prev.filter(item => item.categoryId !== categoryId)
+    );
+    setNotes(prev =>
+      prev.map(note =>
         note.categoryIds.includes(categoryId)
           ? {
               ...note,
-              categoryIds: note.categoryIds.filter((id) => id !== categoryId).length
-                ? note.categoryIds.filter((id) => id !== categoryId)
+              categoryIds: note.categoryIds.filter(id => id !== categoryId)
+                .length
+                ? note.categoryIds.filter(id => id !== categoryId)
                 : [nextActive],
               subcategoryIds: note.subcategoryIds.filter(
-                (subId) =>
-                  !subcategories.some((item) => item.id === subId && item.categoryId === categoryId)
+                subId =>
+                  !subcategories.some(
+                    item => item.id === subId && item.categoryId === categoryId
+                  )
               ),
             }
           : note
@@ -517,17 +714,24 @@ export default function Notes() {
       id: `note-sub-${Date.now()}`,
       name,
       categoryId: newSubcategoryCategory,
+      color: newSubcategoryColor,
     };
-    setSubcategories((prev) => [...prev, next]);
+    setSubcategories(prev => [...prev, next]);
     setNewSubcategoryName("");
+    setNewSubcategoryColor(DEFAULT_COLORS[0]);
   };
 
   const removeSubcategory = (subcategoryId: string) => {
-    setSubcategories((prev) => prev.filter((item) => item.id !== subcategoryId));
-    setNotes((prev) =>
-      prev.map((note) =>
+    setSubcategories(prev => prev.filter(item => item.id !== subcategoryId));
+    setNotes(prev =>
+      prev.map(note =>
         note.subcategoryIds.includes(subcategoryId)
-          ? { ...note, subcategoryIds: note.subcategoryIds.filter((id) => id !== subcategoryId) }
+          ? {
+              ...note,
+              subcategoryIds: note.subcategoryIds.filter(
+                id => id !== subcategoryId
+              ),
+            }
           : note
       )
     );
@@ -537,12 +741,14 @@ export default function Notes() {
     setEditingSubcategoryId(subcategory.id);
     setEditingSubcategoryName(subcategory.name);
     setEditingSubcategoryCategory(subcategory.categoryId);
+    setEditingSubcategoryColor(subcategory.color);
   };
 
   const cancelEditSubcategory = () => {
     setEditingSubcategoryId(null);
     setEditingSubcategoryName("");
     setEditingSubcategoryCategory(defaultCategories[0]?.id || "");
+    setEditingSubcategoryColor(DEFAULT_COLORS[0]);
   };
 
   const saveSubcategory = () => {
@@ -553,10 +759,15 @@ export default function Notes() {
     if (!name || !editingSubcategoryCategory) {
       return;
     }
-    setSubcategories((prev) =>
-      prev.map((subcategory) =>
+    setSubcategories(prev =>
+      prev.map(subcategory =>
         subcategory.id === editingSubcategoryId
-          ? { ...subcategory, name, categoryId: editingSubcategoryCategory }
+          ? {
+              ...subcategory,
+              name,
+              categoryId: editingSubcategoryCategory,
+              color: editingSubcategoryColor,
+            }
           : subcategory
       )
     );
@@ -582,8 +793,8 @@ export default function Notes() {
     if (!name) {
       return;
     }
-    setCategories((prev) =>
-      prev.map((category) =>
+    setCategories(prev =>
+      prev.map(category =>
         category.id === editingCategoryId
           ? { ...category, name, color: editingCategoryColor }
           : category
@@ -595,7 +806,7 @@ export default function Notes() {
   const removeLink = (note: Note, linkId: string) => {
     updateNote({
       ...note,
-      links: note.links.filter((link) => link.id !== linkId),
+      links: note.links.filter(link => link.id !== linkId),
       updatedAt: new Date().toISOString(),
     });
   };
@@ -611,10 +822,15 @@ export default function Notes() {
     });
   };
 
-  const updateLink = (note: Note, linkId: string, key: "label" | "url", value: string) => {
+  const updateLink = (
+    note: Note,
+    linkId: string,
+    key: "label" | "url",
+    value: string
+  ) => {
     updateNote({
       ...note,
-      links: note.links.map((link) =>
+      links: note.links.map(link =>
         link.id === linkId ? { ...link, [key]: value } : link
       ),
       updatedAt: new Date().toISOString(),
@@ -629,28 +845,85 @@ export default function Notes() {
     });
   };
 
+  const requestNoteAction = (
+    note: Note,
+    type: "archive" | "restore" | "delete"
+  ) => {
+    setNoteConfirm({ type, id: note.id });
+  };
+
+  const applyNoteAction = (
+    noteId: string,
+    type: "archive" | "restore" | "delete"
+  ) => {
+    if (type === "delete") {
+      setNotes(prev => prev.filter(note => note.id !== noteId));
+    } else {
+      setNotes(prev =>
+        prev.map(note =>
+          note.id === noteId
+            ? { ...note, archived: type === "archive" ? true : false }
+            : note
+        )
+      );
+    }
+    if (selectedNoteId === noteId) {
+      setSelectedNoteId(null);
+    }
+    if (type === "archive") {
+      setLocation("/notas");
+      return;
+    }
+    if (type === "restore") {
+      setLocation("/notas/arquivo");
+      return;
+    }
+    setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
+  };
+
   const createSubpage = (note: Note) => {
     const next = {
       ...emptyNote(note.categoryIds[0] || activeCategory),
       parentId: note.id,
-      categoryIds: note.categoryIds.length ? note.categoryIds : [activeCategory],
+      categoryIds: note.categoryIds.length
+        ? note.categoryIds
+        : [activeCategory],
       subcategoryIds: note.subcategoryIds,
     };
-    setNotes((prev) => [next, ...prev]);
+    setNotes(prev => [next, ...prev]);
     setSelectedNoteId(next.id);
     setLocation(`/notas/${next.id}`);
   };
 
-  const showSidebar = fieldSettings.showCategories || fieldSettings.showSubcategories;
+  const showSidebar =
+    fieldSettings.showCategories || fieldSettings.showSubcategories;
+  const showBackButton = Boolean(noteIdFromRoute);
+  const archiveLink = isArchiveView
+    ? { label: "Notas", href: "/notas" }
+    : { label: "Arquivo", href: "/notas/arquivo" };
 
   return (
     <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
       <Stack spacing={3}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Notas
-          </Typography>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
           <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              {isArchiveView ? "Arquivo" : "Notas"}
+            </Typography>
+          </Stack>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Button
+              component={RouterLink}
+              href={archiveLink.href}
+              variant="outlined"
+              sx={{ textTransform: "none", fontWeight: 600 }}
+            >
+              {archiveLink.label}
+            </Button>
             <Button
               variant="outlined"
               startIcon={<AddRoundedIcon />}
@@ -666,7 +939,9 @@ export default function Notes() {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: showSidebar ? { xs: "1fr", md: "280px 1fr" } : "1fr",
+            gridTemplateColumns: showSidebar
+              ? { xs: "1fr", md: "280px 1fr" }
+              : "1fr",
             gap: 2.5,
           }}
         >
@@ -679,22 +954,31 @@ export default function Notes() {
                       Categorias
                     </Typography>
                     <Stack spacing={1}>
-                      {categories.map((category) => (
+                      {categories.map(category => (
                         <Box
                           key={category.id}
-                          onClick={() => setActiveCategory(category.id)}
-                          sx={(theme) => ({
+                          onClick={() => {
+                            setActiveCategory(category.id);
+                            setActiveSubcategory(null);
+                          }}
+                          sx={theme => ({
                             p: 1,
                             borderRadius: "var(--radius-card)",
                             border: 1,
                             borderColor:
-                              activeCategory === category.id ? "primary.main" : "divider",
+                              activeCategory === category.id
+                                ? "primary.main"
+                                : "divider",
                             backgroundColor: "background.paper",
                             cursor: "pointer",
                             ...interactiveCardSx(theme),
                           })}
                         >
-                          <Stack direction="row" spacing={1} alignItems="center">
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                          >
                             <Box
                               sx={{
                                 width: 10,
@@ -703,7 +987,27 @@ export default function Notes() {
                                 backgroundColor: category.color,
                               }}
                             />
-                            <Typography variant="body2">{category.name}</Typography>
+                            <Typography variant="body2">
+                              {category.name}
+                            </Typography>
+                            {fieldSettings.showCategoryCounts ? (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: "text.secondary",
+                                  fontWeight: 600,
+                                  ml: "auto",
+                                }}
+                              >
+                                {
+                                  notes.filter(
+                                    note =>
+                                      note.archived === isArchiveView &&
+                                      note.categoryIds.includes(category.id)
+                                  ).length
+                                }
+                              </Typography>
+                            ) : null}
                           </Stack>
                         </Box>
                       ))}
@@ -715,7 +1019,9 @@ export default function Notes() {
               {fieldSettings.showSubcategories ? (
                 <Accordion
                   expanded={subcategoriesExpanded}
-                  onChange={(_, isExpanded) => setSubcategoriesExpanded(isExpanded)}
+                  onChange={(_, isExpanded) =>
+                    setSubcategoriesExpanded(isExpanded)
+                  }
                   elevation={0}
                 >
                   <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
@@ -726,15 +1032,30 @@ export default function Notes() {
                   <AccordionDetails>
                     <Stack spacing={2}>
                       {activeSubcategories.length ? (
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {activeSubcategories.map((subcategory) => {
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {activeSubcategories.map(subcategory => {
                             const parentCategory = categories.find(
-                              (category) => category.id === subcategory.categoryId
+                              category => category.id === subcategory.categoryId
                             );
+                            const isActive =
+                              activeSubcategory === subcategory.id;
                             return (
                               <Chip
                                 key={subcategory.id}
                                 label={subcategory.name}
+                                clickable
+                                onClick={() =>
+                                  setActiveSubcategory(prev =>
+                                    prev === subcategory.id
+                                      ? null
+                                      : subcategory.id
+                                  )
+                                }
                                 sx={{
                                   maxWidth: 220,
                                   minHeight: 32,
@@ -742,6 +1063,11 @@ export default function Notes() {
                                   backgroundColor: parentCategory
                                     ? darkenColor(parentCategory.color, 0.7)
                                     : "rgba(15, 23, 42, 0.6)",
+                                  border: 1,
+                                  borderColor: isActive
+                                    ? "primary.main"
+                                    : "divider",
+                                  boxShadow: isActive ? 2 : "none",
                                   "& .MuiChip-label": {
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
@@ -753,7 +1079,10 @@ export default function Notes() {
                           })}
                         </Stack>
                       ) : (
-                        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "text.secondary" }}
+                        >
                           Sem subcategorias.
                         </Typography>
                       )}
@@ -765,144 +1094,208 @@ export default function Notes() {
           ) : null}
 
           <Stack spacing={2.5}>
-            <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
-              <Stack spacing={1.5}>
-                <Stack
-                  direction={{ xs: "column", md: "row" }}
-                  spacing={1.5}
-                  alignItems={{ xs: "flex-start", md: "center" }}
-                  justifyContent="space-between"
-                >
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                    Notas
-                  </Typography>
+            {!selectedNote ? (
+              <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+                <Stack spacing={1.5}>
                   <TextField
                     label="Buscar nota"
                     size="small"
                     value={noteQuery}
-                    onChange={(event) => setNoteQuery(event.target.value)}
+                    onChange={event => setNoteQuery(event.target.value)}
                     sx={{ minWidth: 220 }}
                   />
+                  {filteredNotes.length ? (
+                    <Stack spacing={2}>
+                      {(expandedNoteId
+                        ? filteredNotes.filter(
+                            note => note.id === expandedNoteId
+                          )
+                        : filteredNotes
+                      ).map(note => {
+                        const noteCategories = categories.filter(cat =>
+                          note.categoryIds.includes(cat.id)
+                        );
+                        const isExpanded = note.id === expandedNoteId;
+                        const preview = stripHtml(
+                          note.contentHtml || ""
+                        ).trim();
+                        return (
+                          <Paper
+                            key={note.id}
+                            elevation={0}
+                            onClick={() => {
+                              if (isExpanded) {
+                                setExpandedNoteId(null);
+                              } else {
+                                setExpandedNoteId(note.id);
+                                selectNote(note);
+                              }
+                            }}
+                            sx={theme => ({
+                              p: isExpanded ? 2.5 : 2,
+                              borderRadius: "var(--radius-card)",
+                              border: 1,
+                              borderColor: isExpanded
+                                ? "primary.main"
+                                : "divider",
+                              backgroundColor: "background.paper",
+                              cursor: "pointer",
+                              minHeight: isExpanded ? "auto" : 120,
+                              ...interactiveCardSx(theme),
+                            })}
+                          >
+                            <Stack spacing={isExpanded ? 1.5 : 1}>
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                flexWrap="wrap"
+                              >
+                                <Typography
+                                  variant={
+                                    isExpanded ? "subtitle1" : "subtitle2"
+                                  }
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  {note.title}
+                                </Typography>
+                                {fieldSettings.showCategories
+                                  ? noteCategories.slice(0, 1).map(category => (
+                                      <Chip
+                                        key={category.id}
+                                        label={category.name}
+                                        size="small"
+                                        sx={{
+                                          color: "#e6edf3",
+                                          backgroundColor: darkenColor(
+                                            category.color,
+                                            0.5
+                                          ),
+                                        }}
+                                      />
+                                    ))
+                                  : null}
+                                {fieldSettings.showUpdatedAt ? (
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: "text.secondary" }}
+                                  >
+                                    {new Date(
+                                      note.updatedAt
+                                    ).toLocaleDateString("pt-BR")}
+                                  </Typography>
+                                ) : null}
+                              </Stack>
+                              {isExpanded && preview ? (
+                                <Typography
+                                  variant="body2"
+                                  sx={{ color: "text.secondary" }}
+                                >
+                                  {preview.length > 180
+                                    ? `${preview.slice(0, 180)}...`
+                                    : preview}
+                                </Typography>
+                              ) : null}
+                            </Stack>
+                          </Paper>
+                        );
+                      })}
+                    </Stack>
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {isArchiveView
+                        ? "Sem notas arquivadas nesta categoria."
+                        : "Sem notas nesta categoria."}
+                    </Typography>
+                  )}
                 </Stack>
-                {filteredNotes.length ? (
-                  <Stack spacing={1.5}>
-                    {filteredNotes.map((note) => {
-                      const noteCategories = categories.filter((cat) =>
-                        note.categoryIds.includes(cat.id)
-                      );
-                      const noteSubcategories = subcategories.filter((sub) =>
-                        note.subcategoryIds.includes(sub.id)
-                      );
-                      return (
-                        <Paper
-                          key={note.id}
-                          elevation={0}
-                          onClick={() => selectNote(note)}
-                          sx={(theme) => ({
-                            p: 1,
-                            borderRadius: "var(--radius-card)",
-                            border: 1,
-                            borderColor:
-                              selectedNoteId === note.id ? "primary.main" : "divider",
-                            backgroundColor: "background.paper",
-                            cursor: "pointer",
-                            ...interactiveCardSx(theme),
-                          })}
-                        >
-                          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                              {note.title}
-                            </Typography>
-                            {fieldSettings.showCategories
-                              ? noteCategories.slice(0, 1).map((category) => (
-                                  <Chip
-                                    key={category.id}
-                                    label={category.name}
-                                    size="small"
-                                    sx={{
-                                      color: "#e6edf3",
-                                      backgroundColor: darkenColor(category.color, 0.5),
-                                    }}
-                                  />
-                                ))
-                              : null}
-                            {fieldSettings.showSubcategories
-                              ? noteSubcategories.slice(0, 1).map((subcategory) => {
-                                  const parentCategory = categories.find(
-                                    (category) => category.id === subcategory.categoryId
-                                  );
-                                  return (
-                                    <Chip
-                                      key={subcategory.id}
-                                      label={subcategory.name}
-                                      sx={{
-                                        maxWidth: 200,
-                                        minHeight: 32,
-                                        color: "#e6edf3",
-                                        backgroundColor: parentCategory
-                                          ? darkenColor(parentCategory.color, 0.7)
-                                          : "rgba(15, 23, 42, 0.6)",
-                                        "& .MuiChip-label": {
-                                          overflow: "hidden",
-                                          textOverflow: "ellipsis",
-                                          whiteSpace: "nowrap",
-                                        },
-                                      }}
-                                    />
-                                  );
-                                })
-                              : null}
-                            {fieldSettings.showUpdatedAt ? (
-                              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                                {new Date(note.updatedAt).toLocaleDateString("pt-BR")}
-                              </Typography>
-                            ) : null}
-                          </Stack>
-                        </Paper>
-                      );
-                    })}
-                  </Stack>
-                ) : (
-                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Sem notas nesta categoria.
-                  </Typography>
-                )}
-              </Stack>
-            </Paper>
+              </Paper>
+            ) : null}
 
             {selectedNote ? (
               <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
                 <Stack spacing={2}>
                   <Stack spacing={2}>
-                    <TextField
-                      label="Titulo"
-                      value={selectedNote.title}
-                      onChange={(event) =>
-                        updateNote({
-                          ...selectedNote,
-                          title: event.target.value,
-                          updatedAt: new Date().toISOString(),
-                        })
-                      }
-                      fullWidth
-                      sx={{
-                        "& .MuiInputBase-input": {
-                          fontSize: "1.35rem",
-                          fontWeight: 700,
-                          lineHeight: 1.3,
-                        },
-                      }}
-                    />
+                    <Stack direction="row" spacing={1} alignItems="flex-start">
+                      <TextField
+                        label="Titulo"
+                        value={selectedNote.title}
+                        onChange={event =>
+                          updateNote({
+                            ...selectedNote,
+                            title: event.target.value,
+                            updatedAt: new Date().toISOString(),
+                          })
+                        }
+                        fullWidth
+                        sx={{
+                          "& .MuiInputBase-input": {
+                            fontSize: "1.35rem",
+                            fontWeight: 700,
+                            lineHeight: 1.3,
+                          },
+                        }}
+                      />
+                      <Stack direction="row" spacing={0.5}>
+                        <Tooltip title="Fechar nota" placement="top">
+                          <IconButton
+                            onClick={e => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setSelectedNoteId(null);
+                              setExpandedNoteId(null);
+                            }}
+                          >
+                            <CloseRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip
+                          title={
+                            selectedNote.archived
+                              ? "Restaurar nota"
+                              : "Arquivar nota"
+                          }
+                          placement="top"
+                        >
+                          <IconButton
+                            onClick={() =>
+                              requestNoteAction(
+                                selectedNote,
+                                selectedNote.archived ? "restore" : "archive"
+                              )
+                            }
+                          >
+                            {selectedNote.archived ? (
+                              <UnarchiveRoundedIcon fontSize="small" />
+                            ) : (
+                              <ArchiveRoundedIcon fontSize="small" />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Remover nota" placement="top">
+                          <IconButton
+                            onClick={() =>
+                              requestNoteAction(selectedNote, "delete")
+                            }
+                          >
+                            <DeleteRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </Stack>
                     <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                       {fieldSettings.showCategories ? (
                         <Autocomplete
                           multiple
                           options={categories}
-                          value={categories.filter((item) =>
+                          value={categories.filter(item =>
                             selectedNote.categoryIds.includes(item.id)
                           )}
                           onChange={(_, value) => {
-                            const nextIds = value.map((item) => item.id);
+                            const nextIds = value.map(item => item.id);
                             updateNote({
                               ...selectedNote,
                               categoryIds: nextIds,
@@ -912,15 +1305,23 @@ export default function Notes() {
                               setActiveCategory(nextIds[0]);
                             }
                           }}
-                          getOptionLabel={(option) => option.name}
+                          getOptionLabel={option => option.name}
                           renderOption={(props, option, { selected }) => (
                             <li {...props}>
-                              <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
+                              <Checkbox
+                                checked={selected}
+                                size="small"
+                                sx={{ mr: 1 }}
+                              />
                               {option.name}
                             </li>
                           )}
-                          renderInput={(params) => (
-                            <TextField {...params} label="Categorias" fullWidth />
+                          renderInput={params => (
+                            <TextField
+                              {...params}
+                              label="Categorias"
+                              fullWidth
+                            />
                           )}
                           sx={{ minWidth: 240, flex: 1 }}
                         />
@@ -928,28 +1329,36 @@ export default function Notes() {
                       {fieldSettings.showSubcategories ? (
                         <Autocomplete
                           multiple
-                          options={subcategories.filter((item) =>
+                          options={subcategories.filter(item =>
                             selectedNote.categoryIds.includes(item.categoryId)
                           )}
-                          value={subcategories.filter((item) =>
+                          value={subcategories.filter(item =>
                             selectedNote.subcategoryIds.includes(item.id)
                           )}
                           onChange={(_, value) =>
                             updateNote({
                               ...selectedNote,
-                              subcategoryIds: value.map((item) => item.id),
+                              subcategoryIds: value.map(item => item.id),
                               updatedAt: new Date().toISOString(),
                             })
                           }
-                          getOptionLabel={(option) => option.name}
+                          getOptionLabel={option => option.name}
                           renderOption={(props, option, { selected }) => (
                             <li {...props}>
-                              <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
+                              <Checkbox
+                                checked={selected}
+                                size="small"
+                                sx={{ mr: 1 }}
+                              />
                               {option.name}
                             </li>
                           )}
-                          renderInput={(params) => (
-                            <TextField {...params} label="Subcategorias" fullWidth />
+                          renderInput={params => (
+                            <TextField
+                              {...params}
+                              label="Subcategorias"
+                              fullWidth
+                            />
                           )}
                           sx={{ minWidth: 240, flex: 1 }}
                         />
@@ -961,11 +1370,17 @@ export default function Notes() {
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                       Subpáginas
                     </Typography>
-                    {notes.filter((note) => note.parentId === selectedNote.id).length ? (
-                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {notes.filter(note => note.parentId === selectedNote.id)
+                      .length ? (
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
                         {notes
-                          .filter((note) => note.parentId === selectedNote.id)
-                          .map((child) => (
+                          .filter(note => note.parentId === selectedNote.id)
+                          .map(child => (
                             <Chip
                               key={child.id}
                               label={child.title}
@@ -976,14 +1391,21 @@ export default function Notes() {
                           ))}
                       </Stack>
                     ) : (
-                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                      >
                         Sem subpáginas.
                       </Typography>
                     )}
                     <Button
                       variant="outlined"
                       onClick={() => createSubpage(selectedNote)}
-                      sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                      sx={{
+                        alignSelf: "flex-start",
+                        textTransform: "none",
+                        fontWeight: 600,
+                      }}
                     >
                       Criar subpágina
                     </Button>
@@ -995,32 +1417,47 @@ export default function Notes() {
                     </Typography>
                     <Autocomplete
                       multiple
-                      options={notes.filter((note) => note.id !== selectedNote.id)}
-                      value={notes.filter((note) =>
+                      options={notes.filter(
+                        note => note.id !== selectedNote.id
+                      )}
+                      value={notes.filter(note =>
                         (selectedNote.relatedNoteIds || []).includes(note.id)
                       )}
                       onChange={(_, value) =>
                         updateRelatedNotes(
                           selectedNote,
-                          value.map((item) => item.id)
+                          value.map(item => item.id)
                         )
                       }
-                      getOptionLabel={(option) => option.title}
+                      getOptionLabel={option => option.title}
                       renderOption={(props, option, { selected }) => (
                         <li {...props}>
-                          <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
+                          <Checkbox
+                            checked={selected}
+                            size="small"
+                            sx={{ mr: 1 }}
+                          />
                           {option.title}
                         </li>
                       )}
-                      renderInput={(params) => (
-                        <TextField {...params} label="Vincular notas" fullWidth />
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          label="Vincular notas"
+                          fullWidth
+                        />
                       )}
                     />
-                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      flexWrap="wrap"
+                      useFlexGap
+                    >
                       {(selectedNote.relatedNoteIds || [])
-                        .map((id) => notes.find((note) => note.id === id))
+                        .map(id => notes.find(note => note.id === id))
                         .filter(Boolean)
-                        .map((note) => (
+                        .map(note => (
                           <Chip
                             key={note?.id}
                             label={note?.title}
@@ -1036,14 +1473,24 @@ export default function Notes() {
                       <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                         Links
                       </Typography>
-                      {selectedNote.links.map((link) => (
-                        <Stack key={link.id} direction="row" spacing={1} alignItems="center">
+                      {selectedNote.links.map(link => (
+                        <Stack
+                          key={link.id}
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                        >
                           <TextField
                             label="Titulo"
                             size="small"
                             value={link.label}
-                            onChange={(event) =>
-                              updateLink(selectedNote, link.id, "label", event.target.value)
+                            onChange={event =>
+                              updateLink(
+                                selectedNote,
+                                link.id,
+                                "label",
+                                event.target.value
+                              )
                             }
                             fullWidth
                           />
@@ -1051,13 +1498,20 @@ export default function Notes() {
                             label="URL"
                             size="small"
                             value={link.url}
-                            onChange={(event) =>
-                              updateLink(selectedNote, link.id, "url", event.target.value)
+                            onChange={event =>
+                              updateLink(
+                                selectedNote,
+                                link.id,
+                                "url",
+                                event.target.value
+                              )
                             }
                             fullWidth
                           />
                           <Tooltip title="Remover link" placement="top">
-                            <IconButton onClick={() => removeLink(selectedNote, link.id)}>
+                            <IconButton
+                              onClick={() => removeLink(selectedNote, link.id)}
+                            >
                               <CloseRoundedIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
@@ -1078,7 +1532,11 @@ export default function Notes() {
                         variant="outlined"
                         startIcon={<AddRoundedIcon />}
                         onClick={() => addLink(selectedNote)}
-                        sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                        sx={{
+                          alignSelf: "flex-start",
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
                       >
                         Adicionar link
                       </Button>
@@ -1087,7 +1545,7 @@ export default function Notes() {
 
                   <RichTextEditor
                     value={selectedNote.contentHtml}
-                    onChange={(value) =>
+                    onChange={value =>
                       updateNote({
                         ...selectedNote,
                         contentHtml: value,
@@ -1107,7 +1565,12 @@ export default function Notes() {
           </Stack>
         </Box>
       </Stack>
-      <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogContent>
           <Stack spacing={2.5}>
             <Typography variant="h6">Configurações de notas</Typography>
@@ -1147,10 +1610,17 @@ export default function Notes() {
                           label="Nome"
                           fullWidth
                           value={editingCategoryName}
-                          onChange={(event) => setEditingCategoryName(event.target.value)}
+                          onChange={event =>
+                            setEditingCategoryName(event.target.value)
+                          }
                         />
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {DEFAULT_COLORS.map((color) => (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {DEFAULT_COLORS.map(color => (
                             <Box
                               key={color}
                               onClick={() => setEditingCategoryColor(color)}
@@ -1160,15 +1630,23 @@ export default function Notes() {
                                 borderRadius: 1,
                                 backgroundColor: color,
                                 borderStyle: "solid",
-                                borderWidth: editingCategoryColor === color ? 2 : 1,
+                                borderWidth:
+                                  editingCategoryColor === color ? 2 : 1,
                                 borderColor: "divider",
                                 cursor: "pointer",
                               }}
                             />
                           ))}
                         </Stack>
-                        <Stack direction="row" spacing={2} justifyContent="flex-end">
-                          <Button variant="outlined" onClick={cancelEditCategory}>
+                        <Stack
+                          direction="row"
+                          spacing={2}
+                          justifyContent="flex-end"
+                        >
+                          <Button
+                            variant="outlined"
+                            onClick={cancelEditCategory}
+                          >
                             Cancelar
                           </Button>
                           <Button variant="contained" onClick={saveCategory}>
@@ -1179,12 +1657,17 @@ export default function Notes() {
                     </Box>
                   ) : null}
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {categories.map((category) => (
+                    {categories.map(category => (
                       <Chip
                         key={category.id}
                         label={category.name}
                         onClick={() => startEditCategory(category)}
-                        onDelete={() => setConfirmRemove({ type: "category", id: category.id })}
+                        onDelete={() =>
+                          setConfirmRemove({
+                            type: "category",
+                            id: category.id,
+                          })
+                        }
                         sx={{
                           color: "#e6edf3",
                           backgroundColor: darkenColor(category.color, 0.5),
@@ -1198,10 +1681,17 @@ export default function Notes() {
                         label="Nova categoria"
                         fullWidth
                         value={newCategoryName}
-                        onChange={(event) => setNewCategoryName(event.target.value)}
+                        onChange={event =>
+                          setNewCategoryName(event.target.value)
+                        }
                       />
-                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                        {DEFAULT_COLORS.map((color) => (
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        {DEFAULT_COLORS.map(color => (
                           <Box
                             key={color}
                             onClick={() => setNewCategoryColor(color)}
@@ -1222,7 +1712,11 @@ export default function Notes() {
                         variant="outlined"
                         startIcon={<AddRoundedIcon />}
                         onClick={addCategory}
-                        sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                        sx={{
+                          alignSelf: "flex-start",
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
                       >
                         Criar categoria
                       </Button>
@@ -1268,24 +1762,57 @@ export default function Notes() {
                           label="Nome"
                           fullWidth
                           value={editingSubcategoryName}
-                          onChange={(event) => setEditingSubcategoryName(event.target.value)}
+                          onChange={event =>
+                            setEditingSubcategoryName(event.target.value)
+                          }
                         />
                         <TextField
                           select
                           label="Categoria"
                           value={editingSubcategoryCategory}
-                          onChange={(event) =>
+                          onChange={event =>
                             setEditingSubcategoryCategory(event.target.value)
                           }
                         >
-                          {categories.map((category) => (
+                          {categories.map(category => (
                             <MenuItem key={category.id} value={category.id}>
                               {category.name}
                             </MenuItem>
                           ))}
                         </TextField>
-                        <Stack direction="row" spacing={2} justifyContent="flex-end">
-                          <Button variant="outlined" onClick={cancelEditSubcategory}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {DEFAULT_COLORS.map(color => (
+                            <Box
+                              key={color}
+                              onClick={() => setEditingSubcategoryColor(color)}
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 1,
+                                backgroundColor: color,
+                                borderStyle: "solid",
+                                borderWidth:
+                                  editingSubcategoryColor === color ? 2 : 1,
+                                borderColor: "divider",
+                                cursor: "pointer",
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                        <Stack
+                          direction="row"
+                          spacing={2}
+                          justifyContent="flex-end"
+                        >
+                          <Button
+                            variant="outlined"
+                            onClick={cancelEditSubcategory}
+                          >
                             Cancelar
                           </Button>
                           <Button variant="contained" onClick={saveSubcategory}>
@@ -1295,65 +1822,130 @@ export default function Notes() {
                       </Stack>
                     </Box>
                   ) : null}
+                  {!editingSubcategoryId ? (
+                    <TextField
+                      select
+                      label="Categoria"
+                      value={subcategoryFilter}
+                      onChange={event => {
+                        setSubcategoryFilter(event.target.value);
+                        setNewSubcategoryCategory(event.target.value);
+                      }}
+                    >
+                      {categories.map(category => (
+                        <MenuItem key={category.id} value={category.id}>
+                          {category.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  ) : null}
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {subcategories.map((subcategory) => {
-                      const parentCategory = categories.find(
-                        (category) => category.id === subcategory.categoryId
-                      );
-                      return (
-                        <Chip
-                          key={subcategory.id}
-                          label={`${parentCategory?.name || "Categoria"} - ${subcategory.name}`}
-                          onClick={() => startEditSubcategory(subcategory)}
-                          onDelete={() =>
-                            setConfirmRemove({ type: "subcategory", id: subcategory.id })
-                          }
-                          sx={{
-                            maxWidth: 320,
-                            minHeight: 32,
-                            color: "#e6edf3",
-                            backgroundColor: parentCategory
-                              ? darkenColor(parentCategory.color, 0.7)
-                              : "rgba(15, 23, 42, 0.6)",
-                            "& .MuiChip-label": {
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            },
-                          }}
-                        />
-                      );
-                    })}
-                    {!subcategories.length ? (
-                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    {subcategories
+                      .filter(
+                        subcategory =>
+                          subcategory.categoryId === subcategoryFilter
+                      )
+                      .map(subcategory => {
+                        const parentCategory = categories.find(
+                          category => category.id === subcategory.categoryId
+                        );
+                        return (
+                          <Chip
+                            key={subcategory.id}
+                            label={`${parentCategory?.name || "Categoria"} - ${subcategory.name}`}
+                            onClick={() => startEditSubcategory(subcategory)}
+                            onDelete={() =>
+                              setConfirmRemove({
+                                type: "subcategory",
+                                id: subcategory.id,
+                              })
+                            }
+                            sx={{
+                              maxWidth: 320,
+                              minHeight: 32,
+                              color: "#e6edf3",
+                              backgroundColor: darkenColor(
+                                subcategory.color,
+                                0.7
+                              ),
+                              "& .MuiChip-label": {
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              },
+                            }}
+                          />
+                        );
+                      })}
+                    {!subcategories.filter(
+                      subcategory =>
+                        subcategory.categoryId === subcategoryFilter
+                    ).length ? (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                      >
                         Nenhuma subcategoria criada.
                       </Typography>
                     ) : null}
                   </Stack>
                   {editingSubcategoryId ? null : (
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <TextField
-                        select
-                        label="Categoria"
-                        value={newSubcategoryCategory}
-                        onChange={(event) => setNewSubcategoryCategory(event.target.value)}
-                        sx={{ minWidth: 180 }}
+                    <Stack spacing={1.5}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <TextField
+                          select
+                          label="Categoria"
+                          value={newSubcategoryCategory}
+                          onChange={event =>
+                            setNewSubcategoryCategory(event.target.value)
+                          }
+                          sx={{ minWidth: 180 }}
+                        >
+                          {categories.map(category => (
+                            <MenuItem key={category.id} value={category.id}>
+                              {category.name}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                        <TextField
+                          label="Nova subcategoria"
+                          fullWidth
+                          value={newSubcategoryName}
+                          onChange={event =>
+                            setNewSubcategoryName(event.target.value)
+                          }
+                        />
+                        <IconButton
+                          onClick={addSubcategory}
+                          aria-label="Adicionar subcategoria"
+                        >
+                          <AddRoundedIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
                       >
-                        {categories.map((category) => (
-                          <MenuItem key={category.id} value={category.id}>
-                            {category.name}
-                          </MenuItem>
+                        {DEFAULT_COLORS.map(color => (
+                          <Box
+                            key={color}
+                            onClick={() => setNewSubcategoryColor(color)}
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 1,
+                              backgroundColor: color,
+                              borderStyle: "solid",
+                              borderWidth:
+                                newSubcategoryColor === color ? 2 : 1,
+                              borderColor: "divider",
+                              cursor: "pointer",
+                            }}
+                          />
                         ))}
-                      </TextField>
-                      <TextField
-                        label="Nova subcategoria"
-                        fullWidth
-                        value={newSubcategoryName}
-                        onChange={(event) => setNewSubcategoryName(event.target.value)}
-                      />
-                      <IconButton onClick={addSubcategory} aria-label="Adicionar subcategoria">
-                        <AddRoundedIcon fontSize="small" />
-                      </IconButton>
+                      </Stack>
                     </Stack>
                   )}
                 </Stack>
@@ -1383,13 +1975,23 @@ export default function Notes() {
                 <Stack spacing={1.5}>
                   {[
                     { key: "showCategories", label: "Mostrar categorias" },
-                    { key: "showSubcategories", label: "Mostrar subcategorias" },
+                    {
+                      key: "showSubcategories",
+                      label: "Mostrar subcategorias",
+                    },
+                    {
+                      key: "showCategoryCounts",
+                      label: "Mostrar contagem por categoria",
+                    },
                     { key: "showLinks", label: "Mostrar links" },
-                  { key: "showUpdatedAt", label: "Mostrar última atualização" },
-                  ].map((item) => (
+                    {
+                      key: "showUpdatedAt",
+                      label: "Mostrar última atualização",
+                    },
+                  ].map(item => (
                     <Box
                       key={item.key}
-                      sx={(theme) => ({
+                      sx={theme => ({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -1402,22 +2004,25 @@ export default function Notes() {
                         ...interactiveCardSx(theme),
                       })}
                       onClick={() =>
-                        setFieldSettings((prev) => ({
+                        setFieldSettings(prev => ({
                           ...prev,
-                          [item.key]: !prev[item.key as keyof typeof fieldSettings],
+                          [item.key]:
+                            !prev[item.key as keyof typeof fieldSettings],
                         }))
                       }
                     >
                       <Typography variant="subtitle2">{item.label}</Typography>
                       <ToggleCheckbox
-                        checked={Boolean(fieldSettings[item.key as keyof typeof fieldSettings])}
-                        onChange={(event) =>
-                          setFieldSettings((prev) => ({
+                        checked={Boolean(
+                          fieldSettings[item.key as keyof typeof fieldSettings]
+                        )}
+                        onChange={event =>
+                          setFieldSettings(prev => ({
                             ...prev,
                             [item.key]: event.target.checked,
                           }))
                         }
-                        onClick={(event) => event.stopPropagation()}
+                        onClick={event => event.stopPropagation()}
                       />
                     </Box>
                   ))}
@@ -1455,6 +2060,31 @@ export default function Notes() {
             removeSubcategory(confirmRemove.id);
           }
           setConfirmRemove(null);
+        }}
+      />
+      <ConfirmDialog
+        open={Boolean(noteConfirm)}
+        title={
+          noteConfirm?.type === "delete"
+            ? "Remover nota"
+            : noteConfirm?.type === "archive"
+              ? "Arquivar nota"
+              : "Restaurar nota"
+        }
+        description={
+          noteConfirm?.type === "delete"
+            ? "Você confirma a remoção desta nota? Esta ação não poderá ser desfeita."
+            : noteConfirm?.type === "archive"
+              ? "Você confirma o envio desta nota para o arquivo?"
+              : "Você confirma a restauração desta nota para a lista principal?"
+        }
+        onCancel={() => setNoteConfirm(null)}
+        onConfirm={() => {
+          if (!noteConfirm) {
+            return;
+          }
+          applyNoteAction(noteConfirm.id, noteConfirm.type);
+          setNoteConfirm(null);
         }}
       />
     </Box>
@@ -1495,7 +2125,6 @@ function ConfirmDialog({
     </Dialog>
   );
 }
-
 
 function RichTextEditor({
   value,
@@ -1564,8 +2193,12 @@ function RichTextEditor({
         <Tooltip title="Titulo 1" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-            color={editor?.isActive("heading", { level: 1 }) ? "primary" : "default"}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 1 }).run()
+            }
+            color={
+              editor?.isActive("heading", { level: 1 }) ? "primary" : "default"
+            }
             aria-label="Titulo 1"
           >
             <LooksOneRoundedIcon fontSize="small" />
@@ -1574,8 +2207,12 @@ function RichTextEditor({
         <Tooltip title="Titulo 2" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-            color={editor?.isActive("heading", { level: 2 }) ? "primary" : "default"}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            color={
+              editor?.isActive("heading", { level: 2 }) ? "primary" : "default"
+            }
             aria-label="Titulo 2"
           >
             <LooksTwoRoundedIcon fontSize="small" />
@@ -1584,8 +2221,12 @@ function RichTextEditor({
         <Tooltip title="Titulo 3" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-            color={editor?.isActive("heading", { level: 3 }) ? "primary" : "default"}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+            color={
+              editor?.isActive("heading", { level: 3 }) ? "primary" : "default"
+            }
             aria-label="Titulo 3"
           >
             <Looks3RoundedIcon fontSize="small" />
@@ -1624,7 +2265,9 @@ function RichTextEditor({
         <Tooltip title="Limpar formatação" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()}
+            onClick={() =>
+              editor?.chain().focus().unsetAllMarks().clearNodes().run()
+            }
             aria-label="Limpar formatação"
           >
             <BackspaceRoundedIcon fontSize="small" />

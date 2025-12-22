@@ -212,8 +212,8 @@ const NEW_PIPELINE_NAMES = new Set([
 ]);
 
 const isLegacyPipelineCategories = (cats: Category[]) => {
-  const hasLegacy = cats.some((cat) => LEGACY_PIPELINE_NAMES.has(cat.name));
-  const hasNew = cats.some((cat) => NEW_PIPELINE_NAMES.has(cat.name));
+  const hasLegacy = cats.some(cat => LEGACY_PIPELINE_NAMES.has(cat.name));
+  const hasNew = cats.some(cat => NEW_PIPELINE_NAMES.has(cat.name));
   return hasLegacy && !hasNew;
 };
 
@@ -454,7 +454,7 @@ const normalizePersonIds = (ids?: Array<number | string>) => {
   if (!ids) {
     return [];
   }
-  return ids.map((id) => {
+  return ids.map(id => {
     if (typeof id === "number") {
       return `user:${id}`;
     }
@@ -466,15 +466,17 @@ const normalizePersonIds = (ids?: Array<number | string>) => {
 };
 
 const normalizeDeals = (deals: Deal[]) =>
-  deals.map((deal) => ({
+  deals.map(deal => ({
     ...deal,
-    responsibleIds: normalizePersonIds(deal.responsibleIds as Array<number | string>),
+    responsibleIds: normalizePersonIds(
+      deal.responsibleIds as Array<number | string>
+    ),
     workerIds: normalizePersonIds(deal.workerIds as Array<number | string>),
     watcherIds: normalizePersonIds(deal.watcherIds as Array<number | string>),
   }));
 
 const normalizeColumns = (incoming: Column[]) =>
-  incoming.map((column) => ({
+  incoming.map(column => ({
     ...column,
     archived: Boolean(column.archived),
     deals: normalizeDeals(column.deals),
@@ -541,9 +543,13 @@ export default function Pipeline() {
   });
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
   const [editingCategoryName, setEditingCategoryName] = useState("");
-  const [editingCategoryColor, setEditingCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [editingCategoryColor, setEditingCategoryColor] = useState(
+    DEFAULT_COLORS[0]
+  );
   const [taskQuery, setTaskQuery] = useState("");
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [sprintState, setSprintState] = useState<SprintState>({
@@ -556,7 +562,9 @@ export default function Pipeline() {
   const [newDealId, setNewDealId] = useState<string | null>(null);
   const [removeDealOpen, setRemoveDealOpen] = useState(false);
   const [removeColumnOpen, setRemoveColumnOpen] = useState(false);
-  const [removeColumnTarget, setRemoveColumnTarget] = useState<Column | null>(null);
+  const [removeColumnTarget, setRemoveColumnTarget] = useState<Column | null>(
+    null
+  );
   const [permissions, setPermissions] = useState(() => ({
     pipeline_view: true,
     pipeline_edit_tasks: true,
@@ -571,9 +579,12 @@ export default function Pipeline() {
   const isLoadedRef = useRef(false);
   const saveTimeoutRef = useRef<number | null>(null);
   const openedFromLinkRef = useRef(false);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 3 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 3 } })
+  );
   const canEditTasksOnBoard =
-    permissions.pipeline_edit_tasks && (!sprintState.enabled || !!sprintState.activeSprint);
+    permissions.pipeline_edit_tasks &&
+    (!sprintState.enabled || !!sprintState.activeSprint);
 
   useEffect(() => {
     const loadPipeline = async () => {
@@ -602,7 +613,7 @@ export default function Pipeline() {
               activeSprint: incomingSprints.activeSprint || null,
               backlog: normalizeDeals(incomingSprints.backlog || []),
               history: Array.isArray(incomingSprints.history)
-                ? incomingSprints.history.map((item) => ({
+                ? incomingSprints.history.map(item => ({
                     ...item,
                     columns: normalizeColumns(item.columns || []),
                   }))
@@ -683,7 +694,8 @@ export default function Pipeline() {
       setTaskFieldSettings({
         value: Boolean(parsed.value),
         link: Boolean(parsed.link),
-        description: parsed.description !== undefined ? Boolean(parsed.description) : true,
+        description:
+          parsed.description !== undefined ? Boolean(parsed.description) : true,
         priority: Boolean(parsed.priority),
         dueDate: Boolean(parsed.dueDate),
         checklist: Boolean(parsed.checklist),
@@ -723,7 +735,10 @@ export default function Pipeline() {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("sc_task_fields", JSON.stringify(taskFieldSettings));
+    window.localStorage.setItem(
+      "sc_task_fields",
+      JSON.stringify(taskFieldSettings)
+    );
     window.dispatchEvent(new Event("task-fields-change"));
   }, [taskFieldSettings]);
 
@@ -756,13 +771,22 @@ export default function Pipeline() {
 
   const getStoredPermissions = () => {
     const storedUser = window.localStorage.getItem("sc_user");
-    const email = storedUser ? (JSON.parse(storedUser) as { email?: string }).email : "";
+    const email = storedUser
+      ? (JSON.parse(storedUser) as { email?: string }).email
+      : "";
     const storedRoles = window.localStorage.getItem("sc_user_roles");
-    const userRoles = storedRoles ? (JSON.parse(storedRoles) as Record<string, string>) : {};
+    const userRoles = storedRoles
+      ? (JSON.parse(storedRoles) as Record<string, string>)
+      : {};
     const roleName = (email && userRoles[email]) || "Administrador";
-    const storedPermissions = window.localStorage.getItem("sc_role_permissions");
+    const storedPermissions = window.localStorage.getItem(
+      "sc_role_permissions"
+    );
     const rolePermissions = storedPermissions
-      ? (JSON.parse(storedPermissions) as Record<string, Record<string, boolean>>)
+      ? (JSON.parse(storedPermissions) as Record<
+          string,
+          Record<string, boolean>
+        >)
       : {};
     return (
       rolePermissions[roleName] || {
@@ -777,18 +801,18 @@ export default function Pipeline() {
 
   const categoryMap = useMemo(() => {
     const map = new Map<string, Category>();
-    categories.forEach((cat) => map.set(cat.id, cat));
+    categories.forEach(cat => map.set(cat.id, cat));
     return map;
   }, [categories]);
 
   const personOptions = useMemo<PersonOption[]>(() => {
-    const userOptions = users.map((user) => ({
+    const userOptions = users.map(user => ({
       id: `user:${user.id}`,
       name: user.name?.trim() ? user.name : user.email,
       email: user.email,
       type: "user" as const,
     }));
-    const contactOptions = contacts.map((contact) => ({
+    const contactOptions = contacts.map(contact => ({
       id: `contact:${contact.id}`,
       name: contact.name || contact.emails?.[0] || "Contato",
       email: contact.emails?.[0],
@@ -799,7 +823,7 @@ export default function Pipeline() {
 
   const personMap = useMemo(() => {
     const map = new Map<string, PersonOption>();
-    personOptions.forEach((person) => map.set(person.id, person));
+    personOptions.forEach(person => map.set(person.id, person));
     return map;
   }, [personOptions]);
 
@@ -811,17 +835,20 @@ export default function Pipeline() {
   };
 
   const getPersonLabels = (ids?: string[]) =>
-    (ids || []).map((id) => formatPersonLabel(personMap.get(id))).filter(Boolean);
+    (ids || []).map(id => formatPersonLabel(personMap.get(id))).filter(Boolean);
 
   const stripHtml = (value: string) =>
-    value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    value
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
 
   const findColumnByCard = (cardId: string) =>
-    columns.find((column) => column.deals.some((deal) => deal.id === cardId));
+    columns.find(column => column.deals.some(deal => deal.id === cardId));
 
   const findDeal = (cardId: string) => {
     for (const column of columns) {
-      const deal = column.deals.find((item) => item.id === cardId);
+      const deal = column.deals.find(item => item.id === cardId);
       if (deal) {
         return deal;
       }
@@ -830,10 +857,10 @@ export default function Pipeline() {
   };
 
   const findDealInColumns = (cardId: string) =>
-    columns.some((column) => column.deals.some((deal) => deal.id === cardId));
+    columns.some(column => column.deals.some(deal => deal.id === cardId));
 
   const findDealInBacklog = (cardId: string) =>
-    sprintState.backlog.some((deal) => deal.id === cardId);
+    sprintState.backlog.some(deal => deal.id === cardId);
 
   const getSprintLabel = (deal?: Deal | null) => {
     if (!deal || !sprintState.enabled) {
@@ -869,7 +896,7 @@ export default function Pipeline() {
       name: deal.name ? `${deal.name} (copia)` : "Copia da tarefa",
     };
     if (sprintState.enabled && findDealInBacklog(deal.id)) {
-      setSprintState((prev) => ({
+      setSprintState(prev => ({
         ...prev,
         backlog: [nextDeal, ...prev.backlog],
       }));
@@ -880,9 +907,11 @@ export default function Pipeline() {
     if (!column) {
       return;
     }
-    setColumns((prev) =>
-      prev.map((item) =>
-        item.id === column.id ? { ...item, deals: [nextDeal, ...item.deals] } : item
+    setColumns(prev =>
+      prev.map(item =>
+        item.id === column.id
+          ? { ...item, deals: [nextDeal, ...item.deals] }
+          : item
       )
     );
     setViewingDeal(nextDeal);
@@ -917,7 +946,7 @@ export default function Pipeline() {
 
   const filterDealsByQuery = (column: Column, query: string) => {
     if (!query) {
-      return column.deals.filter((deal) => {
+      return column.deals.filter(deal => {
         if (categoryFilters.length === 0) {
           return true;
         }
@@ -926,33 +955,36 @@ export default function Pipeline() {
           : deal.categoryId
             ? [deal.categoryId]
             : [];
-        return categoryFilters.some((id) => ids.includes(id));
+        return categoryFilters.some(id => ids.includes(id));
       });
     }
-    return column.deals.filter((deal) => {
+    return column.deals.filter(deal => {
       if (categoryFilters.length > 0) {
         const ids = deal.categoryIds?.length
           ? deal.categoryIds
           : deal.categoryId
             ? [deal.categoryId]
             : [];
-        if (!categoryFilters.some((id) => ids.includes(id))) {
+        if (!categoryFilters.some(id => ids.includes(id))) {
           return false;
         }
       }
-      const description = stripHtml(deal.descriptionHtml || deal.comments || "");
-      const haystack = `${deal.name} ${getDealOwnerLabel(deal)} ${deal.value} ${description}`.toLowerCase();
+      const description = stripHtml(
+        deal.descriptionHtml || deal.comments || ""
+      );
+      const haystack =
+        `${deal.name} ${getDealOwnerLabel(deal)} ${deal.value} ${description}`.toLowerCase();
       return haystack.includes(query);
     });
   };
 
   const activeColumns = useMemo(
-    () => columns.filter((column) => !column.archived),
+    () => columns.filter(column => !column.archived),
     [columns]
   );
 
   const archivedColumns = useMemo(
-    () => columns.filter((column) => column.archived),
+    () => columns.filter(column => column.archived),
     [columns]
   );
 
@@ -960,27 +992,45 @@ export default function Pipeline() {
     if (!normalizedQuery) {
       return activeColumns;
     }
-    return activeColumns.filter((column) => filterDealsByQuery(column, normalizedQuery).length > 0);
-  }, [activeColumns, normalizedQuery, categoryFilters, getDealOwnerLabel, stripHtml]);
+    return activeColumns.filter(
+      column => filterDealsByQuery(column, normalizedQuery).length > 0
+    );
+  }, [
+    activeColumns,
+    normalizedQuery,
+    categoryFilters,
+    getDealOwnerLabel,
+    stripHtml,
+  ]);
 
   const filteredBacklog = useMemo(() => {
     if (!sprintState.backlog.length) {
       return [];
     }
-    const virtualColumn: Column = { id: "backlog", title: "Backlog", deals: sprintState.backlog };
+    const virtualColumn: Column = {
+      id: "backlog",
+      title: "Backlog",
+      deals: sprintState.backlog,
+    };
     return filterDealsByQuery(virtualColumn, normalizedQuery);
-  }, [sprintState.backlog, normalizedQuery, categoryFilters, getDealOwnerLabel, stripHtml]);
+  }, [
+    sprintState.backlog,
+    normalizedQuery,
+    categoryFilters,
+    getDealOwnerLabel,
+    stripHtml,
+  ]);
 
   const columnItems = useMemo(
-    () => visibleColumns.map((column) => columnDragId(column.id)),
+    () => visibleColumns.map(column => columnDragId(column.id)),
     [visibleColumns]
   );
 
   const selectPersonsByIds = (ids: string[]) =>
-    personOptions.filter((person) => ids.includes(person.id));
+    personOptions.filter(person => ids.includes(person.id));
 
   const findColumn = (columnId: string) =>
-    columns.find((column) => column.id === columnId) || null;
+    columns.find(column => column.id === columnId) || null;
 
   const handleEditOpen = (deal: Deal) => {
     setEditingDeal(deal);
@@ -988,11 +1038,19 @@ export default function Pipeline() {
     setEditValue(deal.value);
     setEditLink(deal.link || "");
     setEditDescription(deal.descriptionHtml || deal.comments || "");
-    setEditResponsibleIds(normalizePersonIds(deal.responsibleIds as Array<number | string>));
-    setEditWorkerIds(normalizePersonIds(deal.workerIds as Array<number | string>));
-    setEditWatcherIds(normalizePersonIds(deal.watcherIds as Array<number | string>));
+    setEditResponsibleIds(
+      normalizePersonIds(deal.responsibleIds as Array<number | string>)
+    );
+    setEditWorkerIds(
+      normalizePersonIds(deal.workerIds as Array<number | string>)
+    );
+    setEditWatcherIds(
+      normalizePersonIds(deal.watcherIds as Array<number | string>)
+    );
     setEditOwnerFallback(deal.owner);
-    setEditCategoryIds(deal.categoryIds || (deal.categoryId ? [deal.categoryId] : []));
+    setEditCategoryIds(
+      deal.categoryIds || (deal.categoryId ? [deal.categoryId] : [])
+    );
     setEditPriority(deal.priority || "Media");
     setEditDueDate(deal.dueDate || "");
     setEditChecklist(deal.checklist ? [...deal.checklist] : []);
@@ -1020,15 +1078,15 @@ export default function Pipeline() {
         editCategoryIds.length === 0;
       if (isEmpty) {
         if (sprintState.enabled && !findDealInColumns(newDealId)) {
-          setSprintState((prev) => ({
+          setSprintState(prev => ({
             ...prev,
-            backlog: prev.backlog.filter((deal) => deal.id !== newDealId),
+            backlog: prev.backlog.filter(deal => deal.id !== newDealId),
           }));
         } else {
-          setColumns((prev) =>
-            prev.map((column) => ({
+          setColumns(prev =>
+            prev.map(column => ({
               ...column,
-              deals: column.deals.filter((deal) => deal.id !== newDealId),
+              deals: column.deals.filter(deal => deal.id !== newDealId),
             }))
           );
         }
@@ -1052,16 +1110,20 @@ export default function Pipeline() {
       return;
     }
     const ownerLabels = getPersonLabels(editResponsibleIds);
-    const ownerLabel = ownerLabels.length ? ownerLabels.join(", ") : editOwnerFallback;
+    const ownerLabel = ownerLabels.length
+      ? ownerLabels.join(", ")
+      : editOwnerFallback;
     if (sprintState.enabled && !findDealInColumns(editingDeal.id)) {
-      setSprintState((prev) => ({
+      setSprintState(prev => ({
         ...prev,
-        backlog: prev.backlog.map((deal) =>
+        backlog: prev.backlog.map(deal =>
           deal.id === editingDeal.id
-          ? {
+            ? {
                 ...deal,
                 name: editName.trim() || deal.name,
-                value: taskFieldSettings.value ? editValue.trim() || deal.value : deal.value,
+                value: taskFieldSettings.value
+                  ? editValue.trim() || deal.value
+                  : deal.value,
                 owner: ownerLabel.trim() || deal.owner,
                 link: taskFieldSettings.link ? editLink.trim() : deal.link,
                 comments: stripHtml(editDescription),
@@ -1086,15 +1148,17 @@ export default function Pipeline() {
       setNewDealId(null);
       return;
     }
-    setColumns((prev) =>
-      prev.map((column) => ({
+    setColumns(prev =>
+      prev.map(column => ({
         ...column,
-        deals: column.deals.map((deal) =>
+        deals: column.deals.map(deal =>
           deal.id === editingDeal.id
             ? {
                 ...deal,
                 name: editName.trim() || deal.name,
-                value: taskFieldSettings.value ? editValue.trim() || deal.value : deal.value,
+                value: taskFieldSettings.value
+                  ? editValue.trim() || deal.value
+                  : deal.value,
                 owner: ownerLabel.trim() || deal.owner,
                 link: taskFieldSettings.link ? editLink.trim() : deal.link,
                 comments: stripHtml(editDescription),
@@ -1125,9 +1189,9 @@ export default function Pipeline() {
       return;
     }
     if (sprintState.enabled && !findDealInColumns(editingDeal.id)) {
-      setSprintState((prev) => ({
+      setSprintState(prev => ({
         ...prev,
-        backlog: prev.backlog.filter((deal) => deal.id !== editingDeal.id),
+        backlog: prev.backlog.filter(deal => deal.id !== editingDeal.id),
       }));
       setEditingDeal(null);
       return;
@@ -1140,7 +1204,7 @@ export default function Pipeline() {
       if (found) {
         return found;
       }
-      const index = column.deals.findIndex((deal) => deal.id === editingDeal.id);
+      const index = column.deals.findIndex(deal => deal.id === editingDeal.id);
       if (index === -1) {
         return null;
       }
@@ -1150,10 +1214,10 @@ export default function Pipeline() {
       setLastRemoved(removal);
       setSnackbarOpen(true);
     }
-    setColumns((prev) =>
-      prev.map((column) => ({
+    setColumns(prev =>
+      prev.map(column => ({
         ...column,
-        deals: column.deals.filter((deal) => deal.id !== editingDeal.id),
+        deals: column.deals.filter(deal => deal.id !== editingDeal.id),
       }))
     );
     setEditingDeal(null);
@@ -1163,8 +1227,8 @@ export default function Pipeline() {
     if (!lastRemoved) {
       return;
     }
-    setColumns((prev) =>
-      prev.map((column) => {
+    setColumns(prev =>
+      prev.map(column => {
         if (column.id !== lastRemoved.columnId) {
           return column;
         }
@@ -1184,31 +1248,35 @@ export default function Pipeline() {
       return;
     }
     const id = `cat-${Date.now()}`;
-    setCategories((prev) => [...prev, { id, name, color: newCategoryColor }]);
+    setCategories(prev => [...prev, { id, name, color: newCategoryColor }]);
     setNewCategoryName("");
   };
 
   const handleRemoveCategory = (id: string) => {
-    let nextCategories = categories.filter((cat) => cat.id !== id);
+    let nextCategories = categories.filter(cat => cat.id !== id);
     if (nextCategories.length === 0) {
       nextCategories = [
-        { id: `cat-${Date.now()}`, name: "Sem categoria", color: DEFAULT_COLORS[0] },
+        {
+          id: `cat-${Date.now()}`,
+          name: "Sem categoria",
+          color: DEFAULT_COLORS[0],
+        },
       ];
     }
     const fallback = nextCategories[0]?.id || "";
     setCategories(nextCategories);
-    setEditCategoryId((prev) => (prev === id ? fallback : prev));
-    setColumns((prev) =>
-      prev.map((column) => ({
+    setEditCategoryId(prev => (prev === id ? fallback : prev));
+    setColumns(prev =>
+      prev.map(column => ({
         ...column,
-        deals: column.deals.map((deal) =>
+        deals: column.deals.map(deal =>
           deal.categoryId === id ? { ...deal, categoryId: fallback } : deal
         ),
       }))
     );
-    setSprintState((prev) => ({
+    setSprintState(prev => ({
       ...prev,
-      backlog: prev.backlog.map((deal) =>
+      backlog: prev.backlog.map(deal =>
         deal.categoryId === id ? { ...deal, categoryId: fallback } : deal
       ),
     }));
@@ -1232,43 +1300,45 @@ export default function Pipeline() {
     if (!name) {
       return;
     }
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.id === editingCategoryId ? { ...cat, name, color: editingCategoryColor } : cat
+    setCategories(prev =>
+      prev.map(cat =>
+        cat.id === editingCategoryId
+          ? { ...cat, name, color: editingCategoryColor }
+          : cat
       )
     );
     setEditingCategoryId(null);
   };
 
   const addChecklistItem = () => {
-    setEditChecklist((prev) => [
+    setEditChecklist(prev => [
       ...prev,
       { id: `chk-${nanoid(6)}`, text: "", done: false },
     ]);
   };
 
   const updateChecklistItem = (id: string, text: string) => {
-    setEditChecklist((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, text } : item))
+    setEditChecklist(prev =>
+      prev.map(item => (item.id === id ? { ...item, text } : item))
     );
   };
 
   const toggleChecklistItem = (id: string) => {
-    setEditChecklist((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, done: !item.done } : item))
+    setEditChecklist(prev =>
+      prev.map(item => (item.id === id ? { ...item, done: !item.done } : item))
     );
   };
 
   const removeChecklistItem = (id: string) => {
-    setEditChecklist((prev) => prev.filter((item) => item.id !== id));
+    setEditChecklist(prev => prev.filter(item => item.id !== id));
   };
 
   const addAttachmentField = () => {
-    setEditAttachments((prev) => [...prev, ""]);
+    setEditAttachments(prev => [...prev, ""]);
   };
 
   const updateAttachmentField = (index: number, value: string) => {
-    setEditAttachments((prev) => {
+    setEditAttachments(prev => {
       const next = [...prev];
       next[index] = value;
       return next;
@@ -1276,7 +1346,7 @@ export default function Pipeline() {
   };
 
   const removeAttachmentField = (index: number) => {
-    setEditAttachments((prev) => prev.filter((_, idx) => idx !== index));
+    setEditAttachments(prev => prev.filter((_, idx) => idx !== index));
   };
 
   const handleColumnEditOpen = (column: Column) => {
@@ -1295,8 +1365,8 @@ export default function Pipeline() {
     }
     const nextTitle = editColumnTitle.trim() || editingColumn.title;
     const nextDescription = editColumnDescription.trim();
-    setColumns((prev) =>
-      prev.map((column) =>
+    setColumns(prev =>
+      prev.map(column =>
         column.id === editingColumn.id
           ? { ...column, title: nextTitle, description: nextDescription }
           : column
@@ -1306,23 +1376,23 @@ export default function Pipeline() {
   };
 
   const handleArchiveColumn = (columnId: string) => {
-    setColumns((prev) =>
-      prev.map((column) =>
+    setColumns(prev =>
+      prev.map(column =>
         column.id === columnId ? { ...column, archived: true } : column
       )
     );
   };
 
   const handleRestoreColumn = (columnId: string) => {
-    setColumns((prev) =>
-      prev.map((column) =>
+    setColumns(prev =>
+      prev.map(column =>
         column.id === columnId ? { ...column, archived: false } : column
       )
     );
   };
 
   const handleRemoveColumnById = (columnId: string) => {
-    setColumns((prev) => prev.filter((column) => column.id !== columnId));
+    setColumns(prev => prev.filter(column => column.id !== columnId));
     if (editingColumn?.id === columnId) {
       setEditingColumn(null);
     }
@@ -1342,11 +1412,15 @@ export default function Pipeline() {
     setRemoveColumnOpen(false);
   };
 
-  const reorderActiveColumns = (prev: Column[], activeId: string, overId: string) => {
-    const activeList = prev.filter((column) => !column.archived);
-    const archivedList = prev.filter((column) => column.archived);
-    const oldIndex = activeList.findIndex((column) => column.id === activeId);
-    const newIndex = activeList.findIndex((column) => column.id === overId);
+  const reorderActiveColumns = (
+    prev: Column[],
+    activeId: string,
+    overId: string
+  ) => {
+    const activeList = prev.filter(column => !column.archived);
+    const archivedList = prev.filter(column => column.archived);
+    const oldIndex = activeList.findIndex(column => column.id === activeId);
+    const newIndex = activeList.findIndex(column => column.id === overId);
     if (oldIndex === -1 || newIndex === -1) {
       return prev;
     }
@@ -1354,20 +1428,26 @@ export default function Pipeline() {
     return [...nextActive, ...archivedList];
   };
 
-  const handleColumnReorder = (event: { active: { id: string }; over?: { id: string } }) => {
+  const handleColumnReorder = (event: {
+    active: { id: string };
+    over?: { id: string };
+  }) => {
     const activeId = String(event.active.id);
     const overId = event.over ? String(event.over.id) : null;
     if (!overId || activeId === overId) {
       return;
     }
-    setColumns((prev) => reorderActiveColumns(prev, activeId, overId));
+    setColumns(prev => reorderActiveColumns(prev, activeId, overId));
   };
 
   const handleDragStart = (event: { active: { id: string } }) => {
     setActiveDragId(String(event.active.id));
   };
 
-  const handleDragOver = (event: { active: { id: string }; over?: { id: string } }) => {
+  const handleDragOver = (event: {
+    active: { id: string };
+    over?: { id: string };
+  }) => {
     const activeId = String(event.active.id);
     let overId = event.over ? String(event.over.id) : null;
     if (!overId || activeId === overId) {
@@ -1388,7 +1468,9 @@ export default function Pipeline() {
       const activeColumnId = stripPrefix(activeId);
       const overColumnId = stripPrefix(overId);
       if (activeColumnId !== overColumnId) {
-        setColumns((prev) => reorderActiveColumns(prev, activeColumnId, overColumnId));
+        setColumns(prev =>
+          reorderActiveColumns(prev, activeColumnId, overColumnId)
+        );
       }
       return;
     }
@@ -1410,13 +1492,15 @@ export default function Pipeline() {
           return;
         }
         destinationIndex = destinationColumn.deals.findIndex(
-          (deal) => deal.id === overCardId
+          deal => deal.id === overCardId
         );
       } else if (isColumnId(overId)) {
         destinationColumn = columns.find(
-          (column) => column.id === stripPrefix(overId)
+          column => column.id === stripPrefix(overId)
         );
-        destinationIndex = destinationColumn ? destinationColumn.deals.length : 0;
+        destinationIndex = destinationColumn
+          ? destinationColumn.deals.length
+          : 0;
       } else {
         return;
       }
@@ -1427,32 +1511,37 @@ export default function Pipeline() {
 
       if (sourceColumn.id === destinationColumn.id) {
         const oldIndex = sourceColumn.deals.findIndex(
-          (deal) => deal.id === activeCardId
+          deal => deal.id === activeCardId
         );
         if (oldIndex === -1 || oldIndex === destinationIndex) {
           return;
         }
-        setColumns((prev) =>
-          prev.map((column) =>
+        setColumns(prev =>
+          prev.map(column =>
             column.id === sourceColumn.id
-              ? { ...column, deals: arrayMove(column.deals, oldIndex, destinationIndex) }
+              ? {
+                  ...column,
+                  deals: arrayMove(column.deals, oldIndex, destinationIndex),
+                }
               : column
           )
         );
         return;
       }
 
-      const movingDeal = sourceColumn.deals.find((deal) => deal.id === activeCardId);
+      const movingDeal = sourceColumn.deals.find(
+        deal => deal.id === activeCardId
+      );
       if (!movingDeal) {
         return;
       }
 
-      setColumns((prev) =>
-        prev.map((column) => {
+      setColumns(prev =>
+        prev.map(column => {
           if (column.id === sourceColumn.id) {
             return {
               ...column,
-              deals: column.deals.filter((deal) => deal.id !== activeCardId),
+              deals: column.deals.filter(deal => deal.id !== activeCardId),
             };
           }
           if (column.id === destinationColumn?.id) {
@@ -1466,7 +1555,10 @@ export default function Pipeline() {
     }
   };
 
-  const handleDragEnd = (event: { active: { id: string }; over?: { id: string } }) => {
+  const handleDragEnd = (event: {
+    active: { id: string };
+    over?: { id: string };
+  }) => {
     setActiveDragId(null);
     const activeId = String(event.active.id);
     const overId = event.over ? String(event.over.id) : null;
@@ -1495,13 +1587,15 @@ export default function Pipeline() {
           return;
         }
         destinationIndex = destinationColumn.deals.findIndex(
-          (deal) => deal.id === overCardId
+          deal => deal.id === overCardId
         );
       } else if (isColumnId(overId)) {
         destinationColumn = columns.find(
-          (column) => column.id === stripPrefix(overId)
+          column => column.id === stripPrefix(overId)
         );
-        destinationIndex = destinationColumn ? destinationColumn.deals.length : 0;
+        destinationIndex = destinationColumn
+          ? destinationColumn.deals.length
+          : 0;
       } else {
         return;
       }
@@ -1512,32 +1606,37 @@ export default function Pipeline() {
 
       if (sourceColumn.id === destinationColumn.id) {
         const oldIndex = sourceColumn.deals.findIndex(
-          (deal) => deal.id === activeCardId
+          deal => deal.id === activeCardId
         );
         if (oldIndex === -1 || oldIndex === destinationIndex) {
           return;
         }
-        setColumns((prev) =>
-          prev.map((column) =>
+        setColumns(prev =>
+          prev.map(column =>
             column.id === sourceColumn.id
-              ? { ...column, deals: arrayMove(column.deals, oldIndex, destinationIndex) }
+              ? {
+                  ...column,
+                  deals: arrayMove(column.deals, oldIndex, destinationIndex),
+                }
               : column
           )
         );
         return;
       }
 
-      const movingDeal = sourceColumn.deals.find((deal) => deal.id === activeCardId);
+      const movingDeal = sourceColumn.deals.find(
+        deal => deal.id === activeCardId
+      );
       if (!movingDeal) {
         return;
       }
 
-      setColumns((prev) =>
-        prev.map((column) => {
+      setColumns(prev =>
+        prev.map(column => {
           if (column.id === sourceColumn.id) {
             return {
               ...column,
-              deals: column.deals.filter((deal) => deal.id !== activeCardId),
+              deals: column.deals.filter(deal => deal.id !== activeCardId),
             };
           }
           if (column.id === destinationColumn?.id) {
@@ -1561,7 +1660,7 @@ export default function Pipeline() {
     }
     const nextId = nanoid(6);
     const index = columns.length + 1;
-    setColumns((prev) => [
+    setColumns(prev => [
       ...prev,
       {
         id: `stage-${nextId}`,
@@ -1597,7 +1696,7 @@ export default function Pipeline() {
       attachments: [],
     };
     if (sprintState.enabled && !sprintState.activeSprint) {
-      setSprintState((prev) => ({
+      setSprintState(prev => ({
         ...prev,
         backlog: [newDeal, ...prev.backlog],
       }));
@@ -1605,8 +1704,8 @@ export default function Pipeline() {
       handleEditOpen(newDeal);
       return;
     }
-    setColumns((prev) =>
-      prev.map((column) =>
+    setColumns(prev =>
+      prev.map(column =>
         column.id === columnId
           ? {
               ...column,
@@ -1625,7 +1724,7 @@ export default function Pipeline() {
     }
     if (enabled) {
       if (sprintState.activeSprint) {
-        setSprintState((prev) => ({ ...prev, enabled: true }));
+        setSprintState(prev => ({ ...prev, enabled: true }));
         return;
       }
       const now = new Date();
@@ -1636,21 +1735,21 @@ export default function Pipeline() {
         startDate: now.toISOString(),
         endDate: endDate.toISOString(),
       };
-      setSprintState((prev) => ({
+      setSprintState(prev => ({
         ...prev,
         enabled: true,
         activeSprint: nextSprint,
       }));
       return;
     }
-    setSprintState((prev) => ({
+    setSprintState(prev => ({
       ...prev,
       enabled: false,
       activeSprint: null,
     }));
     if (sprintState.backlog.length) {
-      setColumns((prev) => {
-        const targetIndex = prev.findIndex((column) => !column.archived);
+      setColumns(prev => {
+        const targetIndex = prev.findIndex(column => !column.archived);
         if (targetIndex === -1) {
           return prev;
         }
@@ -1660,7 +1759,7 @@ export default function Pipeline() {
             : column
         );
       });
-      setSprintState((prev) => ({ ...prev, backlog: [] }));
+      setSprintState(prev => ({ ...prev, backlog: [] }));
     }
   };
 
@@ -1679,7 +1778,7 @@ export default function Pipeline() {
       startDate: now.toISOString(),
       endDate: endDate.toISOString(),
     };
-    setSprintState((prev) => ({
+    setSprintState(prev => ({
       ...prev,
       enabled: true,
       activeSprint: nextSprint,
@@ -1695,7 +1794,7 @@ export default function Pipeline() {
     }
     const closedAt = new Date().toISOString();
     const snapshot = normalizeColumns(columns);
-    setSprintState((prev) => ({
+    setSprintState(prev => ({
       ...prev,
       activeSprint: null,
       history: [
@@ -1706,20 +1805,20 @@ export default function Pipeline() {
         },
         ...prev.history,
       ],
-      backlog: [...prev.backlog, ...columns.flatMap((column) => column.deals)],
+      backlog: [...prev.backlog, ...columns.flatMap(column => column.deals)],
     }));
-    setColumns((prev) => prev.map((column) => ({ ...column, deals: [] })));
+    setColumns(prev => prev.map(column => ({ ...column, deals: [] })));
   };
 
   const handleReopenSprint = (sprintId: string) => {
     if (!permissions.pipeline_edit_tasks) {
       return;
     }
-    const target = sprintState.history.find((item) => item.id === sprintId);
+    const target = sprintState.history.find(item => item.id === sprintId);
     if (!target) {
       return;
     }
-    setSprintState((prev) => ({
+    setSprintState(prev => ({
       ...prev,
       activeSprint: {
         id: target.id,
@@ -1727,28 +1826,30 @@ export default function Pipeline() {
         startDate: target.startDate,
         endDate: target.endDate,
       },
-      history: prev.history.filter((item) => item.id !== sprintId),
+      history: prev.history.filter(item => item.id !== sprintId),
       enabled: true,
     }));
-    setColumns(target.columns.map((column) => ({ ...column })));
+    setColumns(target.columns.map(column => ({ ...column })));
   };
 
   const handleMoveToBacklog = (dealId: string) => {
     let removed: Deal | null = null;
-    setColumns((prev) =>
-      prev.map((column) => {
-        const nextDeals = column.deals.filter((deal) => {
+    setColumns(prev =>
+      prev.map(column => {
+        const nextDeals = column.deals.filter(deal => {
           if (deal.id === dealId) {
             removed = deal;
             return false;
           }
           return true;
         });
-        return nextDeals.length === column.deals.length ? column : { ...column, deals: nextDeals };
+        return nextDeals.length === column.deals.length
+          ? column
+          : { ...column, deals: nextDeals };
       })
     );
     if (removed) {
-      setSprintState((prev) => ({
+      setSprintState(prev => ({
         ...prev,
         backlog: [removed as Deal, ...prev.backlog],
       }));
@@ -1760,9 +1861,9 @@ export default function Pipeline() {
       return;
     }
     let moved: Deal | null = null;
-    setSprintState((prev) => ({
+    setSprintState(prev => ({
       ...prev,
-      backlog: prev.backlog.filter((deal) => {
+      backlog: prev.backlog.filter(deal => {
         if (deal.id === dealId) {
           moved = deal;
           return false;
@@ -1773,8 +1874,8 @@ export default function Pipeline() {
     if (!moved) {
       return;
     }
-    setColumns((prev) => {
-      const targetIndex = prev.findIndex((column) => !column.archived);
+    setColumns(prev => {
+      const targetIndex = prev.findIndex(column => !column.archived);
       if (targetIndex === -1) {
         return prev;
       }
@@ -1786,7 +1887,9 @@ export default function Pipeline() {
     });
   };
 
-  const handleScrollPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handleScrollPointerDown = (
+    event: React.PointerEvent<HTMLDivElement>
+  ) => {
     const container = scrollRef.current;
     if (!container || event.button !== 0) {
       return;
@@ -1804,7 +1907,9 @@ export default function Pipeline() {
     container.setPointerCapture(event.pointerId);
   };
 
-  const handleScrollPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handleScrollPointerMove = (
+    event: React.PointerEvent<HTMLDivElement>
+  ) => {
     const container = scrollRef.current;
     if (!container || !isDraggingRef.current) {
       return;
@@ -1835,7 +1940,7 @@ export default function Pipeline() {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200 }}>
+    <Box sx={{ maxWidth: 1200, mx: "auto" }}>
       <Stack spacing={3}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ flex: 1 }}>
@@ -1851,7 +1956,7 @@ export default function Pipeline() {
             <TextField
               label="Buscar tasks"
               value={taskQuery}
-              onChange={(event) => setTaskQuery(event.target.value)}
+              onChange={event => setTaskQuery(event.target.value)}
               sx={{ minWidth: { xs: "100%", sm: 280 } }}
               InputProps={{
                 endAdornment: taskQuery ? (
@@ -1870,9 +1975,11 @@ export default function Pipeline() {
             <Autocomplete
               multiple
               options={categories}
-              value={categories.filter((cat) => categoryFilters.includes(cat.id))}
-              onChange={(_, value) => setCategoryFilters(value.map((cat) => cat.id))}
-              getOptionLabel={(option) => option.name}
+              value={categories.filter(cat => categoryFilters.includes(cat.id))}
+              onChange={(_, value) =>
+                setCategoryFilters(value.map(cat => cat.id))
+              }
+              getOptionLabel={option => option.name}
               disableCloseOnSelect
               ListboxProps={{ style: { maxHeight: 240 } }}
               renderOption={(props, option, { selected }) => (
@@ -1881,7 +1988,7 @@ export default function Pipeline() {
                   {option.name}
                 </li>
               )}
-              renderInput={(params) => (
+              renderInput={params => (
                 <TextField {...params} label="Filtrar categorias" />
               )}
               renderTags={(value, getTagProps) => {
@@ -1914,17 +2021,24 @@ export default function Pipeline() {
                         sx={{
                           color: "text.secondary",
                           border: 1,
-                      borderColor: "divider",
+                          borderColor: "divider",
                         }}
                       />
                     ) : null}
                   </>
                 );
               }}
-              sx={{ minWidth: { xs: "100%", sm: 280 }, "& .MuiAutocomplete-inputRoot": { minHeight: 44 } }}
+              sx={{
+                minWidth: { xs: "100%", sm: 280 },
+                "& .MuiAutocomplete-inputRoot": { minHeight: 44 },
+              }}
             />
           </Stack>
-          <Stack direction="row" spacing={2} sx={{ width: { xs: "100%", sm: "auto" } }}>
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ width: { xs: "100%", sm: "auto" } }}
+          >
             <SettingsIconButton
               onClick={() => setTaskFieldSettingsOpen(true)}
               disabled={!permissions.pipeline_edit_tasks}
@@ -1935,7 +2049,7 @@ export default function Pipeline() {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
+          onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
@@ -1947,7 +2061,7 @@ export default function Pipeline() {
               sx={{
                 p: 3,
                 border: 1,
-                      borderColor: "divider",
+                borderColor: "divider",
                 backgroundColor: "background.paper",
                 mb: 2,
               }}
@@ -1957,7 +2071,10 @@ export default function Pipeline() {
               </Typography>
             </Paper>
           ) : null}
-          <SortableContext items={columnItems} strategy={horizontalListSortingStrategy}>
+          <SortableContext
+            items={columnItems}
+            strategy={horizontalListSortingStrategy}
+          >
             <Box sx={{ position: "relative" }}>
               <IconButton
                 onClick={() => scrollColumnsBy("left")}
@@ -1973,7 +2090,10 @@ export default function Pipeline() {
                   backgroundColor: "transparent",
                   border: "none",
                   color: "text.primary",
-                  "&:hover": { backgroundColor: "transparent", color: "primary.main" },
+                  "&:hover": {
+                    backgroundColor: "transparent",
+                    color: "primary.main",
+                  },
                   "&:active": { backgroundColor: "transparent" },
                 }}
                 aria-label="Voltar colunas"
@@ -1994,7 +2114,10 @@ export default function Pipeline() {
                   backgroundColor: "transparent",
                   border: "none",
                   color: "text.primary",
-                  "&:hover": { backgroundColor: "transparent", color: "primary.main" },
+                  "&:hover": {
+                    backgroundColor: "transparent",
+                    color: "primary.main",
+                  },
                   "&:active": { backgroundColor: "transparent" },
                 }}
                 aria-label="Avancar colunas"
@@ -2019,145 +2142,181 @@ export default function Pipeline() {
                   spacing={2}
                   sx={{ width: "max-content", minWidth: "100%" }}
                 >
-                {visibleColumns.map((column) => (
-                  <SortableColumn
-                    key={column.id}
-                    column={column}
-                    onEdit={handleViewOpen}
-                    onEditColumn={handleColumnEditOpen}
-                    onAddDeal={handleAddDeal}
-                    filteredDeals={filterDealsByQuery(column, normalizedQuery)}
-                    categoryMap={categoryMap}
-                    getDealOwnerLabel={getDealOwnerLabel}
-                    showValue={taskFieldSettings.value}
-                    canEditTasks={canEditTasksOnBoard}
-                    canEditColumns={permissions.pipeline_edit_columns}
-                  />
-                ))}
-                {permissions.pipeline_edit_columns ? (
-                  <Paper
-                    elevation={0}
-                    onClick={handleAddColumn}
-                    data-draggable
-                    sx={(theme) => ({
-                      p: 2.5,
-                      minWidth: 280,
-                      border: "1px dashed",
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      ...interactiveCardSx(theme),
-                    })}
-                  >
-                    <Stack spacing={1} alignItems="center">
-                      <AddRoundedIcon />
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        Adicionar coluna
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                ) : null}
-              </Stack>
-            </Box>
+                  {visibleColumns.map(column => (
+                    <SortableColumn
+                      key={column.id}
+                      column={column}
+                      onEdit={handleViewOpen}
+                      onEditColumn={handleColumnEditOpen}
+                      onAddDeal={handleAddDeal}
+                      filteredDeals={filterDealsByQuery(
+                        column,
+                        normalizedQuery
+                      )}
+                      categoryMap={categoryMap}
+                      getDealOwnerLabel={getDealOwnerLabel}
+                      showValue={taskFieldSettings.value}
+                      canEditTasks={canEditTasksOnBoard}
+                      canEditColumns={permissions.pipeline_edit_columns}
+                    />
+                  ))}
+                  {permissions.pipeline_edit_columns ? (
+                    <Paper
+                      elevation={0}
+                      onClick={handleAddColumn}
+                      data-draggable
+                      sx={theme => ({
+                        p: 2.5,
+                        minWidth: 280,
+                        border: "1px dashed",
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        ...interactiveCardSx(theme),
+                      })}
+                    >
+                      <Stack spacing={1} alignItems="center">
+                        <AddRoundedIcon />
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          Adicionar coluna
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  ) : null}
+                </Stack>
+              </Box>
             </Box>
           </SortableContext>
           <DragOverlay>
-            {activeDragId ? (
-              isColumnId(activeDragId) ? (
-                (() => {
-                  const column = findColumn(stripPrefix(activeDragId));
-                  if (!column) {
-                    return null;
-                  }
-                  return (
-                    <Paper
-                      elevation={0}
-                      sx={(theme) => ({
-                        p: 2.5,
-                        minWidth: 280,
-                        borderRadius: "var(--radius-card)",
-                        border: 1,
-                      borderColor: "divider",
-                        backgroundColor: "background.paper",
-                        boxShadow: theme.shadows[2],
-                      })}
-                    >
-                      <Stack spacing={2}>
-                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                            {column.title}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600 }}>
-                            {column.deals.length}
-                          </Typography>
-                        </Box>
-                        <Divider />
-                        <Stack spacing={1.5}>
-                          {column.deals.slice(0, 3).map((deal) => (
-                            <Box
-                              key={deal.id}
-                              sx={{
-                                p: 2,
-                                borderRadius: "var(--radius-card)",
-                                border: 1,
-                      borderColor: "divider",
-                                backgroundColor: "background.paper",
-                              }}
+            {activeDragId
+              ? isColumnId(activeDragId)
+                ? (() => {
+                    const column = findColumn(stripPrefix(activeDragId));
+                    if (!column) {
+                      return null;
+                    }
+                    return (
+                      <Paper
+                        elevation={0}
+                        sx={theme => ({
+                          p: 2.5,
+                          minWidth: 280,
+                          borderRadius: "var(--radius-card)",
+                          border: 1,
+                          borderColor: "divider",
+                          backgroundColor: "background.paper",
+                          boxShadow: theme.shadows[2],
+                        })}
+                      >
+                        <Stack spacing={2}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Typography
+                              variant="subtitle1"
+                              sx={{ fontWeight: 700 }}
                             >
-                              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                {deal.name}
+                              {column.title}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "text.secondary", fontWeight: 600 }}
+                            >
+                              {column.deals.length}
+                            </Typography>
+                          </Box>
+                          <Divider />
+                          <Stack spacing={1.5}>
+                            {column.deals.slice(0, 3).map(deal => (
+                              <Box
+                                key={deal.id}
+                                sx={{
+                                  p: 2,
+                                  borderRadius: "var(--radius-card)",
+                                  border: 1,
+                                  borderColor: "divider",
+                                  backgroundColor: "background.paper",
+                                }}
+                              >
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{ fontWeight: 600 }}
+                                >
+                                  {deal.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: "text.secondary" }}
+                                >
+                                  {getDealOwnerLabel(deal)}
+                                </Typography>
+                              </Box>
+                            ))}
+                            {column.deals.length > 3 ? (
+                              <Typography
+                                variant="caption"
+                                sx={{ color: "text.secondary" }}
+                              >
+                                +{column.deals.length - 3} tasks
                               </Typography>
-                              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                                {getDealOwnerLabel(deal)}
-                              </Typography>
-                            </Box>
-                          ))}
-                          {column.deals.length > 3 ? (
-                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                              +{column.deals.length - 3} tasks
+                            ) : null}
+                          </Stack>
+                        </Stack>
+                      </Paper>
+                    );
+                  })()
+                : isCardId(activeDragId)
+                  ? (() => {
+                      const deal = findDeal(stripPrefix(activeDragId));
+                      if (!deal) {
+                        return null;
+                      }
+                      return (
+                        <Box
+                          sx={theme => ({
+                            p: 2,
+                            borderRadius: "var(--radius-card)",
+                            border: 1,
+                            borderColor: "divider",
+                            backgroundColor: "background.paper",
+                            boxShadow: theme.shadows[2],
+                          })}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            {deal.name}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "text.secondary" }}
+                          >
+                            {getDealOwnerLabel(deal)}
+                          </Typography>
+                          {taskFieldSettings.value ? (
+                            <Typography
+                              variant="body2"
+                              sx={{ mt: 0.5, fontWeight: 600 }}
+                            >
+                              {deal.value}
                             </Typography>
                           ) : null}
-                        </Stack>
-                      </Stack>
-                    </Paper>
-                  );
-                })()
-              ) : isCardId(activeDragId) ? (
-                (() => {
-                  const deal = findDeal(stripPrefix(activeDragId));
-                  if (!deal) {
-                    return null;
-                  }
-                  return (
-                    <Box
-                      sx={(theme) => ({
-                        p: 2,
-                        borderRadius: "var(--radius-card)",
-                        border: 1,
-                      borderColor: "divider",
-                        backgroundColor: "background.paper",
-                        boxShadow: theme.shadows[2],
-                      })}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {deal.name}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {getDealOwnerLabel(deal)}
-                      </Typography>
-                      {taskFieldSettings.value ? (
-                        <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 600 }}>
-                          {deal.value}
-                        </Typography>
-                      ) : null}
-                    </Box>
-                  );
-                })()
-              ) : null
-            ) : null}
+                        </Box>
+                      );
+                    })()
+                  : null
+              : null}
           </DragOverlay>
         </DndContext>
         {sprintState.enabled ? (
@@ -2180,13 +2339,24 @@ export default function Pipeline() {
                     Sprint ativa
                   </Typography>
                   {sprintState.activeSprint ? (
-                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
                       {sprintState.activeSprint.name} -{" "}
-                      {new Date(sprintState.activeSprint.startDate).toLocaleDateString("pt-BR")} -{" "}
-                      {new Date(sprintState.activeSprint.endDate).toLocaleDateString("pt-BR")}
+                      {new Date(
+                        sprintState.activeSprint.startDate
+                      ).toLocaleDateString("pt-BR")}{" "}
+                      -{" "}
+                      {new Date(
+                        sprintState.activeSprint.endDate
+                      ).toLocaleDateString("pt-BR")}
                     </Typography>
                   ) : (
-                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
                       Nenhuma sprint ativa.
                     </Typography>
                   )}
@@ -2234,20 +2404,21 @@ export default function Pipeline() {
                   <Box
                     sx={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(260px, 1fr))",
                       gap: 2,
                     }}
                   >
-                    {filteredBacklog.map((deal) => (
+                    {filteredBacklog.map(deal => (
                       <Paper
                         key={deal.id}
                         elevation={0}
                         onClick={() => handleViewOpen(deal)}
-                        sx={(theme) => ({
+                        sx={theme => ({
                           p: 2,
                           borderRadius: "var(--radius-card)",
                           border: 1,
-                      borderColor: "divider",
+                          borderColor: "divider",
                           backgroundColor: "background.paper",
                           cursor: "pointer",
                           ...interactiveCardSx(theme),
@@ -2255,21 +2426,34 @@ export default function Pipeline() {
                       >
                         <Stack spacing={2}>
                           <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                            <Typography
+                              variant="subtitle2"
+                              sx={{ fontWeight: 600 }}
+                            >
                               {deal.name}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "text.secondary" }}
+                            >
                               {getDealOwnerLabel(deal)}
                             </Typography>
                           </Box>
                           <Button
                             variant="outlined"
-                            onClick={(event) => {
+                            onClick={event => {
                               event.stopPropagation();
                               handleMoveToSprint(deal.id);
                             }}
-                            disabled={!sprintState.activeSprint || !permissions.pipeline_edit_tasks}
-                            sx={{ textTransform: "none", fontWeight: 600, alignSelf: "flex-start" }}
+                            disabled={
+                              !sprintState.activeSprint ||
+                              !permissions.pipeline_edit_tasks
+                            }
+                            sx={{
+                              textTransform: "none",
+                              fontWeight: 600,
+                              alignSelf: "flex-start",
+                            }}
                           >
                             Adicionar a sprint
                           </Button>
@@ -2283,73 +2467,111 @@ export default function Pipeline() {
           </Stack>
         ) : null}
 
-      <Dialog open={Boolean(viewingDeal)} onClose={handleViewClose} maxWidth="sm" fullWidth>
-        <DialogContent>
-          <Stack spacing={2.5}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="h6">{viewingDeal?.name || "-"}</Typography>
-                {viewingDeal ? (
-                  <Tooltip title="Copiar link" placement="top">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleCopyLink(viewingDeal.id)}
-                      sx={{
-                        color: "text.secondary",
-                        border: 1,
-                      borderColor: "divider",
-                      }}
-                    >
-                      <LinkRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                ) : null}
+        <Dialog
+          open={Boolean(viewingDeal)}
+          onClose={handleViewClose}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogContent>
+            <Stack spacing={2.5}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="h6">
+                    {viewingDeal?.name || "-"}
+                  </Typography>
+                  {viewingDeal ? (
+                    <Tooltip title="Copiar link" placement="top">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleCopyLink(viewingDeal.id)}
+                        sx={{
+                          color: "text.secondary",
+                          border: 1,
+                          borderColor: "divider",
+                        }}
+                      >
+                        <LinkRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  ) : null}
+                </Box>
+                <IconButton
+                  onClick={handleViewClose}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
               </Box>
-              <IconButton onClick={handleViewClose} sx={{ color: "text.secondary" }}>
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            {taskFieldSettings.value ? (
+              {taskFieldSettings.value ? (
+                <Stack spacing={0.5}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: "text.secondary" }}
+                  >
+                    Valor
+                  </Typography>
+                  <Typography variant="body1">
+                    {viewingDeal?.value || "-"}
+                  </Typography>
+                </Stack>
+              ) : null}
               <Stack spacing={0.5}>
-                <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                  Valor
+                <Typography
+                  variant="subtitle2"
+                  sx={{ color: "text.secondary" }}
+                >
+                  Responsaveis
                 </Typography>
-                <Typography variant="body1">{viewingDeal?.value || "-"}</Typography>
+                <Typography variant="body1">
+                  {viewingDeal
+                    ? getPersonLabels(viewingDeal.responsibleIds).join(", ") ||
+                      viewingDeal.owner
+                    : "-"}
+                </Typography>
               </Stack>
-            ) : null}
-            <Stack spacing={0.5}>
-              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                Responsaveis
-              </Typography>
-              <Typography variant="body1">
-                {viewingDeal
-                  ? getPersonLabels(viewingDeal.responsibleIds).join(", ") || viewingDeal.owner
-                  : "-"}
-              </Typography>
-            </Stack>
-            <Stack spacing={0.5}>
-              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                Pessoas na tarefa
-              </Typography>
-              <Typography variant="body1">
-                {viewingDeal ? getPersonLabels(viewingDeal.workerIds).join(", ") || "-" : "-"}
-              </Typography>
-            </Stack>
-            {taskFieldSettings.link ? (
               <Stack spacing={0.5}>
-                <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                  Link
+                <Typography
+                  variant="subtitle2"
+                  sx={{ color: "text.secondary" }}
+                >
+                  Pessoas na tarefa
                 </Typography>
-                <Typography variant="body1">{viewingDeal?.link || "-"}</Typography>
+                <Typography variant="body1">
+                  {viewingDeal
+                    ? getPersonLabels(viewingDeal.workerIds).join(", ") || "-"
+                    : "-"}
+                </Typography>
               </Stack>
-            ) : null}
-            <Stack spacing={0.5}>
-              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                Categorias
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {viewingDeal?.categoryIds?.length
-                  ? viewingDeal.categoryIds.map((id) => {
+              {taskFieldSettings.link ? (
+                <Stack spacing={0.5}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: "text.secondary" }}
+                  >
+                    Link
+                  </Typography>
+                  <Typography variant="body1">
+                    {viewingDeal?.link || "-"}
+                  </Typography>
+                </Stack>
+              ) : null}
+              <Stack spacing={0.5}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ color: "text.secondary" }}
+                >
+                  Categorias
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {viewingDeal?.categoryIds?.length ? (
+                    viewingDeal.categoryIds.map(id => {
                       const cat = categoryMap.get(id);
                       if (!cat) {
                         return null;
@@ -2365,824 +2587,234 @@ export default function Pipeline() {
                         />
                       );
                     })
-                  : (
-                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
                       Sem categoria
                     </Typography>
                   )}
-              </Stack>
-            </Stack>
-            <Stack spacing={0.5}>
-              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                Descrição
-              </Typography>
-              <Box
-                sx={{
-                  borderRadius: "var(--radius-card)",
-                  border: 1,
-                      borderColor: "divider",
-                  backgroundColor: "background.paper",
-                  p: 2,
-                  minHeight: 120,
-                }}
-                dangerouslySetInnerHTML={{
-                  __html: viewingDeal?.descriptionHtml || viewingDeal?.comments || "",
-                }}
-              />
-            </Stack>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              {permissions.pipeline_edit_tasks ? (
-                <Button
-                  color="error"
-                  variant="outlined"
-                  onClick={() => setRemoveDealOpen(true)}
-                >
-                  Remover
-                </Button>
-              ) : null}
-              {permissions.pipeline_edit_tasks ? (
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    if (!viewingDeal) {
-                      return;
-                    }
-                    handleDuplicateDeal(viewingDeal);
-                  }}
-                  startIcon={<FileCopyRoundedIcon fontSize="small" />}
-                >
-                  Duplicar
-                </Button>
-              ) : null}
-              {permissions.pipeline_edit_tasks ? (
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    if (!viewingDeal) {
-                      return;
-                    }
-                    handleEditOpen(viewingDeal);
-                    setViewingDeal(null);
-                  }}
-                >
-                  Editar
-                </Button>
-              ) : null}
-              <Button variant="contained" onClick={handleViewClose}>
-                Fechar
-              </Button>
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={taskFieldSettingsOpen}
-        onClose={() => {
-          setTaskFieldSettingsOpen(false);
-          cancelEditCategory();
-          setConfigAccordion(false);
-        }}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogContent>
-          <Stack spacing={2.5}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Typography variant="h6">Configurações</Typography>
-              <IconButton
-                onClick={() => {
-                  setTaskFieldSettingsOpen(false);
-                  cancelEditCategory();
-                  setConfigAccordion(false);
-                }}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            <Accordion
-              elevation={0}
-              expanded={configAccordion === "sprints"}
-              onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "sprints" : false)}
-              sx={{
-                border: 1,
-                      borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Sprints e backlog
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={2}>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() => handleToggleSprints(!sprintState.enabled)}
-                  >
-                    <Typography variant="subtitle2">Usar sprints e backlog</Typography>
-                    <ToggleCheckbox
-                      checked={sprintState.enabled}
-                      onChange={(event) => handleToggleSprints(event.target.checked)}
-                      onClick={(event) => event.stopPropagation()}
-                      disabled={!permissions.pipeline_edit_tasks}
-                    />
-                  </Box>
-                  <TextField
-                    select
-                    label="Duração da sprint"
-                    value={sprintState.duration}
-                    onChange={(event) =>
-                      setSprintState((prev) => ({
-                        ...prev,
-                        duration: event.target.value as SprintState["duration"],
-                      }))
-                    }
-                    disabled={!sprintState.enabled || !permissions.pipeline_edit_tasks}
-                  >
-                    <MenuItem value="1w">1 semana</MenuItem>
-                    <MenuItem value="2w">2 semanas</MenuItem>
-                    <MenuItem value="1m">1 mes</MenuItem>
-                  </TextField>
-                  <Stack direction="row" spacing={2}>
-                    <Button
-                      variant="outlined"
-                      onClick={handleCreateSprint}
-                      disabled={
-                        !sprintState.enabled ||
-                        !!sprintState.activeSprint ||
-                        !permissions.pipeline_edit_tasks
-                      }
-                      sx={{ textTransform: "none", fontWeight: 600 }}
-                    >
-                      Criar sprint
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={handleFinishSprint}
-                      disabled={
-                        !sprintState.enabled ||
-                        !sprintState.activeSprint ||
-                        !permissions.pipeline_edit_tasks
-                      }
-                      sx={{ textTransform: "none", fontWeight: 600 }}
-                    >
-                      Finalizar sprint
-                    </Button>
-                  </Stack>
-                  <Stack spacing={1.5}>
-                    <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                      Historico de sprints
-                    </Typography>
-                    {sprintState.history.length === 0 ? (
-                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                        Nenhuma sprint finalizada.
-                      </Typography>
-                    ) : (
-                      <Stack spacing={1}>
-                        {sprintState.history.map((sprint) => (
-                          <Paper
-                            key={sprint.id}
-                            elevation={0}
-                            sx={{
-                              p: 1.5,
-                              borderRadius: "var(--radius-card)",
-                              border: 1,
-                      borderColor: "divider",
-                              backgroundColor: "background.paper",
-                            }}
-                          >
-                            <Stack
-                              direction={{ xs: "column", sm: "row" }}
-                              spacing={2}
-                              alignItems="center"
-                              justifyContent="space-between"
-                            >
-                              <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                  {sprint.name}
-                                </Typography>
-                                <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                                  {new Date(sprint.startDate).toLocaleDateString("pt-BR")} -{" "}
-                                  {new Date(sprint.endDate).toLocaleDateString("pt-BR")}
-                                </Typography>
-                              </Box>
-                              <Button
-                                variant="outlined"
-                                onClick={() => handleReopenSprint(sprint.id)}
-                                sx={{ textTransform: "none", fontWeight: 600 }}
-                                disabled={!permissions.pipeline_edit_tasks}
-                              >
-                                Reabrir sprint
-                              </Button>
-                            </Stack>
-                          </Paper>
-                        ))}
-                      </Stack>
-                    )}
-                  </Stack>
                 </Stack>
-              </AccordionDetails>
-            </Accordion>
-            <Accordion
-              elevation={0}
-              expanded={configAccordion === "fields"}
-              onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "fields" : false)}
-              sx={{
-                border: 1,
-                      borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Campos da tarefa
+              </Stack>
+              <Stack spacing={0.5}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ color: "text.secondary" }}
+                >
+                  Descrição
                 </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
                 <Box
                   sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 1.5,
+                    borderRadius: "var(--radius-card)",
+                    border: 1,
+                    borderColor: "divider",
+                    backgroundColor: "background.paper",
+                    p: 2,
+                    minHeight: 120,
                   }}
-                >
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, value: !prev.value }))
-                    }
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      viewingDeal?.descriptionHtml ||
+                      viewingDeal?.comments ||
+                      "",
+                  }}
+                />
+              </Stack>
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
+                {permissions.pipeline_edit_tasks ? (
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    onClick={() => setRemoveDealOpen(true)}
                   >
-                    <Typography variant="subtitle2">Mostrar valor</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.value}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({ ...prev, value: event.target.checked }))
+                    Remover
+                  </Button>
+                ) : null}
+                {permissions.pipeline_edit_tasks ? (
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      if (!viewingDeal) {
+                        return;
                       }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, link: !prev.link }))
-                    }
+                      handleDuplicateDeal(viewingDeal);
+                    }}
+                    startIcon={<FileCopyRoundedIcon fontSize="small" />}
                   >
-                    <Typography variant="subtitle2">Mostrar link</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.link}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({ ...prev, link: event.target.checked }))
+                    Duplicar
+                  </Button>
+                ) : null}
+                {permissions.pipeline_edit_tasks ? (
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      if (!viewingDeal) {
+                        return;
                       }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, description: !prev.description }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Mostrar descricao</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.description}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          description: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, priority: !prev.priority }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Prioridade</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.priority}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          priority: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, dueDate: !prev.dueDate }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Data de entrega</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.dueDate}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          dueDate: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, checklist: !prev.checklist }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Checklist</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.checklist}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          checklist: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, labels: !prev.labels }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Labels</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.labels}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          labels: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, estimate: !prev.estimate }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Estimativa</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.estimate}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          estimate: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, timeSpent: !prev.timeSpent }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Tempo gasto</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.timeSpent}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          timeSpent: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, watchers: !prev.watchers }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Observadores</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.watchers}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          watchers: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, attachments: !prev.attachments }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Anexos</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.attachments}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          attachments: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={(theme) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      border: 1,
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings((prev) => ({ ...prev, sprintInfo: !prev.sprintInfo }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Sprint</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.sprintInfo}
-                      onChange={(event) =>
-                        setTaskFieldSettings((prev) => ({
-                          ...prev,
-                          sprintInfo: event.target.checked,
-                        }))
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  </Box>
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-            <Accordion
-              elevation={0}
-              expanded={configAccordion === "categories"}
-              onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "categories" : false)}
-              sx={{
-                border: 1,
-                      borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Categorias
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={1.5}>
-                  {editingCategoryId ? (
-                    <Box
-                      sx={{
-                        p: 2,
-                        borderRadius: "var(--radius-card)",
-                        border: 1,
-                      borderColor: "divider",
-                        backgroundColor: "background.paper",
-                      }}
-                    >
-                      <Stack spacing={1.5}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          Editar categoria
-                        </Typography>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={editingCategoryName}
-                          onChange={(event) => setEditingCategoryName(event.target.value)}
-                        />
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {DEFAULT_COLORS.map((color) => (
-                            <Box
-                              key={color}
-                              onClick={() => setEditingCategoryColor(color)}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth: editingCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Stack direction="row" spacing={2} justifyContent="flex-end">
-                          <Button variant="outlined" onClick={cancelEditCategory}>
-                            Cancelar
-                          </Button>
-                          <Button variant="contained" onClick={saveCategory}>
-                            Salvar
-                          </Button>
-                        </Stack>
-                      </Stack>
-                    </Box>
-                  ) : null}
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {categories.map((cat) => (
-                      <Chip
-                        key={cat.id}
-                        label={cat.name}
-                        onClick={() => startEditCategory(cat)}
-                        onDelete={() => handleRemoveCategory(cat.id)}
-                        sx={{
-                          color: "#e6edf3",
-                          backgroundColor: darkenColor(cat.color, 0.5),
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                  {editingCategoryId ? null : (
-                    <Box>
-                      <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
-                        Nova categoria
-                      </Typography>
-                      <Stack spacing={1.5}>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={newCategoryName}
-                          onChange={(event) => setNewCategoryName(event.target.value)}
-                        />
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {DEFAULT_COLORS.map((color) => (
-                            <Box
-                              key={color}
-                              onClick={() => setNewCategoryColor(color)}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth: newCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Button
-                          variant="outlined"
-                          onClick={handleAddCategory}
-                          startIcon={<AddRoundedIcon />}
-                          sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
-                        >
-                          Criar categoria
-                        </Button>
-                      </Stack>
-                    </Box>
-                  )}
-                </Stack>
-              </AccordionDetails>
-            </Accordion>
-            <Accordion
-              elevation={0}
-              expanded={configAccordion === "columns"}
-              onChange={(_, isExpanded) => setConfigAccordion(isExpanded ? "columns" : false)}
-              sx={{
-                border: 1,
-                      borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Colunas
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={2}>
-                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Renomeie, reorganize ou arquive colunas.
-                  </Typography>
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCorners}
-                    onDragEnd={handleColumnReorder}
-                  >
-                    <SortableContext
-                      items={activeColumns.map((column) => column.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <Stack spacing={1.5}>
-                        {activeColumns.map((column) => (
-                          <SortableColumnRow
-                            key={column.id}
-                            column={column}
-                            onRename={(nextTitle) => {
-                              setColumns((prev) =>
-                                prev.map((item) =>
-                                  item.id === column.id ? { ...item, title: nextTitle } : item
-                                )
-                              );
-                            }}
-                            onArchive={() => handleArchiveColumn(column.id)}
-                            onRemove={() => handleRequestRemoveColumn(column)}
-                          />
-                        ))}
-                      </Stack>
-                    </SortableContext>
-                  </DndContext>
-                  <Accordion
-                    elevation={0}
-                    sx={{
-                      border: 1,
-                      borderColor: "divider",
-                      borderRadius: "var(--radius-card)",
-                      backgroundColor: "background.paper",
-                      "&:before": { display: "none" },
-                      "&.Mui-expanded": { marginTop: 1.5 },
+                      handleEditOpen(viewingDeal);
+                      setViewingDeal(null);
                     }}
                   >
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreRoundedIcon />}
-                      sx={{
-                        minHeight: 48,
-                        "&.Mui-expanded": { minHeight: 48 },
-                        "& .MuiAccordionSummary-content": { my: 0 },
-                      }}
+                    Editar
+                  </Button>
+                ) : null}
+                <Button variant="contained" onClick={handleViewClose}>
+                  Fechar
+                </Button>
+              </Stack>
+            </Stack>
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={taskFieldSettingsOpen}
+          onClose={() => {
+            setTaskFieldSettingsOpen(false);
+            cancelEditCategory();
+            setConfigAccordion(false);
+          }}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogContent>
+            <Stack spacing={2.5}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography variant="h6">Configurações</Typography>
+                <IconButton
+                  onClick={() => {
+                    setTaskFieldSettingsOpen(false);
+                    cancelEditCategory();
+                    setConfigAccordion(false);
+                  }}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              <Accordion
+                elevation={0}
+                expanded={configAccordion === "sprints"}
+                onChange={(_, isExpanded) =>
+                  setConfigAccordion(isExpanded ? "sprints" : false)
+                }
+                sx={{
+                  border: 1,
+                  borderColor: "divider",
+                  borderRadius: "var(--radius-card)",
+                  backgroundColor: "background.paper",
+                  "&:before": { display: "none" },
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Sprints e backlog
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack spacing={2}>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() => handleToggleSprints(!sprintState.enabled)}
                     >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        Colunas arquivadas ({archivedColumns.length})
+                      <Typography variant="subtitle2">
+                        Usar sprints e backlog
                       </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ pt: 0, pb: 2 }}>
-                      {archivedColumns.length === 0 ? (
-                        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                          Nenhuma coluna arquivada.
+                      <ToggleCheckbox
+                        checked={sprintState.enabled}
+                        onChange={event =>
+                          handleToggleSprints(event.target.checked)
+                        }
+                        onClick={event => event.stopPropagation()}
+                        disabled={!permissions.pipeline_edit_tasks}
+                      />
+                    </Box>
+                    <TextField
+                      select
+                      label="Duração da sprint"
+                      value={sprintState.duration}
+                      onChange={event =>
+                        setSprintState(prev => ({
+                          ...prev,
+                          duration: event.target
+                            .value as SprintState["duration"],
+                        }))
+                      }
+                      disabled={
+                        !sprintState.enabled || !permissions.pipeline_edit_tasks
+                      }
+                    >
+                      <MenuItem value="1w">1 semana</MenuItem>
+                      <MenuItem value="2w">2 semanas</MenuItem>
+                      <MenuItem value="1m">1 mes</MenuItem>
+                    </TextField>
+                    <Stack direction="row" spacing={2}>
+                      <Button
+                        variant="outlined"
+                        onClick={handleCreateSprint}
+                        disabled={
+                          !sprintState.enabled ||
+                          !!sprintState.activeSprint ||
+                          !permissions.pipeline_edit_tasks
+                        }
+                        sx={{ textTransform: "none", fontWeight: 600 }}
+                      >
+                        Criar sprint
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        onClick={handleFinishSprint}
+                        disabled={
+                          !sprintState.enabled ||
+                          !sprintState.activeSprint ||
+                          !permissions.pipeline_edit_tasks
+                        }
+                        sx={{ textTransform: "none", fontWeight: 600 }}
+                      >
+                        Finalizar sprint
+                      </Button>
+                    </Stack>
+                    <Stack spacing={1.5}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        Historico de sprints
+                      </Typography>
+                      {sprintState.history.length === 0 ? (
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "text.secondary" }}
+                        >
+                          Nenhuma sprint finalizada.
                         </Typography>
                       ) : (
-                        <Stack spacing={1.5}>
-                          {archivedColumns.map((column) => (
+                        <Stack spacing={1}>
+                          {sprintState.history.map(sprint => (
                             <Paper
-                              key={column.id}
+                              key={sprint.id}
                               elevation={0}
                               sx={{
-                                p: 2,
-                                border: 1,
-                      borderColor: "divider",
+                                p: 1.5,
                                 borderRadius: "var(--radius-card)",
+                                border: 1,
+                                borderColor: "divider",
                                 backgroundColor: "background.paper",
                               }}
                             >
@@ -3190,337 +2822,1140 @@ export default function Pipeline() {
                                 direction={{ xs: "column", sm: "row" }}
                                 spacing={2}
                                 alignItems="center"
+                                justifyContent="space-between"
                               >
-                                <Typography variant="subtitle2" sx={{ flex: 1 }}>
-                                  {column.title}
-                                </Typography>
-                                <Stack direction="row" spacing={1}>
-                                  <Tooltip title="Restaurar" placement="top">
-                                    <IconButton
-                                      onClick={() => handleRestoreColumn(column.id)}
-                                      sx={{ border: 1, borderColor: "divider" }}
-                                      aria-label={`Restaurar ${column.title}`}
-                                    >
-                                      <RestoreFromTrashRoundedIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Remover" placement="top">
-                                    <IconButton
-                                      onClick={() => handleRequestRemoveColumn(column)}
-                                      sx={{ border: 1, borderColor: "divider" }}
-                                      aria-label={`Remover ${column.title}`}
-                                    >
-                                      <DeleteRoundedIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                </Stack>
+                                <Box>
+                                  <Typography
+                                    variant="subtitle2"
+                                    sx={{ fontWeight: 600 }}
+                                  >
+                                    {sprint.name}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: "text.secondary" }}
+                                  >
+                                    {new Date(
+                                      sprint.startDate
+                                    ).toLocaleDateString("pt-BR")}{" "}
+                                    -{" "}
+                                    {new Date(
+                                      sprint.endDate
+                                    ).toLocaleDateString("pt-BR")}
+                                  </Typography>
+                                </Box>
+                                <Button
+                                  variant="outlined"
+                                  onClick={() => handleReopenSprint(sprint.id)}
+                                  sx={{
+                                    textTransform: "none",
+                                    fontWeight: 600,
+                                  }}
+                                  disabled={!permissions.pipeline_edit_tasks}
+                                >
+                                  Reabrir sprint
+                                </Button>
                               </Stack>
                             </Paper>
                           ))}
                         </Stack>
                       )}
-                    </AccordionDetails>
-                  </Accordion>
-                </Stack>
-              </AccordionDetails>
-            </Accordion>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setTaskFieldSettingsOpen(false);
-                  cancelEditCategory();
-                  setConfigAccordion(false);
+                    </Stack>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion
+                elevation={0}
+                expanded={configAccordion === "fields"}
+                onChange={(_, isExpanded) =>
+                  setConfigAccordion(isExpanded ? "fields" : false)
+                }
+                sx={{
+                  border: 1,
+                  borderColor: "divider",
+                  borderRadius: "var(--radius-card)",
+                  backgroundColor: "background.paper",
+                  "&:before": { display: "none" },
                 }}
               >
-                Fechar
-              </Button>
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={removeDealOpen}
-        onClose={() => setRemoveDealOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogContent>
-          <Stack spacing={2}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Typography variant="h6">Remover tarefa</Typography>
-              <IconButton onClick={() => setRemoveDealOpen(false)} sx={{ color: "text.secondary" }}>
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              Você confirma a exclusão desta tarefa? Essa ação não pode ser desfeita.
-            </Typography>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button variant="outlined" onClick={() => setRemoveDealOpen(false)}>
-                Cancelar
-              </Button>
-              <Button
-                color="error"
-                variant="contained"
-                onClick={() => {
-                  if (!viewingDeal) {
-                    return;
-                  }
-                  setColumns((prev) =>
-                    prev.map((column) => ({
-                      ...column,
-                      deals: column.deals.filter((deal) => deal.id !== viewingDeal.id),
-                    }))
-                  );
-                  setViewingDeal(null);
-                  setRemoveDealOpen(false);
-                }}
-              >
-                Remover
-              </Button>
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={removeColumnOpen}
-        onClose={() => {
-          setRemoveColumnOpen(false);
-          setRemoveColumnTarget(null);
-        }}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogContent>
-          <Stack spacing={2}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Typography variant="h6">Remover coluna</Typography>
-              <IconButton
-                onClick={() => {
-                  setRemoveColumnOpen(false);
-                  setRemoveColumnTarget(null);
-                }}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              Você confirma a exclusão da coluna {removeColumnTarget?.title || ""}? Todas as
-              tarefas nela serao removidas.
-            </Typography>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setRemoveColumnOpen(false);
-                  setRemoveColumnTarget(null);
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button color="error" variant="contained" onClick={handleConfirmRemoveColumn}>
-                Remover
-              </Button>
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={Boolean(editingDeal)} onClose={handleEditClose} maxWidth="sm" fullWidth>
-        <DialogContent>
-          <Stack spacing={2.5}>
-            <Box>
-              <Typography variant="h6">Editar tarefa</Typography>
-            </Box>
-            <TextField
-              label="Titulo"
-              fullWidth
-              value={editName}
-              onChange={(event) => setEditName(event.target.value)}
-            />
-            {taskFieldSettings.value ? (
-              <TextField
-                label="Valor"
-                fullWidth
-                value={editValue}
-                onChange={(event) => setEditValue(event.target.value)}
-              />
-            ) : null}
-            <Autocomplete
-              multiple
-              options={personOptions}
-              value={selectPersonsByIds(editResponsibleIds)}
-              onChange={(_, value) => setEditResponsibleIds(value.map((person) => person.id))}
-              getOptionLabel={(option) => formatPersonLabel(option)}
-              noOptionsText="Nenhum usuario"
-              renderInput={(params) => <TextField {...params} label="Responsaveis" fullWidth />}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    {...getTagProps({ index })}
-                    key={option.id}
-                    label={formatPersonLabel(option)}
-                    size="small"
-                  />
-                ))
-              }
-            />
-            <Autocomplete
-              multiple
-              options={personOptions}
-              value={selectPersonsByIds(editWorkerIds)}
-              onChange={(_, value) => setEditWorkerIds(value.map((person) => person.id))}
-              getOptionLabel={(option) => formatPersonLabel(option)}
-              noOptionsText="Nenhum usuario"
-              renderInput={(params) => <TextField {...params} label="Pessoas na tarefa" fullWidth />}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    {...getTagProps({ index })}
-                    key={option.id}
-                    label={formatPersonLabel(option)}
-                    size="small"
-                  />
-                ))
-              }
-            />
-            {taskFieldSettings.link ? (
-              <TextField
-                label="Link"
-                fullWidth
-                value={editLink}
-                onChange={(event) => setEditLink(event.target.value)}
-              />
-            ) : null}
-            <Autocomplete
-              multiple
-              options={categories}
-              value={categories.filter((cat) => editCategoryIds.includes(cat.id))}
-              onChange={(_, value) => setEditCategoryIds(value.map((cat) => cat.id))}
-              getOptionLabel={(option) => option.name}
-              disableCloseOnSelect
-              renderOption={(props, option, { selected }) => (
-                <li {...props}>
-                  <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
-                  {option.name}
-                </li>
-              )}
-              renderInput={(params) => <TextField {...params} label="Categorias" fullWidth />}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    {...getTagProps({ index })}
-                    key={option.id}
-                    label={option.name}
-                    size="small"
+                <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Campos da tarefa
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Box
                     sx={{
-                      color: "#e6edf3",
-                      backgroundColor: darkenColor(option.color, 0.5),
+                      display: "grid",
+                      gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                      gap: 1.5,
                     }}
-                  />
-                ))
-              }
-            />
-            <Stack spacing={1}>
-              <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
-                Descrição
+                  >
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          value: !prev.value,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Mostrar valor</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.value}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            value: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          link: !prev.link,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Mostrar link</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.link}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            link: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          description: !prev.description,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">
+                        Mostrar descricao
+                      </Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.description}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            description: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          priority: !prev.priority,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Prioridade</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.priority}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            priority: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          dueDate: !prev.dueDate,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">
+                        Data de entrega
+                      </Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.dueDate}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            dueDate: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          checklist: !prev.checklist,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Checklist</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.checklist}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            checklist: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          labels: !prev.labels,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Labels</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.labels}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            labels: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          estimate: !prev.estimate,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Estimativa</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.estimate}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            estimate: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          timeSpent: !prev.timeSpent,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Tempo gasto</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.timeSpent}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            timeSpent: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          watchers: !prev.watchers,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Observadores</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.watchers}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            watchers: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          attachments: !prev.attachments,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Anexos</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.attachments}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            attachments: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                    <Box
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderRadius: "var(--radius-card)",
+                        border: 1,
+                        borderColor: "divider",
+                        backgroundColor: "background.paper",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          sprintInfo: !prev.sprintInfo,
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">Sprint</Typography>
+                      <ToggleCheckbox
+                        checked={taskFieldSettings.sprintInfo}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            sprintInfo: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion
+                elevation={0}
+                expanded={configAccordion === "categories"}
+                onChange={(_, isExpanded) =>
+                  setConfigAccordion(isExpanded ? "categories" : false)
+                }
+                sx={{
+                  border: 1,
+                  borderColor: "divider",
+                  borderRadius: "var(--radius-card)",
+                  backgroundColor: "background.paper",
+                  "&:before": { display: "none" },
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Categorias
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack spacing={1.5}>
+                    {editingCategoryId ? (
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: "var(--radius-card)",
+                          border: 1,
+                          borderColor: "divider",
+                          backgroundColor: "background.paper",
+                        }}
+                      >
+                        <Stack spacing={1.5}>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            Editar categoria
+                          </Typography>
+                          <TextField
+                            label="Nome"
+                            fullWidth
+                            value={editingCategoryName}
+                            onChange={event =>
+                              setEditingCategoryName(event.target.value)
+                            }
+                          />
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            flexWrap="wrap"
+                            useFlexGap
+                          >
+                            {DEFAULT_COLORS.map(color => (
+                              <Box
+                                key={color}
+                                onClick={() => setEditingCategoryColor(color)}
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: 1,
+                                  backgroundColor: color,
+                                  borderStyle: "solid",
+                                  borderWidth:
+                                    editingCategoryColor === color ? 2 : 1,
+                                  borderColor: "divider",
+                                  cursor: "pointer",
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                          <Stack
+                            direction="row"
+                            spacing={2}
+                            justifyContent="flex-end"
+                          >
+                            <Button
+                              variant="outlined"
+                              onClick={cancelEditCategory}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button variant="contained" onClick={saveCategory}>
+                              Salvar
+                            </Button>
+                          </Stack>
+                        </Stack>
+                      </Box>
+                    ) : null}
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      flexWrap="wrap"
+                      useFlexGap
+                    >
+                      {categories.map(cat => (
+                        <Chip
+                          key={cat.id}
+                          label={cat.name}
+                          onClick={() => startEditCategory(cat)}
+                          onDelete={() => handleRemoveCategory(cat.id)}
+                          sx={{
+                            color: "#e6edf3",
+                            backgroundColor: darkenColor(cat.color, 0.5),
+                          }}
+                        />
+                      ))}
+                    </Stack>
+                    {editingCategoryId ? null : (
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "text.secondary", mb: 1 }}
+                        >
+                          Nova categoria
+                        </Typography>
+                        <Stack spacing={1.5}>
+                          <TextField
+                            label="Nome"
+                            fullWidth
+                            value={newCategoryName}
+                            onChange={event =>
+                              setNewCategoryName(event.target.value)
+                            }
+                          />
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            flexWrap="wrap"
+                            useFlexGap
+                          >
+                            {DEFAULT_COLORS.map(color => (
+                              <Box
+                                key={color}
+                                onClick={() => setNewCategoryColor(color)}
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: 1,
+                                  backgroundColor: color,
+                                  borderStyle: "solid",
+                                  borderWidth:
+                                    newCategoryColor === color ? 2 : 1,
+                                  borderColor: "divider",
+                                  cursor: "pointer",
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                          <Button
+                            variant="outlined"
+                            onClick={handleAddCategory}
+                            startIcon={<AddRoundedIcon />}
+                            sx={{
+                              alignSelf: "flex-start",
+                              textTransform: "none",
+                              fontWeight: 600,
+                            }}
+                          >
+                            Criar categoria
+                          </Button>
+                        </Stack>
+                      </Box>
+                    )}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+              <Accordion
+                elevation={0}
+                expanded={configAccordion === "columns"}
+                onChange={(_, isExpanded) =>
+                  setConfigAccordion(isExpanded ? "columns" : false)
+                }
+                sx={{
+                  border: 1,
+                  borderColor: "divider",
+                  borderRadius: "var(--radius-card)",
+                  backgroundColor: "background.paper",
+                  "&:before": { display: "none" },
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Colunas
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack spacing={2}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Renomeie, reorganize ou arquive colunas.
+                    </Typography>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCorners}
+                      onDragEnd={handleColumnReorder}
+                    >
+                      <SortableContext
+                        items={activeColumns.map(column => column.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <Stack spacing={1.5}>
+                          {activeColumns.map(column => (
+                            <SortableColumnRow
+                              key={column.id}
+                              column={column}
+                              onRename={nextTitle => {
+                                setColumns(prev =>
+                                  prev.map(item =>
+                                    item.id === column.id
+                                      ? { ...item, title: nextTitle }
+                                      : item
+                                  )
+                                );
+                              }}
+                              onArchive={() => handleArchiveColumn(column.id)}
+                              onRemove={() => handleRequestRemoveColumn(column)}
+                            />
+                          ))}
+                        </Stack>
+                      </SortableContext>
+                    </DndContext>
+                    <Accordion
+                      elevation={0}
+                      sx={{
+                        border: 1,
+                        borderColor: "divider",
+                        borderRadius: "var(--radius-card)",
+                        backgroundColor: "background.paper",
+                        "&:before": { display: "none" },
+                        "&.Mui-expanded": { marginTop: 1.5 },
+                      }}
+                    >
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreRoundedIcon />}
+                        sx={{
+                          minHeight: 48,
+                          "&.Mui-expanded": { minHeight: 48 },
+                          "& .MuiAccordionSummary-content": { my: 0 },
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          Colunas arquivadas ({archivedColumns.length})
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+                        {archivedColumns.length === 0 ? (
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary" }}
+                          >
+                            Nenhuma coluna arquivada.
+                          </Typography>
+                        ) : (
+                          <Stack spacing={1.5}>
+                            {archivedColumns.map(column => (
+                              <Paper
+                                key={column.id}
+                                elevation={0}
+                                sx={{
+                                  p: 2,
+                                  border: 1,
+                                  borderColor: "divider",
+                                  borderRadius: "var(--radius-card)",
+                                  backgroundColor: "background.paper",
+                                }}
+                              >
+                                <Stack
+                                  direction={{ xs: "column", sm: "row" }}
+                                  spacing={2}
+                                  alignItems="center"
+                                >
+                                  <Typography
+                                    variant="subtitle2"
+                                    sx={{ flex: 1 }}
+                                  >
+                                    {column.title}
+                                  </Typography>
+                                  <Stack direction="row" spacing={1}>
+                                    <Tooltip title="Restaurar" placement="top">
+                                      <IconButton
+                                        onClick={() =>
+                                          handleRestoreColumn(column.id)
+                                        }
+                                        sx={{
+                                          border: 1,
+                                          borderColor: "divider",
+                                        }}
+                                        aria-label={`Restaurar ${column.title}`}
+                                      >
+                                        <RestoreFromTrashRoundedIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Remover" placement="top">
+                                      <IconButton
+                                        onClick={() =>
+                                          handleRequestRemoveColumn(column)
+                                        }
+                                        sx={{
+                                          border: 1,
+                                          borderColor: "divider",
+                                        }}
+                                        aria-label={`Remover ${column.title}`}
+                                      >
+                                        <DeleteRoundedIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Stack>
+                                </Stack>
+                              </Paper>
+                            ))}
+                          </Stack>
+                        )}
+                      </AccordionDetails>
+                    </Accordion>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setTaskFieldSettingsOpen(false);
+                    cancelEditCategory();
+                    setConfigAccordion(false);
+                  }}
+                >
+                  Fechar
+                </Button>
+              </Stack>
+            </Stack>
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={removeDealOpen}
+          onClose={() => setRemoveDealOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogContent>
+            <Stack spacing={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography variant="h6">Remover tarefa</Typography>
+                <IconButton
+                  onClick={() => setRemoveDealOpen(false)}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                Você confirma a exclusão desta tarefa? Essa ação não pode ser
+                desfeita.
               </Typography>
-              <RichTextEditor value={editDescription} onChange={setEditDescription} />
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Button
+                  variant="outlined"
+                  onClick={() => setRemoveDealOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  color="error"
+                  variant="contained"
+                  onClick={() => {
+                    if (!viewingDeal) {
+                      return;
+                    }
+                    setColumns(prev =>
+                      prev.map(column => ({
+                        ...column,
+                        deals: column.deals.filter(
+                          deal => deal.id !== viewingDeal.id
+                        ),
+                      }))
+                    );
+                    setViewingDeal(null);
+                    setRemoveDealOpen(false);
+                  }}
+                >
+                  Remover
+                </Button>
+              </Stack>
             </Stack>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button color="error" variant="outlined" onClick={handleDealRemove}>
-                Remover
-              </Button>
-              <Button variant="outlined" onClick={handleEditClose}>
-                Cancelar
-              </Button>
-              <Button variant="contained" onClick={handleEditSave}>
-                Salvar
-              </Button>
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={5000}
-        onClose={(_, reason) => {
-          if (reason === "clickaway") {
-            return;
-          }
-          setSnackbarOpen(false);
-          setLastRemoved(null);
-        }}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          severity="info"
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={removeColumnOpen}
           onClose={() => {
+            setRemoveColumnOpen(false);
+            setRemoveColumnTarget(null);
+          }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogContent>
+            <Stack spacing={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography variant="h6">Remover coluna</Typography>
+                <IconButton
+                  onClick={() => {
+                    setRemoveColumnOpen(false);
+                    setRemoveColumnTarget(null);
+                  }}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                Você confirma a exclusão da coluna{" "}
+                {removeColumnTarget?.title || ""}? Todas as tarefas nela serao
+                removidas.
+              </Typography>
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setRemoveColumnOpen(false);
+                    setRemoveColumnTarget(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  color="error"
+                  variant="contained"
+                  onClick={handleConfirmRemoveColumn}
+                >
+                  Remover
+                </Button>
+              </Stack>
+            </Stack>
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={Boolean(editingDeal)}
+          onClose={handleEditClose}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogContent>
+            <Stack spacing={2.5}>
+              <Box>
+                <Typography variant="h6">Editar tarefa</Typography>
+              </Box>
+              <TextField
+                label="Titulo"
+                fullWidth
+                value={editName}
+                onChange={event => setEditName(event.target.value)}
+              />
+              {taskFieldSettings.value ? (
+                <TextField
+                  label="Valor"
+                  fullWidth
+                  value={editValue}
+                  onChange={event => setEditValue(event.target.value)}
+                />
+              ) : null}
+              <Autocomplete
+                multiple
+                options={personOptions}
+                value={selectPersonsByIds(editResponsibleIds)}
+                onChange={(_, value) =>
+                  setEditResponsibleIds(value.map(person => person.id))
+                }
+                getOptionLabel={option => formatPersonLabel(option)}
+                noOptionsText="Nenhum usuario"
+                renderInput={params => (
+                  <TextField {...params} label="Responsaveis" fullWidth />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      {...getTagProps({ index })}
+                      key={option.id}
+                      label={formatPersonLabel(option)}
+                      size="small"
+                    />
+                  ))
+                }
+              />
+              <Autocomplete
+                multiple
+                options={personOptions}
+                value={selectPersonsByIds(editWorkerIds)}
+                onChange={(_, value) =>
+                  setEditWorkerIds(value.map(person => person.id))
+                }
+                getOptionLabel={option => formatPersonLabel(option)}
+                noOptionsText="Nenhum usuario"
+                renderInput={params => (
+                  <TextField {...params} label="Pessoas na tarefa" fullWidth />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      {...getTagProps({ index })}
+                      key={option.id}
+                      label={formatPersonLabel(option)}
+                      size="small"
+                    />
+                  ))
+                }
+              />
+              {taskFieldSettings.link ? (
+                <TextField
+                  label="Link"
+                  fullWidth
+                  value={editLink}
+                  onChange={event => setEditLink(event.target.value)}
+                />
+              ) : null}
+              <Autocomplete
+                multiple
+                options={categories}
+                value={categories.filter(cat =>
+                  editCategoryIds.includes(cat.id)
+                )}
+                onChange={(_, value) =>
+                  setEditCategoryIds(value.map(cat => cat.id))
+                }
+                getOptionLabel={option => option.name}
+                disableCloseOnSelect
+                renderOption={(props, option, { selected }) => (
+                  <li {...props}>
+                    <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
+                    {option.name}
+                  </li>
+                )}
+                renderInput={params => (
+                  <TextField {...params} label="Categorias" fullWidth />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      {...getTagProps({ index })}
+                      key={option.id}
+                      label={option.name}
+                      size="small"
+                      sx={{
+                        color: "#e6edf3",
+                        backgroundColor: darkenColor(option.color, 0.5),
+                      }}
+                    />
+                  ))
+                }
+              />
+              <Stack spacing={1}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ color: "text.secondary" }}
+                >
+                  Descrição
+                </Typography>
+                <RichTextEditor
+                  value={editDescription}
+                  onChange={setEditDescription}
+                />
+              </Stack>
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Button
+                  color="error"
+                  variant="outlined"
+                  onClick={handleDealRemove}
+                >
+                  Remover
+                </Button>
+                <Button variant="outlined" onClick={handleEditClose}>
+                  Cancelar
+                </Button>
+                <Button variant="contained" onClick={handleEditSave}>
+                  Salvar
+                </Button>
+              </Stack>
+            </Stack>
+          </DialogContent>
+        </Dialog>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={5000}
+          onClose={(_, reason) => {
+            if (reason === "clickaway") {
+              return;
+            }
             setSnackbarOpen(false);
             setLastRemoved(null);
           }}
-          action={
-            <Button color="inherit" size="small" onClick={handleUndoRemove}>
-              Desfazer
-            </Button>
-          }
-          sx={{ width: "100%" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
-          Task removida.
-        </Alert>
-      </Snackbar>
+          <Alert
+            severity="info"
+            onClose={() => {
+              setSnackbarOpen(false);
+              setLastRemoved(null);
+            }}
+            action={
+              <Button color="inherit" size="small" onClick={handleUndoRemove}>
+                Desfazer
+              </Button>
+            }
+            sx={{ width: "100%" }}
+          >
+            Task removida.
+          </Alert>
+        </Snackbar>
 
-      <Dialog
-        open={Boolean(editingColumn)}
-        onClose={handleColumnEditClose}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogContent>
-          <Stack spacing={2.5}>
-            <Box>
-              <Typography variant="h6">Editar etapa</Typography>
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Atualize o titulo e a descricao da etapa.
-              </Typography>
-            </Box>
-            <TextField
-              label="Titulo"
-              fullWidth
-              value={editColumnTitle}
-              onChange={(event) => setEditColumnTitle(event.target.value)}
-            />
-            <TextField
-              label="Descrição"
-              fullWidth
-              multiline
-              minRows={3}
-              value={editColumnDescription}
-              onChange={(event) => setEditColumnDescription(event.target.value)}
-            />
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button
-                color="error"
-                variant="outlined"
-                onClick={() => {
-                  if (editingColumn) {
-                    handleRequestRemoveColumn(editingColumn);
-                  }
-                }}
-              >
-                Remover
-              </Button>
-              <Button variant="outlined" onClick={handleColumnEditClose}>
-                Cancelar
-              </Button>
-              <Button variant="contained" onClick={handleColumnEditSave}>
-                Salvar
-              </Button>
+        <Dialog
+          open={Boolean(editingColumn)}
+          onClose={handleColumnEditClose}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogContent>
+            <Stack spacing={2.5}>
+              <Box>
+                <Typography variant="h6">Editar etapa</Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  Atualize o titulo e a descricao da etapa.
+                </Typography>
+              </Box>
+              <TextField
+                label="Titulo"
+                fullWidth
+                value={editColumnTitle}
+                onChange={event => setEditColumnTitle(event.target.value)}
+              />
+              <TextField
+                label="Descrição"
+                fullWidth
+                multiline
+                minRows={3}
+                value={editColumnDescription}
+                onChange={event => setEditColumnDescription(event.target.value)}
+              />
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Button
+                  color="error"
+                  variant="outlined"
+                  onClick={() => {
+                    if (editingColumn) {
+                      handleRequestRemoveColumn(editingColumn);
+                    }
+                  }}
+                >
+                  Remover
+                </Button>
+                <Button variant="outlined" onClick={handleColumnEditClose}>
+                  Cancelar
+                </Button>
+                <Button variant="contained" onClick={handleColumnEditSave}>
+                  Salvar
+                </Button>
+              </Stack>
             </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
       </Stack>
     </Box>
   );
@@ -3551,12 +3986,18 @@ function SortableColumn({
 }) {
   const displayCount = filteredDeals.length;
   const dragId = columnDragId(column.id);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({
-      id: dragId,
-      data: { type: "column" },
-      disabled: !canEditColumns,
-    });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: dragId,
+    data: { type: "column" },
+    disabled: !canEditColumns,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -3587,10 +4028,17 @@ function SortableColumn({
             cursor: canEditColumns ? "grab" : "default",
             touchAction: canEditColumns ? "none" : "auto",
           }}
-          {...(canEditColumns ? { ...attributes, ...listeners, "data-draggable": true } : {})}
+          {...(canEditColumns
+            ? { ...attributes, ...listeners, "data-draggable": true }
+            : {})}
         >
           <Box
-            sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              cursor: "pointer",
+            }}
             onClick={() => {
               if (canEditColumns) {
                 onEditColumn(column);
@@ -3602,7 +4050,10 @@ function SortableColumn({
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{ color: "text.secondary", fontWeight: 600 }}
+            >
               {displayCount}
             </Typography>
             <IconButton
@@ -3624,11 +4075,11 @@ function SortableColumn({
         </Box>
         <Divider />
         <SortableContext
-          items={filteredDeals.map((deal) => cardDragId(deal.id))}
+          items={filteredDeals.map(deal => cardDragId(deal.id))}
           strategy={verticalListSortingStrategy}
         >
           <Stack spacing={1.5}>
-            {filteredDeals.map((deal) => (
+            {filteredDeals.map(deal => (
               <SortableDeal
                 key={deal.id}
                 deal={deal}
@@ -3662,12 +4113,18 @@ function SortableDeal({
   canEditTasks: boolean;
 }) {
   const dragId = cardDragId(deal.id);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({
-      id: dragId,
-      data: { type: "card" },
-      disabled: !canEditTasks,
-    });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: dragId,
+    data: { type: "card" },
+    disabled: !canEditTasks,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -3683,7 +4140,7 @@ function SortableDeal({
         p: 2,
         borderRadius: "var(--radius-card)",
         border: 1,
-                      borderColor: "divider",
+        borderColor: "divider",
         backgroundColor: "background.paper",
         cursor: canEditTasks ? "grab" : "pointer",
         touchAction: canEditTasks ? "none" : "auto",
@@ -3693,11 +4150,16 @@ function SortableDeal({
       onClick={() => onEdit(deal)}
       data-draggable
     >
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
           {deal.name}
         </Typography>
-        
       </Box>
       <Typography variant="caption" sx={{ color: "text.secondary" }}>
         {ownerLabel}
@@ -3722,11 +4184,17 @@ function SortableColumnRow({
   onArchive: () => void;
   onRemove: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({
-      id: column.id,
-      data: { type: "column-row" },
-    });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: column.id,
+    data: { type: "column-row" },
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -3742,17 +4210,21 @@ function SortableColumnRow({
       sx={{
         p: 2,
         border: 1,
-                      borderColor: "divider",
+        borderColor: "divider",
         backgroundColor: "background.paper",
       }}
       style={style}
     >
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        alignItems="center"
+      >
         <TextField
           label="Nome da coluna"
           fullWidth
           value={column.title}
-          onChange={(event) => onRename(event.target.value)}
+          onChange={event => onRename(event.target.value)}
         />
         <Stack direction="row" spacing={1}>
           <Tooltip title="Arquivar" placement="top">
@@ -3778,7 +4250,7 @@ function SortableColumnRow({
             {...listeners}
             sx={{
               border: 1,
-                      borderColor: "divider",
+              borderColor: "divider",
               cursor: "grab",
             }}
             aria-label={`Arrastar ${column.title}`}
@@ -3817,13 +4289,13 @@ function RichTextEditor({
         if (moved) {
           return false;
         }
-        const files = Array.from(event.dataTransfer?.files || []).filter((file) =>
+        const files = Array.from(event.dataTransfer?.files || []).filter(file =>
           file.type.startsWith("image/")
         );
         if (!files.length) {
           return false;
         }
-        files.forEach((file) => {
+        files.forEach(file => {
           const reader = new FileReader();
           reader.onload = () => {
             const src = String(reader.result || "");
@@ -3835,11 +4307,11 @@ function RichTextEditor({
       },
       handlePaste: (_view, event) => {
         const items = Array.from(event.clipboardData?.items || []);
-        const imageItems = items.filter((item) => item.type.startsWith("image/"));
+        const imageItems = items.filter(item => item.type.startsWith("image/"));
         if (!imageItems.length) {
           return false;
         }
-        imageItems.forEach((item) => {
+        imageItems.forEach(item => {
           const file = item.getAsFile();
           if (!file) {
             return;
@@ -3901,8 +4373,12 @@ function RichTextEditor({
         <Tooltip title="Titulo 1" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-            color={editor?.isActive("heading", { level: 1 }) ? "primary" : "default"}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 1 }).run()
+            }
+            color={
+              editor?.isActive("heading", { level: 1 }) ? "primary" : "default"
+            }
             aria-label="Titulo 1"
           >
             <LooksOneRoundedIcon fontSize="small" />
@@ -3911,8 +4387,12 @@ function RichTextEditor({
         <Tooltip title="Titulo 2" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-            color={editor?.isActive("heading", { level: 2 }) ? "primary" : "default"}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            color={
+              editor?.isActive("heading", { level: 2 }) ? "primary" : "default"
+            }
             aria-label="Titulo 2"
           >
             <LooksTwoRoundedIcon fontSize="small" />
@@ -3921,8 +4401,12 @@ function RichTextEditor({
         <Tooltip title="Titulo 3" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-            color={editor?.isActive("heading", { level: 3 }) ? "primary" : "default"}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+            color={
+              editor?.isActive("heading", { level: 3 }) ? "primary" : "default"
+            }
             aria-label="Titulo 3"
           >
             <Looks3RoundedIcon fontSize="small" />
@@ -3961,7 +4445,9 @@ function RichTextEditor({
         <Tooltip title="Limpar formatação" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()}
+            onClick={() =>
+              editor?.chain().focus().unsetAllMarks().clearNodes().run()
+            }
             aria-label="Limpar formatação"
           >
             <BackspaceRoundedIcon fontSize="small" />

@@ -272,6 +272,7 @@ function App() {
     "/calendario": "Calendário",
     "/calendario/concluidas": "Tarefas feitas",
     "/notas": "Notas",
+    "/notas/arquivo": "Arquivo",
     "/notifications": "Notificações",
   };
   const showBreadcrumbs = !["/", "/login", "/signup"].includes(location);
@@ -280,7 +281,8 @@ function App() {
     if (!location.startsWith("/notas/")) {
       return null;
     }
-    const noteId = location.split("/")[2];
+    const isArchive = location.startsWith("/notas/arquivo");
+    const noteId = isArchive ? location.split("/")[3] : location.split("/")[2];
     if (!noteId) {
       return null;
     }
@@ -308,6 +310,19 @@ function App() {
           Notas
         </Link>,
       ];
+      if (isArchive) {
+        crumbs.push(
+          <Link
+            key="notas-arquivo"
+            component={RouterLink}
+            href="/notas/arquivo"
+            underline="hover"
+            color="inherit"
+          >
+            Arquivo
+          </Link>
+        );
+      }
       if (parent) {
         crumbs.push(
           <Link
@@ -361,6 +376,21 @@ function App() {
             </Link>,
             <Typography key="concluidas" color="text.primary">
               Tarefas feitas
+            </Typography>,
+          ]
+      : location === "/notas/arquivo"
+        ? [
+            <Link
+              key="notas"
+              component={RouterLink}
+              href="/notas"
+              underline="hover"
+              color="inherit"
+            >
+              Notas
+            </Link>,
+            <Typography key="arquivo" color="text.primary">
+              Arquivo
             </Typography>,
           ]
       : notesBreadcrumb
@@ -719,6 +749,8 @@ function App() {
               <Route path="/contatos" component={Contacts} />
               <Route path="/calendario/concluidas" component={CalendarCompleted} />
               <Route path="/calendario" component={Calendar} />
+              <Route path="/notas/arquivo/:noteId" component={Notes} />
+              <Route path="/notas/arquivo" component={Notes} />
               <Route path="/notas/:noteId" component={Notes} />
               <Route path="/notas" component={Notes} />
               <Route path="/notifications" component={Notifications} />

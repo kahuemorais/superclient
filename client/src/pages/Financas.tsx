@@ -127,7 +127,10 @@ const NEW_FINANCE_NAMES = new Set([
   "Fornecedores",
 ]);
 
-const normalizeCategory = (cat: Partial<Category> | null | undefined, index: number): Category | null => {
+const normalizeCategory = (
+  cat: Partial<Category> | null | undefined,
+  index: number
+): Category | null => {
   if (!cat || typeof cat.name !== "string") {
     return null;
   }
@@ -159,7 +162,7 @@ const shouldResetFinanceCategories = (cats: Category[]) => {
   if (!cats.length) {
     return true;
   }
-  const hasNew = cats.some((cat) => NEW_FINANCE_NAMES.has(cat.name));
+  const hasNew = cats.some(cat => NEW_FINANCE_NAMES.has(cat.name));
   return !hasNew;
 };
 
@@ -290,9 +293,13 @@ export default function Financas() {
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
   const [editingCategoryName, setEditingCategoryName] = useState("");
-  const [editingCategoryColor, setEditingCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [editingCategoryColor, setEditingCategoryColor] = useState(
+    DEFAULT_COLORS[0]
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsAccordion, setSettingsAccordion] = useState<
     "categories" | "table" | false
@@ -319,13 +326,22 @@ export default function Financas() {
 
   const getStoredPermissions = () => {
     const storedUser = window.localStorage.getItem("sc_user");
-    const email = storedUser ? (JSON.parse(storedUser) as { email?: string }).email : "";
+    const email = storedUser
+      ? (JSON.parse(storedUser) as { email?: string }).email
+      : "";
     const storedRoles = window.localStorage.getItem("sc_user_roles");
-    const userRoles = storedRoles ? (JSON.parse(storedRoles) as Record<string, string>) : {};
+    const userRoles = storedRoles
+      ? (JSON.parse(storedRoles) as Record<string, string>)
+      : {};
     const roleName = (email && userRoles[email]) || "Administrador";
-    const storedPermissions = window.localStorage.getItem("sc_role_permissions");
+    const storedPermissions = window.localStorage.getItem(
+      "sc_role_permissions"
+    );
     const rolePermissions = storedPermissions
-      ? (JSON.parse(storedPermissions) as Record<string, Record<string, boolean>>)
+      ? (JSON.parse(storedPermissions) as Record<
+          string,
+          Record<string, boolean>
+        >)
       : {};
     const defaults = {
       pipeline_view: true,
@@ -365,7 +381,9 @@ export default function Financas() {
               expenses?: Expense[];
             };
             const incomingCategories = sanitizeCategories(parsed.categories);
-            const nextCategories = shouldResetFinanceCategories(incomingCategories)
+            const nextCategories = shouldResetFinanceCategories(
+              incomingCategories
+            )
               ? defaultCategories
               : incomingCategories;
             setCategories(nextCategories);
@@ -377,7 +395,9 @@ export default function Financas() {
                 STORAGE_KEY,
                 JSON.stringify({
                   categories: nextCategories,
-                  expenses: Array.isArray(parsed.expenses) ? parsed.expenses : expenses,
+                  expenses: Array.isArray(parsed.expenses)
+                    ? parsed.expenses
+                    : expenses,
                 })
               );
             }
@@ -402,7 +422,9 @@ export default function Financas() {
       try {
         const parsed = JSON.parse(stored) as Contact[];
         if (Array.isArray(parsed)) {
-          const sanitized = parsed.filter((item) => item && typeof item.id === "string");
+          const sanitized = parsed.filter(
+            item => item && typeof item.id === "string"
+          );
           setContacts(sanitized);
         }
       } catch {
@@ -473,7 +495,7 @@ export default function Financas() {
     }
     try {
       const parsed = JSON.parse(stored) as Partial<typeof tableFields>;
-      setTableFields((prev) => ({
+      setTableFields(prev => ({
         ...prev,
         ...parsed,
       }));
@@ -501,18 +523,18 @@ export default function Financas() {
 
   const categoryMap = useMemo(() => {
     const map = new Map<string, Category>();
-    categories.forEach((cat) => map.set(cat.id, cat));
+    categories.forEach(cat => map.set(cat.id, cat));
     return map;
   }, [categories]);
 
   const contactMap = useMemo(() => {
     const map = new Map<string, Contact>();
-    contacts.forEach((contact) => map.set(contact.id, contact));
+    contacts.forEach(contact => map.set(contact.id, contact));
     return map;
   }, [contacts]);
 
   useEffect(() => {
-    if (categoryId && categories.some((cat) => cat.id === categoryId)) {
+    if (categoryId && categories.some(cat => cat.id === categoryId)) {
       return;
     }
     setCategoryId(categories[0]?.id || "");
@@ -520,13 +542,13 @@ export default function Financas() {
 
   const totalsByCategory = useMemo(() => {
     const totals = new Map<string, number>();
-    expenses.forEach((expense) => {
+    expenses.forEach(expense => {
       totals.set(
         expense.categoryId,
         (totals.get(expense.categoryId) || 0) + expense.amount
       );
     });
-    return categories.map((cat) => ({
+    return categories.map(cat => ({
       id: cat.id,
       name: cat.name,
       value: totals.get(cat.id) || 0,
@@ -536,7 +558,7 @@ export default function Financas() {
 
   const totalsByMonth = useMemo(() => {
     const buckets = new Map<string, number>();
-    expenses.forEach((expense) => {
+    expenses.forEach(expense => {
       const date = new Date(expense.createdAt);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       buckets.set(key, (buckets.get(key) || 0) + expense.amount);
@@ -549,14 +571,18 @@ export default function Financas() {
 
   const sortedExpenses = useMemo(() => {
     return [...expenses].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [expenses]);
 
   const filteredExpenses = useMemo(() => {
     const normalizedQuery = expenseQuery.trim().toLowerCase();
-    return sortedExpenses.filter((expense) => {
-      if (categoryFilters.length > 0 && !categoryFilters.includes(expense.categoryId)) {
+    return sortedExpenses.filter(expense => {
+      if (
+        categoryFilters.length > 0 &&
+        !categoryFilters.includes(expense.categoryId)
+      ) {
         return false;
       }
       if (!normalizedQuery) {
@@ -575,7 +601,9 @@ export default function Financas() {
       { key: "date", label: "Data" },
       { key: "comment", label: "Comentario" },
     ];
-    return columns.filter((column) => tableFields[column.key as keyof typeof tableFields]);
+    return columns.filter(
+      column => tableFields[column.key as keyof typeof tableFields]
+    );
   }, [tableFields]);
 
   const tableColumnCount = Math.max(1, visibleTableColumns.length);
@@ -589,8 +617,8 @@ export default function Financas() {
       return;
     }
     if (editingExpenseId) {
-      setExpenses((prev) =>
-        prev.map((expense) =>
+      setExpenses(prev =>
+        prev.map(expense =>
           expense.id === editingExpenseId
             ? {
                 ...expense,
@@ -605,7 +633,7 @@ export default function Financas() {
       );
     } else {
       const id = `exp-${Date.now()}`;
-      setExpenses((prev) => [
+      setExpenses(prev => [
         {
           id,
           title: title.trim(),
@@ -652,23 +680,29 @@ export default function Financas() {
       return;
     }
     const id = `cat-${Date.now()}`;
-    setCategories((prev) => [...prev, { id, name, color }]);
+    setCategories(prev => [...prev, { id, name, color }]);
     setNewCategoryName("");
   };
 
   const handleRemoveCategory = (id: string) => {
-    let nextCategories = categories.filter((cat) => cat.id !== id);
+    let nextCategories = categories.filter(cat => cat.id !== id);
     if (nextCategories.length === 0) {
       nextCategories = [
-        { id: `cat-${Date.now()}`, name: "Sem categoria", color: DEFAULT_COLORS[0] },
+        {
+          id: `cat-${Date.now()}`,
+          name: "Sem categoria",
+          color: DEFAULT_COLORS[0],
+        },
       ];
     }
     const fallback = nextCategories[0]?.id || "";
     setCategories(nextCategories);
     setCategoryId(fallback);
-    setExpenses((prev) =>
-      prev.map((expense) =>
-        expense.categoryId === id ? { ...expense, categoryId: fallback } : expense
+    setExpenses(prev =>
+      prev.map(expense =>
+        expense.categoryId === id
+          ? { ...expense, categoryId: fallback }
+          : expense
       )
     );
   };
@@ -692,8 +726,8 @@ export default function Financas() {
       return;
     }
     const color = editingCategoryColor;
-    setCategories((prev) =>
-      prev.map((cat) =>
+    setCategories(prev =>
+      prev.map(cat =>
         cat.id === editingCategoryId ? { ...cat, name, color } : cat
       )
     );
@@ -701,7 +735,7 @@ export default function Financas() {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200 }}>
+    <Box sx={{ maxWidth: 1200, mx: "auto" }}>
       <Stack spacing={3}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ flex: 1 }}>
@@ -730,10 +764,7 @@ export default function Financas() {
         </Box>
 
         <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-          <Paper
-            variant="outlined"
-            sx={{ p: 3, flex: 1 }}
-          >
+          <Paper variant="outlined" sx={{ p: 3, flex: 1 }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
               Gastos por categoria
             </Typography>
@@ -750,7 +781,7 @@ export default function Financas() {
                     labelLine={false}
                     labelStyle={{ fill: "#e6edf3", fontSize: 12 }}
                   >
-                    {totalsByCategory.map((entry) => (
+                    {totalsByCategory.map(entry => (
                       <Cell key={entry.id} fill={entry.color} />
                     ))}
                   </Pie>
@@ -770,17 +801,17 @@ export default function Financas() {
             </Box>
           </Paper>
 
-          <Paper
-            variant="outlined"
-            sx={{ p: 3, flex: 1 }}
-          >
+          <Paper variant="outlined" sx={{ p: 3, flex: 1 }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
               Evolucao mensal
             </Typography>
             <Box sx={{ height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={totalsByMonth}>
-                  <XAxis dataKey="month" tick={{ fill: "#9aa6b2", fontSize: 12 }} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fill: "#9aa6b2", fontSize: 12 }}
+                  />
                   <YAxis tick={{ fill: "#9aa6b2", fontSize: 12 }} />
                   <RechartsTooltip
                     contentStyle={{
@@ -800,10 +831,7 @@ export default function Financas() {
           </Paper>
         </Stack>
 
-        <Paper
-          variant="outlined"
-          sx={{ p: 3 }}
-        >
+        <Paper variant="outlined" sx={{ p: 3 }}>
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={2}
@@ -818,7 +846,7 @@ export default function Financas() {
               <TextField
                 label="Buscar gastos"
                 value={expenseQuery}
-                onChange={(event) => setExpenseQuery(event.target.value)}
+                onChange={event => setExpenseQuery(event.target.value)}
                 sx={{ minWidth: { xs: "100%", sm: 240 } }}
                 InputProps={{
                   endAdornment: expenseQuery ? (
@@ -837,9 +865,13 @@ export default function Financas() {
               <Autocomplete
                 multiple
                 options={categories}
-                value={categories.filter((cat) => categoryFilters.includes(cat.id))}
-                onChange={(_, value) => setCategoryFilters(value.map((cat) => cat.id))}
-                getOptionLabel={(option) => option.name}
+                value={categories.filter(cat =>
+                  categoryFilters.includes(cat.id)
+                )}
+                onChange={(_, value) =>
+                  setCategoryFilters(value.map(cat => cat.id))
+                }
+                getOptionLabel={option => option.name}
                 disableCloseOnSelect
                 ListboxProps={{
                   style: { maxHeight: 240 },
@@ -850,7 +882,7 @@ export default function Financas() {
                     {option.name}
                   </li>
                 )}
-                renderInput={(params) => (
+                renderInput={params => (
                   <TextField {...params} label="Filtrar categorias" fullWidth />
                 )}
                 renderTags={(value, getTagProps) => {
@@ -883,7 +915,7 @@ export default function Financas() {
                           sx={{
                             color: "text.secondary",
                             border: 1,
-                      borderColor: "divider",
+                            borderColor: "divider",
                           }}
                         />
                       ) : null}
@@ -902,27 +934,37 @@ export default function Financas() {
               <TableHead>
                 <TableRow>
                   {tableFields.title ? (
-                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                    <TableCell
+                      sx={{ color: "text.secondary", fontWeight: 600 }}
+                    >
                       Titulo
                     </TableCell>
                   ) : null}
                   {tableFields.category ? (
-                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                    <TableCell
+                      sx={{ color: "text.secondary", fontWeight: 600 }}
+                    >
                       Categoria
                     </TableCell>
                   ) : null}
                   {tableFields.amount ? (
-                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                    <TableCell
+                      sx={{ color: "text.secondary", fontWeight: 600 }}
+                    >
                       Valor
                     </TableCell>
                   ) : null}
                   {tableFields.date ? (
-                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                    <TableCell
+                      sx={{ color: "text.secondary", fontWeight: 600 }}
+                    >
                       Data
                     </TableCell>
                   ) : null}
                   {tableFields.comment ? (
-                    <TableCell sx={{ color: "text.secondary", fontWeight: 600 }}>
+                    <TableCell
+                      sx={{ color: "text.secondary", fontWeight: 600 }}
+                    >
                       Comentario
                     </TableCell>
                   ) : null}
@@ -931,14 +973,20 @@ export default function Financas() {
               <TableBody>
                 {filteredExpenses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={tableColumnCount} sx={{ color: "text.secondary" }}>
-                      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    <TableCell
+                      colSpan={tableColumnCount}
+                      sx={{ color: "text.secondary" }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                      >
                         Nenhum gasto encontrado.
                       </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredExpenses.map((expense) => {
+                  filteredExpenses.map(expense => {
                     const category = categoryMap.get(expense.categoryId);
                     return (
                       <TableRow
@@ -958,7 +1006,10 @@ export default function Financas() {
                                 label={category.name}
                                 sx={{
                                   color: "#e6edf3",
-                                  backgroundColor: darkenColor(category.color, 0.5),
+                                  backgroundColor: darkenColor(
+                                    category.color,
+                                    0.5
+                                  ),
                                 }}
                               />
                             ) : (
@@ -967,11 +1018,15 @@ export default function Financas() {
                           </TableCell>
                         ) : null}
                         {tableFields.amount ? (
-                          <TableCell>{expense.amount.toLocaleString("pt-BR")}</TableCell>
+                          <TableCell>
+                            {expense.amount.toLocaleString("pt-BR")}
+                          </TableCell>
                         ) : null}
                         {tableFields.date ? (
                           <TableCell>
-                            {new Date(expense.createdAt).toLocaleDateString("pt-BR")}
+                            {new Date(expense.createdAt).toLocaleDateString(
+                              "pt-BR"
+                            )}
                           </TableCell>
                         ) : null}
                         {tableFields.comment ? (
@@ -1000,7 +1055,13 @@ export default function Financas() {
       >
         <DialogContent>
           <Stack spacing={2.5}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Typography variant="h6">
                 {editingExpenseId ? "Editar gasto" : "Adicionar gasto"}
               </Typography>
@@ -1020,14 +1081,14 @@ export default function Financas() {
                 label="Titulo do gasto"
                 fullWidth
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={event => setTitle(event.target.value)}
                 disabled={!permissions.finance_edit}
               />
               <TextField
                 label="Valor"
                 fullWidth
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
+                onChange={event => setAmount(event.target.value)}
                 disabled={!permissions.finance_edit}
               />
               <TextField
@@ -1035,10 +1096,10 @@ export default function Financas() {
                 label="Categoria"
                 fullWidth
                 value={categoryId}
-                onChange={(event) => setCategoryId(event.target.value)}
+                onChange={event => setCategoryId(event.target.value)}
                 disabled={!permissions.finance_edit}
               >
-                {categories.map((cat) => (
+                {categories.map(cat => (
                   <MenuItem key={cat.id} value={cat.id}>
                     {cat.name}
                   </MenuItem>
@@ -1050,19 +1111,29 @@ export default function Financas() {
                 multiline
                 minRows={3}
                 value={comment}
-                onChange={(event) => setComment(event.target.value)}
+                onChange={event => setComment(event.target.value)}
                 disabled={!permissions.finance_edit}
               />
               <Autocomplete
                 multiple
                 options={contacts}
-                value={contacts.filter((contact) => contactIds.includes(contact.id))}
-                onChange={(_, value) => setContactIds(value.map((contact) => contact.id))}
-                getOptionLabel={(option) => option?.name || option?.emails?.[0] || "Contato"}
+                value={contacts.filter(contact =>
+                  contactIds.includes(contact.id)
+                )}
+                onChange={(_, value) =>
+                  setContactIds(value.map(contact => contact.id))
+                }
+                getOptionLabel={option =>
+                  option?.name || option?.emails?.[0] || "Contato"
+                }
                 noOptionsText="Nenhum contato"
                 disabled={!permissions.finance_edit}
-                renderInput={(params) => (
-                  <TextField {...params} label="Contatos associados" fullWidth />
+                renderInput={params => (
+                  <TextField
+                    {...params}
+                    label="Contatos associados"
+                    fullWidth
+                  />
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
@@ -1105,7 +1176,13 @@ export default function Financas() {
       >
         <DialogContent>
           <Stack spacing={2.5}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Typography variant="h6">Configurações</Typography>
               <IconButton
                 onClick={() => {
@@ -1135,17 +1212,27 @@ export default function Financas() {
                   {editingCategoryId ? (
                     <Paper variant="outlined" sx={{ p: 2 }}>
                       <Stack spacing={1.5}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 600 }}
+                        >
                           Editar categoria
                         </Typography>
                         <TextField
                           label="Nome"
                           fullWidth
                           value={editingCategoryName}
-                          onChange={(event) => setEditingCategoryName(event.target.value)}
+                          onChange={event =>
+                            setEditingCategoryName(event.target.value)
+                          }
                         />
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {DEFAULT_COLORS.map((color) => (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {DEFAULT_COLORS.map(color => (
                             <Box
                               key={color}
                               onClick={() => {
@@ -1157,15 +1244,23 @@ export default function Financas() {
                                 borderRadius: 1,
                                 backgroundColor: color,
                                 borderStyle: "solid",
-                                borderWidth: editingCategoryColor === color ? 2 : 1,
+                                borderWidth:
+                                  editingCategoryColor === color ? 2 : 1,
                                 borderColor: "divider",
                                 cursor: "pointer",
                               }}
                             />
                           ))}
                         </Stack>
-                        <Stack direction="row" spacing={2} justifyContent="flex-end">
-                          <Button variant="outlined" onClick={cancelEditCategory}>
+                        <Stack
+                          direction="row"
+                          spacing={2}
+                          justifyContent="flex-end"
+                        >
+                          <Button
+                            variant="outlined"
+                            onClick={cancelEditCategory}
+                          >
                             Cancelar
                           </Button>
                           <Button variant="contained" onClick={saveCategory}>
@@ -1176,7 +1271,7 @@ export default function Financas() {
                     </Paper>
                   ) : null}
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {categories.map((cat) => (
+                    {categories.map(cat => (
                       <Chip
                         key={cat.id}
                         label={cat.name}
@@ -1192,7 +1287,10 @@ export default function Financas() {
 
                   {editingCategoryId ? null : (
                     <Box>
-                      <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary", mb: 1 }}
+                      >
                         Nova categoria
                       </Typography>
                       <Stack spacing={1.5}>
@@ -1200,10 +1298,17 @@ export default function Financas() {
                           label="Nome"
                           fullWidth
                           value={newCategoryName}
-                          onChange={(event) => setNewCategoryName(event.target.value)}
+                          onChange={event =>
+                            setNewCategoryName(event.target.value)
+                          }
                         />
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          {DEFAULT_COLORS.map((color) => (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {DEFAULT_COLORS.map(color => (
                             <Box
                               key={color}
                               onClick={() => {
@@ -1226,7 +1331,11 @@ export default function Financas() {
                           variant="outlined"
                           onClick={handleAddCategory}
                           startIcon={<AddRoundedIcon />}
-                          sx={{ alignSelf: "flex-start", textTransform: "none", fontWeight: 600 }}
+                          sx={{
+                            alignSelf: "flex-start",
+                            textTransform: "none",
+                            fontWeight: 600,
+                          }}
                         >
                           Criar categoria
                         </Button>
@@ -1258,7 +1367,7 @@ export default function Financas() {
                 >
                   <Paper
                     variant="outlined"
-                    sx={(theme) => ({
+                    sx={theme => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1267,24 +1376,24 @@ export default function Financas() {
                       ...interactiveCardSx(theme),
                     })}
                     onClick={() =>
-                      setTableFields((prev) => ({ ...prev, title: !prev.title }))
+                      setTableFields(prev => ({ ...prev, title: !prev.title }))
                     }
                   >
                     <Typography variant="subtitle2">Titulo</Typography>
                     <ToggleCheckbox
                       checked={tableFields.title}
-                      onChange={(event) =>
-                        setTableFields((prev) => ({
+                      onChange={event =>
+                        setTableFields(prev => ({
                           ...prev,
                           title: event.target.checked,
                         }))
                       }
-                      onClick={(event) => event.stopPropagation()}
+                      onClick={event => event.stopPropagation()}
                     />
                   </Paper>
                   <Paper
                     variant="outlined"
-                    sx={(theme) => ({
+                    sx={theme => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1293,24 +1402,27 @@ export default function Financas() {
                       ...interactiveCardSx(theme),
                     })}
                     onClick={() =>
-                      setTableFields((prev) => ({ ...prev, category: !prev.category }))
+                      setTableFields(prev => ({
+                        ...prev,
+                        category: !prev.category,
+                      }))
                     }
                   >
                     <Typography variant="subtitle2">Categoria</Typography>
                     <ToggleCheckbox
                       checked={tableFields.category}
-                      onChange={(event) =>
-                        setTableFields((prev) => ({
+                      onChange={event =>
+                        setTableFields(prev => ({
                           ...prev,
                           category: event.target.checked,
                         }))
                       }
-                      onClick={(event) => event.stopPropagation()}
+                      onClick={event => event.stopPropagation()}
                     />
                   </Paper>
                   <Paper
                     variant="outlined"
-                    sx={(theme) => ({
+                    sx={theme => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1319,24 +1431,27 @@ export default function Financas() {
                       ...interactiveCardSx(theme),
                     })}
                     onClick={() =>
-                      setTableFields((prev) => ({ ...prev, amount: !prev.amount }))
+                      setTableFields(prev => ({
+                        ...prev,
+                        amount: !prev.amount,
+                      }))
                     }
                   >
                     <Typography variant="subtitle2">Valor</Typography>
                     <ToggleCheckbox
                       checked={tableFields.amount}
-                      onChange={(event) =>
-                        setTableFields((prev) => ({
+                      onChange={event =>
+                        setTableFields(prev => ({
                           ...prev,
                           amount: event.target.checked,
                         }))
                       }
-                      onClick={(event) => event.stopPropagation()}
+                      onClick={event => event.stopPropagation()}
                     />
                   </Paper>
                   <Paper
                     variant="outlined"
-                    sx={(theme) => ({
+                    sx={theme => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1345,24 +1460,24 @@ export default function Financas() {
                       ...interactiveCardSx(theme),
                     })}
                     onClick={() =>
-                      setTableFields((prev) => ({ ...prev, date: !prev.date }))
+                      setTableFields(prev => ({ ...prev, date: !prev.date }))
                     }
                   >
                     <Typography variant="subtitle2">Data</Typography>
                     <ToggleCheckbox
                       checked={tableFields.date}
-                      onChange={(event) =>
-                        setTableFields((prev) => ({
+                      onChange={event =>
+                        setTableFields(prev => ({
                           ...prev,
                           date: event.target.checked,
                         }))
                       }
-                      onClick={(event) => event.stopPropagation()}
+                      onClick={event => event.stopPropagation()}
                     />
                   </Paper>
                   <Paper
                     variant="outlined"
-                    sx={(theme) => ({
+                    sx={theme => ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1371,19 +1486,22 @@ export default function Financas() {
                       ...interactiveCardSx(theme),
                     })}
                     onClick={() =>
-                      setTableFields((prev) => ({ ...prev, comment: !prev.comment }))
+                      setTableFields(prev => ({
+                        ...prev,
+                        comment: !prev.comment,
+                      }))
                     }
                   >
                     <Typography variant="subtitle2">Comentario</Typography>
                     <ToggleCheckbox
                       checked={tableFields.comment}
-                      onChange={(event) =>
-                        setTableFields((prev) => ({
+                      onChange={event =>
+                        setTableFields(prev => ({
                           ...prev,
                           comment: event.target.checked,
                         }))
                       }
-                      onClick={(event) => event.stopPropagation()}
+                      onClick={event => event.stopPropagation()}
                     />
                   </Paper>
                 </Box>
@@ -1402,7 +1520,11 @@ export default function Financas() {
                     comment: true,
                   });
                 }}
-                sx={{ textTransform: "none", fontWeight: 600, color: "text.secondary" }}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                  color: "text.secondary",
+                }}
               >
                 Restaurar padrao
               </Button>
@@ -1429,11 +1551,20 @@ export default function Financas() {
       >
         <DialogContent>
           <Stack spacing={2.5}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Typography variant="h6">
                 {viewingExpense?.title || "Detalhes do gasto"}
               </Typography>
-              <IconButton onClick={handleViewClose} sx={{ color: "text.secondary" }}>
+              <IconButton
+                onClick={handleViewClose}
+                sx={{ color: "text.secondary" }}
+              >
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -1461,7 +1592,9 @@ export default function Financas() {
               </Typography>
               <Typography variant="body1">
                 {viewingExpense
-                  ? new Date(viewingExpense.createdAt).toLocaleDateString("pt-BR")
+                  ? new Date(viewingExpense.createdAt).toLocaleDateString(
+                      "pt-BR"
+                    )
                   : "-"}
               </Typography>
             </Stack>
@@ -1480,12 +1613,14 @@ export default function Financas() {
               {viewingExpense?.contactIds?.length ? (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {viewingExpense.contactIds
-                    .map((id) => contactMap.get(id))
+                    .map(id => contactMap.get(id))
                     .filter(Boolean)
-                    .map((contact) => (
+                    .map(contact => (
                       <Chip
                         key={contact?.id}
-                        label={contact?.name || contact?.emails?.[0] || "Contato"}
+                        label={
+                          contact?.name || contact?.emails?.[0] || "Contato"
+                        }
                         size="small"
                       />
                     ))}
@@ -1535,17 +1670,30 @@ export default function Financas() {
       >
         <DialogContent>
           <Stack spacing={2}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Typography variant="h6">Remover gasto</Typography>
-              <IconButton onClick={() => setRemoveExpenseOpen(false)} sx={{ color: "text.secondary" }}>
+              <IconButton
+                onClick={() => setRemoveExpenseOpen(false)}
+                sx={{ color: "text.secondary" }}
+              >
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              Você confirma a exclusão deste gasto? Essa ação não pode ser desfeita.
+              Você confirma a exclusão deste gasto? Essa ação não pode ser
+              desfeita.
             </Typography>
             <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button variant="outlined" onClick={() => setRemoveExpenseOpen(false)}>
+              <Button
+                variant="outlined"
+                onClick={() => setRemoveExpenseOpen(false)}
+              >
                 Cancelar
               </Button>
               <Button
@@ -1555,8 +1703,8 @@ export default function Financas() {
                   if (!viewingExpense) {
                     return;
                   }
-                  setExpenses((prev) =>
-                    prev.filter((expense) => expense.id !== viewingExpense.id)
+                  setExpenses(prev =>
+                    prev.filter(expense => expense.id !== viewingExpense.id)
                   );
                   setViewingExpense(null);
                   setRemoveExpenseOpen(false);
