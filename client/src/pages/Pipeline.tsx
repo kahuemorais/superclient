@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Autocomplete,
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Button,
   Checkbox,
@@ -48,11 +45,14 @@ import RestoreFromTrashRoundedIcon from "@mui/icons-material/RestoreFromTrashRou
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import SettingsIconButton from "../components/SettingsIconButton";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import PageContainer from "../components/layout/PageContainer";
+import AppAccordion from "../components/layout/AppAccordion";
+import CardSection from "../components/layout/CardSection";
+import { APP_RADIUS_PX } from "../designTokens";
 import { interactiveCardSx } from "../styles/interactiveCard";
+import { CategoryChip } from "../components/CategoryChip";
 import {
   DndContext,
   PointerSensor,
@@ -440,35 +440,6 @@ const cardDragId = (id: string) => `card:${id}`;
 const isColumnId = (id: string) => id.startsWith("column:");
 const isCardId = (id: string) => id.startsWith("card:");
 const stripPrefix = (id: string) => id.split(":")[1] || id;
-
-const darkenColor = (value: string, factor: number) => {
-  const trimmed = value.trim();
-  let r = 0;
-  let g = 0;
-  let b = 0;
-
-  if (/^#([0-9a-fA-F]{3})$/.test(trimmed)) {
-    const hex = trimmed.slice(1);
-    r = parseInt(hex[0] + hex[0], 16);
-    g = parseInt(hex[1] + hex[1], 16);
-    b = parseInt(hex[2] + hex[2], 16);
-  } else if (/^#([0-9a-fA-F]{6})$/.test(trimmed)) {
-    const hex = trimmed.slice(1);
-    r = parseInt(hex.slice(0, 2), 16);
-    g = parseInt(hex.slice(2, 4), 16);
-    b = parseInt(hex.slice(4, 6), 16);
-  } else {
-    const match = trimmed.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
-    if (match) {
-      r = Math.min(255, Number(match[1]));
-      g = Math.min(255, Number(match[2]));
-      b = Math.min(255, Number(match[3]));
-    }
-  }
-
-  const next = (channel: number) => Math.max(0, Math.round(channel * factor));
-  return `rgb(${next(r)}, ${next(g)}, ${next(b)})`;
-};
 
 const normalizePersonIds = (ids?: Array<number | string>) => {
   if (!ids) {
@@ -2015,17 +1986,122 @@ export default function Pipeline() {
             <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               Pipeline
             </Typography>
-            <SettingsIconButton
-              onClick={() => setTaskFieldSettingsOpen(true)}
-              disabled={!permissions.pipeline_edit_tasks}
-            />
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={1.5}
+                alignItems="center"
+                sx={{ display: { xs: "none", md: "flex" }, minWidth: 0 }}
+              >
+                <TextField
+                  label="Buscar tasks"
+                  value={taskQuery}
+                  onChange={event => setTaskQuery(event.target.value)}
+                  sx={{ width: 240, minWidth: 0 }}
+                  InputProps={{
+                    endAdornment: taskQuery ? (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => setTaskQuery("")}
+                          aria-label="Limpar busca"
+                        >
+                          <CloseRoundedIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null,
+                  }}
+                />
+                <Autocomplete
+                  multiple
+                  options={categories}
+                  value={categories.filter(cat =>
+                    categoryFilters.includes(cat.id)
+                  )}
+                  onChange={(_, value) =>
+                    setCategoryFilters(value.map(cat => cat.id))
+                  }
+                  getOptionLabel={option => option.name}
+                  disableCloseOnSelect
+                  ListboxProps={{ style: { maxHeight: 240 } }}
+                  sx={{
+                    width: 280,
+                    minWidth: 0,
+                    "& .MuiAutocomplete-inputRoot": {
+                      flexWrap: "nowrap",
+                      overflow: "hidden",
+                    },
+                    "& .MuiAutocomplete-tag": {
+                      flexShrink: 0,
+                      maxWidth: 120,
+                    },
+                    "& .MuiAutocomplete-input": {
+                      minWidth: 0,
+                    },
+                  }}
+                  renderOption={(props, option, { selected }) => (
+                    <li {...props}>
+                      <Checkbox
+                        checked={selected}
+                        size="small"
+                        sx={{ mr: 1 }}
+                      />
+                      {option.name}
+                    </li>
+                  )}
+                  renderInput={params => (
+                    <TextField
+                      {...params}
+                      label="Filtrar categorias"
+                      sx={{ width: 280, minWidth: 0 }}
+                    />
+                  )}
+                  renderTags={(value, getTagProps) => {
+                    const visible = value.slice(0, 2);
+                    const hiddenCount = value.length - visible.length;
+                    return (
+                      <>
+                        {visible.map((option, index) => (
+                          <CategoryChip
+                            {...getTagProps({ index })}
+                            key={option.id}
+                            label={option.name}
+                            categoryColor={option.color}
+                            maxWidth={120}
+                          />
+                        ))}
+                        {hiddenCount > 0 ? (
+                          <Chip
+                            label={`+${hiddenCount}`}
+                            size="small"
+                            sx={{
+                              color: "text.secondary",
+                              border: 1,
+                              borderColor: "divider",
+                            }}
+                          />
+                        ) : null}
+                      </>
+                    );
+                  }}
+                />
+              </Stack>
+              <SettingsIconButton
+                onClick={() => setTaskFieldSettingsOpen(true)}
+                disabled={!permissions.pipeline_edit_tasks}
+              />
+            </Stack>
           </Stack>
 
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={2}
             alignItems={{ xs: "stretch", sm: "center" }}
-            sx={{ width: { xs: "100%", md: "auto" }, minWidth: 0 }}
+            sx={{
+              width: { xs: "100%", md: "auto" },
+              minWidth: 0,
+              display: { xs: "flex", md: "none" },
+            }}
           >
             <TextField
               label="Buscar tasks"
@@ -2073,21 +2149,12 @@ export default function Pipeline() {
                 return (
                   <>
                     {visible.map((option, index) => (
-                      <Chip
+                      <CategoryChip
                         {...getTagProps({ index })}
                         key={option.id}
                         label={option.name}
-                        size="small"
-                        sx={{
-                          color: "#e6edf3",
-                          backgroundColor: darkenColor(option.color, 0.5),
-                          maxWidth: 120,
-                          "& .MuiChip-label": {
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            maxWidth: 100,
-                          },
-                        }}
+                        categoryColor={option.color}
+                        maxWidth={120}
                       />
                     ))}
                     {hiddenCount > 0 ? (
@@ -2107,7 +2174,18 @@ export default function Pipeline() {
               sx={{
                 width: { xs: "100%", sm: 280 },
                 minWidth: 0,
-                "& .MuiAutocomplete-inputRoot": { minHeight: 44 },
+                "& .MuiAutocomplete-inputRoot": {
+                  minHeight: 44,
+                  flexWrap: "nowrap",
+                  overflow: "hidden",
+                },
+                "& .MuiAutocomplete-tag": {
+                  flexShrink: 0,
+                  maxWidth: 120,
+                },
+                "& .MuiAutocomplete-input": {
+                  minWidth: 0,
+                },
               }}
             />
           </Stack>
@@ -2222,7 +2300,7 @@ export default function Pipeline() {
                   },
                   "&::-webkit-scrollbar-thumb": {
                     backgroundColor: theme.palette.divider,
-                    borderRadius: 999,
+                    borderRadius: APP_RADIUS_PX,
                   },
                   "&::-webkit-scrollbar-thumb:hover": {
                     backgroundColor: theme.palette.text.secondary,
@@ -2304,7 +2382,7 @@ export default function Pipeline() {
                         sx={theme => ({
                           p: 2.5,
                           minWidth: 280,
-                          borderRadius: "var(--radius-card)",
+                          borderRadius: APP_RADIUS_PX,
                           border: 1,
                           borderColor: "divider",
                           backgroundColor: "background.paper",
@@ -2337,13 +2415,13 @@ export default function Pipeline() {
                             {column.deals.slice(0, 3).map(deal => (
                               <Box
                                 key={deal.id}
-                                sx={{
+                                sx={theme => ({
                                   p: 2,
-                                  borderRadius: "var(--radius-card)",
+                                  borderRadius: theme.shape.borderRadius,
                                   border: 1,
                                   borderColor: "divider",
                                   backgroundColor: "background.paper",
-                                }}
+                                })}
                               >
                                 <Typography
                                   variant="subtitle2"
@@ -2382,7 +2460,7 @@ export default function Pipeline() {
                         <Box
                           sx={theme => ({
                             p: 2,
-                            borderRadius: "var(--radius-card)",
+                            borderRadius: APP_RADIUS_PX,
                             border: 1,
                             borderColor: "divider",
                             backgroundColor: "background.paper",
@@ -2513,7 +2591,6 @@ export default function Pipeline() {
                         onClick={() => handleViewOpen(deal)}
                         sx={theme => ({
                           p: 2,
-                          borderRadius: "var(--radius-card)",
                           cursor: "pointer",
                           ...interactiveCardSx(theme),
                         })}
@@ -2677,13 +2754,10 @@ export default function Pipeline() {
                         return null;
                       }
                       return (
-                        <Chip
+                        <CategoryChip
                           key={id}
                           label={cat.name}
-                          sx={{
-                            color: "#e6edf3",
-                            backgroundColor: darkenColor(cat.color, 0.5),
-                          }}
+                          categoryColor={cat.color}
                         />
                       );
                     })
@@ -2705,14 +2779,14 @@ export default function Pipeline() {
                   Descrição
                 </Typography>
                 <Box
-                  sx={{
-                    borderRadius: "var(--radius-card)",
+                  sx={theme => ({
+                    borderRadius: APP_RADIUS_PX,
                     border: 1,
                     borderColor: "divider",
                     backgroundColor: "background.paper",
                     p: 2,
                     minHeight: 120,
-                  }}
+                  })}
                   dangerouslySetInnerHTML={{
                     __html:
                       viewingDeal?.descriptionHtml ||
@@ -2813,886 +2887,781 @@ export default function Pipeline() {
                   <CloseRoundedIcon fontSize="small" />
                 </IconButton>
               </Box>
-              <Accordion
+              <AppAccordion
                 elevation={0}
                 expanded={configAccordion === "sprints"}
                 onChange={(_, isExpanded) =>
                   setConfigAccordion(isExpanded ? "sprints" : false)
                 }
-                sx={{
-                  border: 1,
-                  borderColor: "divider",
-                  borderRadius: "var(--radius-card)",
-                  backgroundColor: "background.paper",
+                title="Sprints e backlog"
+                sx={theme => ({
                   "&:before": { display: "none" },
-                }}
+                  ...interactiveCardSx(theme),
+                })}
               >
-                <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Sprints e backlog
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Stack spacing={2}>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() => handleToggleSprints(!sprintState.enabled)}
-                    >
-                      <Typography variant="subtitle2">
-                        Usar sprints e backlog
-                      </Typography>
-                      <ToggleCheckbox
-                        checked={sprintState.enabled}
-                        onChange={event =>
-                          handleToggleSprints(event.target.checked)
-                        }
-                        onClick={event => event.stopPropagation()}
-                        disabled={!permissions.pipeline_edit_tasks}
-                      />
-                    </Box>
-                    <TextField
-                      select
-                      label="Duração da sprint"
-                      value={sprintState.duration}
+                <Stack spacing={2}>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() => handleToggleSprints(!sprintState.enabled)}
+                  >
+                    <Typography variant="subtitle2">
+                      Usar sprints e backlog
+                    </Typography>
+                    <ToggleCheckbox
+                      checked={sprintState.enabled}
                       onChange={event =>
-                        setSprintState(prev => ({
-                          ...prev,
-                          duration: event.target
-                            .value as SprintState["duration"],
-                        }))
+                        handleToggleSprints(event.target.checked)
                       }
+                      onClick={event => event.stopPropagation()}
+                      disabled={!permissions.pipeline_edit_tasks}
+                    />
+                  </Box>
+                  <TextField
+                    select
+                    label="Duração da sprint"
+                    value={sprintState.duration}
+                    onChange={event =>
+                      setSprintState(prev => ({
+                        ...prev,
+                        duration: event.target.value as SprintState["duration"],
+                      }))
+                    }
+                    disabled={
+                      !sprintState.enabled || !permissions.pipeline_edit_tasks
+                    }
+                  >
+                    <MenuItem value="1w">1 semana</MenuItem>
+                    <MenuItem value="2w">2 semanas</MenuItem>
+                    <MenuItem value="1m">1 mes</MenuItem>
+                  </TextField>
+                  <Stack direction="row" spacing={2}>
+                    <Button
+                      variant="outlined"
+                      onClick={handleCreateSprint}
                       disabled={
-                        !sprintState.enabled || !permissions.pipeline_edit_tasks
+                        !sprintState.enabled ||
+                        !!sprintState.activeSprint ||
+                        !permissions.pipeline_edit_tasks
                       }
+                      sx={{ textTransform: "none", fontWeight: 600 }}
                     >
-                      <MenuItem value="1w">1 semana</MenuItem>
-                      <MenuItem value="2w">2 semanas</MenuItem>
-                      <MenuItem value="1m">1 mes</MenuItem>
-                    </TextField>
-                    <Stack direction="row" spacing={2}>
-                      <Button
-                        variant="outlined"
-                        onClick={handleCreateSprint}
-                        disabled={
-                          !sprintState.enabled ||
-                          !!sprintState.activeSprint ||
-                          !permissions.pipeline_edit_tasks
-                        }
-                        sx={{ textTransform: "none", fontWeight: 600 }}
-                      >
-                        Criar sprint
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        onClick={handleFinishSprint}
-                        disabled={
-                          !sprintState.enabled ||
-                          !sprintState.activeSprint ||
-                          !permissions.pipeline_edit_tasks
-                        }
-                        sx={{ textTransform: "none", fontWeight: 600 }}
-                      >
-                        Finalizar sprint
-                      </Button>
-                    </Stack>
-                    <Stack spacing={1.5}>
+                      Criar sprint
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      onClick={handleFinishSprint}
+                      disabled={
+                        !sprintState.enabled ||
+                        !sprintState.activeSprint ||
+                        !permissions.pipeline_edit_tasks
+                      }
+                      sx={{ textTransform: "none", fontWeight: 600 }}
+                    >
+                      Finalizar sprint
+                    </Button>
+                  </Stack>
+                  <Stack spacing={1.5}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Historico de sprints
+                    </Typography>
+                    {sprintState.history.length === 0 ? (
                       <Typography
-                        variant="subtitle2"
+                        variant="body2"
                         sx={{ color: "text.secondary" }}
                       >
-                        Historico de sprints
+                        Nenhuma sprint finalizada.
                       </Typography>
-                      {sprintState.history.length === 0 ? (
-                        <Typography
-                          variant="body2"
-                          sx={{ color: "text.secondary" }}
-                        >
-                          Nenhuma sprint finalizada.
-                        </Typography>
-                      ) : (
-                        <Stack spacing={1}>
-                          {sprintState.history.map(sprint => (
-                            <Paper
-                              key={sprint.id}
-                              elevation={0}
-                              sx={{
-                                p: 1.5,
-                                borderRadius: "var(--radius-card)",
-                                border: 1,
-                                borderColor: "divider",
-                                backgroundColor: "background.paper",
-                              }}
+                    ) : (
+                      <Stack spacing={1}>
+                        {sprintState.history.map(sprint => (
+                          <CardSection size="compact" key={sprint.id}>
+                            <Stack
+                              direction={{ xs: "column", sm: "row" }}
+                              spacing={2}
+                              alignItems="center"
+                              justifyContent="space-between"
                             >
-                              <Stack
-                                direction={{ xs: "column", sm: "row" }}
-                                spacing={2}
-                                alignItems="center"
-                                justifyContent="space-between"
-                              >
-                                <Box>
-                                  <Typography
-                                    variant="subtitle2"
-                                    sx={{ fontWeight: 600 }}
-                                  >
-                                    {sprint.name}
-                                  </Typography>
-                                  <Typography
-                                    variant="caption"
-                                    sx={{ color: "text.secondary" }}
-                                  >
-                                    {new Date(
-                                      sprint.startDate
-                                    ).toLocaleDateString("pt-BR")}{" "}
-                                    -{" "}
-                                    {new Date(
-                                      sprint.endDate
-                                    ).toLocaleDateString("pt-BR")}
-                                  </Typography>
-                                </Box>
-                                <Button
-                                  variant="outlined"
-                                  onClick={() => handleReopenSprint(sprint.id)}
-                                  sx={{
-                                    textTransform: "none",
-                                    fontWeight: 600,
-                                  }}
-                                  disabled={!permissions.pipeline_edit_tasks}
+                              <Box>
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{ fontWeight: 600 }}
                                 >
-                                  Reabrir sprint
-                                </Button>
-                              </Stack>
-                            </Paper>
-                          ))}
-                        </Stack>
-                      )}
-                    </Stack>
+                                  {sprint.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: "text.secondary" }}
+                                >
+                                  {new Date(
+                                    sprint.startDate
+                                  ).toLocaleDateString("pt-BR")}{" "}
+                                  -{" "}
+                                  {new Date(sprint.endDate).toLocaleDateString(
+                                    "pt-BR"
+                                  )}
+                                </Typography>
+                              </Box>
+                              <Button
+                                variant="outlined"
+                                onClick={() => handleReopenSprint(sprint.id)}
+                                sx={{
+                                  textTransform: "none",
+                                  fontWeight: 600,
+                                }}
+                                disabled={!permissions.pipeline_edit_tasks}
+                              >
+                                Reabrir sprint
+                              </Button>
+                            </Stack>
+                          </CardSection>
+                        ))}
+                      </Stack>
+                    )}
                   </Stack>
-                </AccordionDetails>
-              </Accordion>
-              <Accordion
+                </Stack>
+              </AppAccordion>
+              <AppAccordion
                 elevation={0}
                 expanded={configAccordion === "fields"}
                 onChange={(_, isExpanded) =>
                   setConfigAccordion(isExpanded ? "fields" : false)
                 }
-                sx={{
-                  border: 1,
-                  borderColor: "divider",
-                  borderRadius: "var(--radius-card)",
-                  backgroundColor: "background.paper",
+                title="Campos da tarefa"
+                sx={theme => ({
                   "&:before": { display: "none" },
-                }}
+                  ...interactiveCardSx(theme),
+                })}
               >
-                <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Campos da tarefa
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                    gap: 1.5,
+                  }}
+                >
                   <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                      gap: 1.5,
-                    }}
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        value: !prev.value,
+                      }))
+                    }
                   >
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
+                    <Typography variant="subtitle2">Mostrar valor</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.value}
+                      onChange={event =>
                         setTaskFieldSettings(prev => ({
                           ...prev,
-                          value: !prev.value,
+                          value: event.target.checked,
                         }))
                       }
-                    >
-                      <Typography variant="subtitle2">Mostrar valor</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.value}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            value: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          link: !prev.link,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">Mostrar link</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.link}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            link: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          description: !prev.description,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">
-                        Mostrar descricao
-                      </Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.description}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            description: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          priority: !prev.priority,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">Prioridade</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.priority}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            priority: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          dueDate: !prev.dueDate,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">
-                        Data de entrega
-                      </Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.dueDate}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            dueDate: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          checklist: !prev.checklist,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">Checklist</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.checklist}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            checklist: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          labels: !prev.labels,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">Labels</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.labels}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            labels: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          estimate: !prev.estimate,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">Estimativa</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.estimate}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            estimate: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          timeSpent: !prev.timeSpent,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">Tempo gasto</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.timeSpent}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            timeSpent: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          watchers: !prev.watchers,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">Observadores</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.watchers}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            watchers: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          attachments: !prev.attachments,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">Anexos</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.attachments}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            attachments: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Box
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          sprintInfo: !prev.sprintInfo,
-                        }))
-                      }
-                    >
-                      <Typography variant="subtitle2">Sprint</Typography>
-                      <ToggleCheckbox
-                        checked={taskFieldSettings.sprintInfo}
-                        onChange={event =>
-                          setTaskFieldSettings(prev => ({
-                            ...prev,
-                            sprintInfo: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
+                      onClick={event => event.stopPropagation()}
+                    />
                   </Box>
-                </AccordionDetails>
-              </Accordion>
-              <Accordion
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        link: !prev.link,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Mostrar link</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.link}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          link: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        description: !prev.description,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">
+                      Mostrar descricao
+                    </Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.description}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          description: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        priority: !prev.priority,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Prioridade</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.priority}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          priority: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        dueDate: !prev.dueDate,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Data de entrega</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.dueDate}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          dueDate: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        checklist: !prev.checklist,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Checklist</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.checklist}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          checklist: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        labels: !prev.labels,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Labels</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.labels}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          labels: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        estimate: !prev.estimate,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Estimativa</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.estimate}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          estimate: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        timeSpent: !prev.timeSpent,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Tempo gasto</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.timeSpent}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          timeSpent: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        watchers: !prev.watchers,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Observadores</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.watchers}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          watchers: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        attachments: !prev.attachments,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Anexos</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.attachments}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          attachments: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Box
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setTaskFieldSettings(prev => ({
+                        ...prev,
+                        sprintInfo: !prev.sprintInfo,
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">Sprint</Typography>
+                    <ToggleCheckbox
+                      checked={taskFieldSettings.sprintInfo}
+                      onChange={event =>
+                        setTaskFieldSettings(prev => ({
+                          ...prev,
+                          sprintInfo: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                </Box>
+              </AppAccordion>
+              <AppAccordion
                 elevation={0}
                 expanded={configAccordion === "categories"}
                 onChange={(_, isExpanded) =>
                   setConfigAccordion(isExpanded ? "categories" : false)
                 }
-                sx={{
-                  border: 1,
-                  borderColor: "divider",
-                  borderRadius: "var(--radius-card)",
-                  backgroundColor: "background.paper",
+                title="Categorias"
+                sx={theme => ({
                   "&:before": { display: "none" },
-                }}
+                  ...interactiveCardSx(theme),
+                })}
               >
-                <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Categorias
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Stack spacing={1.5}>
-                    {editingCategoryId ? (
-                      <Box
-                        sx={{
-                          p: 2,
-                          borderRadius: "var(--radius-card)",
-                          border: 1,
-                          borderColor: "divider",
-                          backgroundColor: "background.paper",
-                        }}
-                      >
-                        <Stack spacing={1.5}>
-                          <Typography
-                            variant="subtitle2"
-                            sx={{ fontWeight: 600 }}
-                          >
-                            Editar categoria
-                          </Typography>
-                          <TextField
-                            label="Nome"
-                            fullWidth
-                            value={editingCategoryName}
-                            onChange={event =>
-                              setEditingCategoryName(event.target.value)
-                            }
-                          />
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            flexWrap="wrap"
-                            useFlexGap
-                          >
-                            {DEFAULT_COLORS.map(color => (
-                              <Box
-                                key={color}
-                                onClick={() => setEditingCategoryColor(color)}
-                                sx={{
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: 1,
-                                  backgroundColor: color,
-                                  borderStyle: "solid",
-                                  borderWidth:
-                                    editingCategoryColor === color ? 2 : 1,
-                                  borderColor: "divider",
-                                  cursor: "pointer",
-                                }}
-                              />
-                            ))}
-                          </Stack>
-                          <Stack
-                            direction="row"
-                            spacing={2}
-                            justifyContent="flex-end"
-                          >
-                            <Button
-                              variant="outlined"
-                              onClick={cancelEditCategory}
-                            >
-                              Cancelar
-                            </Button>
-                            <Button variant="contained" onClick={saveCategory}>
-                              Salvar
-                            </Button>
-                          </Stack>
-                        </Stack>
-                      </Box>
-                    ) : null}
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      flexWrap="wrap"
-                      useFlexGap
-                    >
-                      {categories.map(cat => (
-                        <Chip
-                          key={cat.id}
-                          label={cat.name}
-                          onClick={() => startEditCategory(cat)}
-                          onDelete={() => handleRemoveCategory(cat.id)}
-                          sx={{
-                            color: "#e6edf3",
-                            backgroundColor: darkenColor(cat.color, 0.5),
-                          }}
-                        />
-                      ))}
-                    </Stack>
-                    {editingCategoryId ? null : (
-                      <Box>
+                <Stack spacing={1.5}>
+                  {editingCategoryId ? (
+                    <CardSection size="xs">
+                      <Stack spacing={1.5}>
                         <Typography
-                          variant="body2"
-                          sx={{ color: "text.secondary", mb: 1 }}
+                          variant="subtitle2"
+                          sx={{ fontWeight: 600 }}
                         >
-                          Nova categoria
+                          Editar categoria
                         </Typography>
-                        <Stack spacing={1.5}>
-                          <TextField
-                            label="Nome"
-                            fullWidth
-                            value={newCategoryName}
-                            onChange={event =>
-                              setNewCategoryName(event.target.value)
-                            }
-                          />
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            flexWrap="wrap"
-                            useFlexGap
-                          >
-                            {DEFAULT_COLORS.map(color => (
-                              <Box
-                                key={color}
-                                onClick={() => setNewCategoryColor(color)}
-                                sx={{
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: 1,
-                                  backgroundColor: color,
-                                  borderStyle: "solid",
-                                  borderWidth:
-                                    newCategoryColor === color ? 2 : 1,
-                                  borderColor: "divider",
-                                  cursor: "pointer",
-                                }}
-                              />
-                            ))}
-                          </Stack>
+                        <TextField
+                          label="Nome"
+                          fullWidth
+                          value={editingCategoryName}
+                          onChange={event =>
+                            setEditingCategoryName(event.target.value)
+                          }
+                        />
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {DEFAULT_COLORS.map(color => (
+                            <Box
+                              key={color}
+                              onClick={() => setEditingCategoryColor(color)}
+                              sx={theme => ({
+                                width: 28,
+                                height: 28,
+                                borderRadius: APP_RADIUS_PX,
+                                backgroundColor: color,
+                                borderStyle: "solid",
+                                borderWidth:
+                                  editingCategoryColor === color ? 2 : 1,
+                                borderColor: "divider",
+                                cursor: "pointer",
+                              })}
+                            />
+                          ))}
+                        </Stack>
+                        <Stack
+                          direction="row"
+                          spacing={2}
+                          justifyContent="flex-end"
+                        >
                           <Button
                             variant="outlined"
-                            onClick={handleAddCategory}
-                            startIcon={<AddRoundedIcon />}
-                            sx={{
-                              alignSelf: "flex-start",
-                              textTransform: "none",
-                              fontWeight: 600,
-                            }}
+                            onClick={cancelEditCategory}
                           >
-                            Criar categoria
+                            Cancelar
+                          </Button>
+                          <Button variant="contained" onClick={saveCategory}>
+                            Salvar
                           </Button>
                         </Stack>
-                      </Box>
-                    )}
+                      </Stack>
+                    </CardSection>
+                  ) : null}
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {categories.map(cat => (
+                      <CategoryChip
+                        key={cat.id}
+                        label={cat.name}
+                        onClick={() => startEditCategory(cat)}
+                        onDelete={() => handleRemoveCategory(cat.id)}
+                        categoryColor={cat.color}
+                      />
+                    ))}
                   </Stack>
-                </AccordionDetails>
-              </Accordion>
-              <Accordion
+                  {editingCategoryId ? null : (
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary", mb: 1 }}
+                      >
+                        Nova categoria
+                      </Typography>
+                      <Stack spacing={1.5}>
+                        <TextField
+                          label="Nome"
+                          fullWidth
+                          value={newCategoryName}
+                          onChange={event =>
+                            setNewCategoryName(event.target.value)
+                          }
+                        />
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {DEFAULT_COLORS.map(color => (
+                            <Box
+                              key={color}
+                              onClick={() => setNewCategoryColor(color)}
+                              sx={theme => ({
+                                width: 28,
+                                height: 28,
+                                borderRadius: APP_RADIUS_PX,
+                                backgroundColor: color,
+                                borderStyle: "solid",
+                                borderWidth: newCategoryColor === color ? 2 : 1,
+                                borderColor: "divider",
+                                cursor: "pointer",
+                              })}
+                            />
+                          ))}
+                        </Stack>
+                        <Button
+                          variant="outlined"
+                          onClick={handleAddCategory}
+                          startIcon={<AddRoundedIcon />}
+                          sx={{
+                            alignSelf: "flex-start",
+                            textTransform: "none",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Criar categoria
+                        </Button>
+                      </Stack>
+                    </Box>
+                  )}
+                </Stack>
+              </AppAccordion>
+              <AppAccordion
                 elevation={0}
                 expanded={configAccordion === "columns"}
                 onChange={(_, isExpanded) =>
                   setConfigAccordion(isExpanded ? "columns" : false)
                 }
-                sx={{
-                  border: 1,
-                  borderColor: "divider",
-                  borderRadius: "var(--radius-card)",
-                  backgroundColor: "background.paper",
+                title="Colunas"
+                sx={theme => ({
                   "&:before": { display: "none" },
-                }}
+                  ...interactiveCardSx(theme),
+                })}
               >
-                <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Colunas
+                <Stack spacing={2}>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Renomeie, reorganize ou arquive colunas.
                   </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Stack spacing={2}>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners}
+                    onDragEnd={handleColumnReorder}
+                  >
+                    <SortableContext
+                      items={activeColumns.map(column => column.id)}
+                      strategy={verticalListSortingStrategy}
                     >
-                      Renomeie, reorganize ou arquive colunas.
-                    </Typography>
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCorners}
-                      onDragEnd={handleColumnReorder}
-                    >
-                      <SortableContext
-                        items={activeColumns.map(column => column.id)}
-                        strategy={verticalListSortingStrategy}
+                      <Stack spacing={1.5}>
+                        {activeColumns.map(column => (
+                          <SortableColumnRow
+                            key={column.id}
+                            column={column}
+                            onRename={nextTitle => {
+                              setColumns(prev =>
+                                prev.map(item =>
+                                  item.id === column.id
+                                    ? { ...item, title: nextTitle }
+                                    : item
+                                )
+                              );
+                            }}
+                            onArchive={() => handleArchiveColumn(column.id)}
+                            onRemove={() => handleRequestRemoveColumn(column)}
+                          />
+                        ))}
+                      </Stack>
+                    </SortableContext>
+                  </DndContext>
+                  <AppAccordion
+                    elevation={0}
+                    summary={
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Colunas arquivadas ({archivedColumns.length})
+                      </Typography>
+                    }
+                    sx={theme => ({
+                      "&:before": { display: "none" },
+                      ...interactiveCardSx(theme),
+                      "&.Mui-expanded": { marginTop: 1.5 },
+                      "& .MuiAccordionSummary-root": {
+                        minHeight: 48,
+                        "&.Mui-expanded": { minHeight: 48 },
+                      },
+                      "& .MuiAccordionSummary-content": { my: 0 },
+                    })}
+                  >
+                    {archivedColumns.length === 0 ? (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
                       >
-                        <Stack spacing={1.5}>
-                          {activeColumns.map(column => (
-                            <SortableColumnRow
-                              key={column.id}
-                              column={column}
-                              onRename={nextTitle => {
-                                setColumns(prev =>
-                                  prev.map(item =>
-                                    item.id === column.id
-                                      ? { ...item, title: nextTitle }
-                                      : item
-                                  )
-                                );
-                              }}
-                              onArchive={() => handleArchiveColumn(column.id)}
-                              onRemove={() => handleRequestRemoveColumn(column)}
-                            />
-                          ))}
-                        </Stack>
-                      </SortableContext>
-                    </DndContext>
-                    <Accordion
-                      elevation={0}
-                      sx={{
-                        border: 1,
-                        borderColor: "divider",
-                        borderRadius: "var(--radius-card)",
-                        backgroundColor: "background.paper",
-                        "&:before": { display: "none" },
-                        "&.Mui-expanded": { marginTop: 1.5 },
-                      }}
-                    >
-                      <AccordionSummary
-                        expandIcon={<ExpandMoreRoundedIcon />}
-                        sx={{
-                          minHeight: 48,
-                          "&.Mui-expanded": { minHeight: 48 },
-                          "& .MuiAccordionSummary-content": { my: 0 },
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: 600 }}
-                        >
-                          Colunas arquivadas ({archivedColumns.length})
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails sx={{ pt: 0, pb: 2 }}>
-                        {archivedColumns.length === 0 ? (
-                          <Typography
-                            variant="body2"
-                            sx={{ color: "text.secondary" }}
-                          >
-                            Nenhuma coluna arquivada.
-                          </Typography>
-                        ) : (
-                          <Stack spacing={1.5}>
-                            {archivedColumns.map(column => (
-                              <Paper
-                                key={column.id}
-                                elevation={0}
-                                sx={{
-                                  p: 2,
-                                  border: 1,
-                                  borderColor: "divider",
-                                  borderRadius: "var(--radius-card)",
-                                  backgroundColor: "background.paper",
-                                }}
-                              >
-                                <Stack
-                                  direction={{ xs: "column", sm: "row" }}
-                                  spacing={2}
-                                  alignItems="center"
-                                >
-                                  <Typography
-                                    variant="subtitle2"
-                                    sx={{ flex: 1 }}
+                        Nenhuma coluna arquivada.
+                      </Typography>
+                    ) : (
+                      <Stack spacing={1.5}>
+                        {archivedColumns.map(column => (
+                          <CardSection size="xs" key={column.id}>
+                            <Stack
+                              direction={{ xs: "column", sm: "row" }}
+                              spacing={2}
+                              alignItems="center"
+                            >
+                              <Typography variant="subtitle2" sx={{ flex: 1 }}>
+                                {column.title}
+                              </Typography>
+                              <Stack direction="row" spacing={1}>
+                                <Tooltip title="Restaurar" placement="top">
+                                  <IconButton
+                                    onClick={() =>
+                                      handleRestoreColumn(column.id)
+                                    }
+                                    sx={{
+                                      border: 1,
+                                      borderColor: "divider",
+                                    }}
+                                    aria-label={`Restaurar ${column.title}`}
                                   >
-                                    {column.title}
-                                  </Typography>
-                                  <Stack direction="row" spacing={1}>
-                                    <Tooltip title="Restaurar" placement="top">
-                                      <IconButton
-                                        onClick={() =>
-                                          handleRestoreColumn(column.id)
-                                        }
-                                        sx={{
-                                          border: 1,
-                                          borderColor: "divider",
-                                        }}
-                                        aria-label={`Restaurar ${column.title}`}
-                                      >
-                                        <RestoreFromTrashRoundedIcon fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Remover" placement="top">
-                                      <IconButton
-                                        onClick={() =>
-                                          handleRequestRemoveColumn(column)
-                                        }
-                                        sx={{
-                                          border: 1,
-                                          borderColor: "divider",
-                                        }}
-                                        aria-label={`Remover ${column.title}`}
-                                      >
-                                        <DeleteRoundedIcon fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
-                                  </Stack>
-                                </Stack>
-                              </Paper>
-                            ))}
-                          </Stack>
-                        )}
-                      </AccordionDetails>
-                    </Accordion>
-                  </Stack>
-                </AccordionDetails>
-              </Accordion>
+                                    <RestoreFromTrashRoundedIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Remover" placement="top">
+                                  <IconButton
+                                    onClick={() =>
+                                      handleRequestRemoveColumn(column)
+                                    }
+                                    sx={{
+                                      border: 1,
+                                      borderColor: "divider",
+                                    }}
+                                    aria-label={`Remover ${column.title}`}
+                                  >
+                                    <DeleteRoundedIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </Stack>
+                            </Stack>
+                          </CardSection>
+                        ))}
+                      </Stack>
+                    )}
+                  </AppAccordion>
+                </Stack>
+              </AppAccordion>
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 spacing={2}
@@ -3967,15 +3936,11 @@ export default function Pipeline() {
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
-                    <Chip
+                    <CategoryChip
                       {...getTagProps({ index })}
                       key={option.id}
                       label={option.name}
-                      size="small"
-                      sx={{
-                        color: "#e6edf3",
-                        backgroundColor: darkenColor(option.color, 0.5),
-                      }}
+                      categoryColor={option.color}
                     />
                   ))
                 }
@@ -4321,15 +4286,15 @@ function SortableDeal({
   return (
     <Box
       ref={setNodeRef}
-      sx={{
+      sx={theme => ({
         p: 2,
-        borderRadius: "var(--radius-card)",
+        borderRadius: APP_RADIUS_PX,
         border: 1,
         borderColor: "divider",
         backgroundColor: "background.paper",
         cursor: canEditTasks ? "grab" : "pointer",
         touchAction: canEditTasks ? "none" : "auto",
-      }}
+      })}
       style={style}
       {...(canEditTasks ? { ...attributes, ...listeners } : {})}
       onClick={() => onEdit(deal)}
@@ -4640,8 +4605,8 @@ function RichTextEditor({
         </Tooltip>
       </Stack>
       <Box
-        sx={{
-          borderRadius: "var(--radius-card)",
+        sx={theme => ({
+          borderRadius: APP_RADIUS_PX,
           border: 1,
           borderColor: "divider",
           backgroundColor: "background.paper",
@@ -4653,7 +4618,10 @@ function RichTextEditor({
           "& .tiptap h1": { fontSize: "1.25rem", fontWeight: 700 },
           "& .tiptap h2": { fontSize: "1.1rem", fontWeight: 700 },
           "& .tiptap h3": { fontSize: "1rem", fontWeight: 700 },
-          "& .tiptap img": { maxWidth: "100%", borderRadius: "12px" },
+          "& .tiptap img": {
+            maxWidth: "100%",
+            borderRadius: APP_RADIUS_PX,
+          },
           "& .tiptap img.ProseMirror-selectednode": {
             outline: "2px solid",
             outlineColor: "primary.main",
@@ -4666,7 +4634,7 @@ function RichTextEditor({
             height: 0,
             pointerEvents: "none",
           },
-        }}
+        })}
       >
         <EditorContent editor={editor} />
       </Box>

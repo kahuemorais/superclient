@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Paper, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import PageContainer from "../components/layout/PageContainer";
-import AppCard from "../components/layout/AppCard";
+import CardSection from "../components/layout/CardSection";
 import { loadUserStorage } from "../userStorage";
 
 type Contact = {
@@ -87,7 +87,7 @@ export default function Notifications() {
           Notificações
         </Typography>
 
-        <AppCard sx={{ p: { xs: 2, md: 3 } }}>
+        <CardSection>
           <Stack spacing={2}>
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -113,16 +113,7 @@ export default function Notifications() {
             ) : (
               <Stack spacing={1.5}>
                 {upcoming.map(item => (
-                  <Paper
-                    key={item.contact.id}
-                    variant="outlined"
-                    sx={{
-                      p: 2,
-                      borderRadius: "var(--radius-card)",
-                      borderColor: "divider",
-                      backgroundColor: "background.paper",
-                    }}
-                  >
+                  <CardSection size="xs" key={item.contact.id}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                       {item.contact.name || "Contato sem nome"}
                     </Typography>
@@ -133,12 +124,12 @@ export default function Notifications() {
                       {item.next.toLocaleDateString("pt-BR")} · em{" "}
                       {item.diffDays} dia(s)
                     </Typography>
-                  </Paper>
+                  </CardSection>
                 ))}
               </Stack>
             )}
           </Stack>
-        </AppCard>
+        </CardSection>
       </Stack>
     </PageContainer>
   );

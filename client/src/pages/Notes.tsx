@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Autocomplete,
   Alert,
   Box,
@@ -36,13 +33,16 @@ import LooksTwoRoundedIcon from "@mui/icons-material/LooksTwoRounded";
 import Looks3RoundedIcon from "@mui/icons-material/Looks3Rounded";
 import UnarchiveRoundedIcon from "@mui/icons-material/UnarchiveRounded";
 import BackspaceRoundedIcon from "@mui/icons-material/BackspaceRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { interactiveCardSx } from "../styles/interactiveCard";
+import { APP_RADIUS_PX } from "../designTokens";
+import { interactiveItemSx } from "../styles/interactiveCard";
 import SettingsIconButton from "../components/SettingsIconButton";
 import ToggleCheckbox from "../components/ToggleCheckbox";
+import CardSection from "../components/layout/CardSection";
+import AppAccordion from "../components/layout/AppAccordion";
+import PageContainer from "../components/layout/PageContainer";
 import { Link as RouterLink, useLocation } from "wouter";
 
 type NoteCategory = {
@@ -985,12 +985,7 @@ export default function Notes() {
     : { label: "Arquivo", href: "/notas/arquivo" };
 
   return (
-    <Box
-      sx={{
-        maxWidth: 1200,
-        mx: "auto",
-      }}
-    >
+    <PageContainer>
       <Stack spacing={3}>
         <Stack spacing={1.5}>
           <Stack
@@ -1003,7 +998,48 @@ export default function Notes() {
             <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               {isArchiveView ? "Arquivo" : "Notas"}
             </Typography>
-            <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ display: { xs: "none", sm: "flex" } }}
+              >
+                <Button
+                  component={RouterLink}
+                  href={archiveLink.href}
+                  variant="outlined"
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                    minWidth: 0,
+                    px: { xs: 1.25, sm: 1.75 },
+                  }}
+                >
+                  {archiveLink.label}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={
+                    <Box sx={{ display: { xs: "none", sm: "inline-flex" } }}>
+                      <AddRoundedIcon />
+                    </Box>
+                  }
+                  onClick={addNote}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                    minWidth: 0,
+                    px: { xs: 1.25, sm: 1.75 },
+                  }}
+                >
+                  Nova nota
+                </Button>
+              </Stack>
+              <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+            </Stack>
           </Stack>
 
           <Stack
@@ -1015,6 +1051,7 @@ export default function Notes() {
               width: "100%",
               flexWrap: "nowrap",
               overflow: "hidden",
+              display: { xs: "flex", sm: "none" },
             }}
           >
             <Button
@@ -1064,154 +1101,152 @@ export default function Notes() {
           {showSidebar ? (
             <Stack spacing={2}>
               {fieldSettings.showCategories ? (
-                <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+                <CardSection size="xs">
                   <Stack spacing={2}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                       Categorias
                     </Typography>
                     <Stack spacing={1}>
-                      {categories.map(category => (
-                        <Box
-                          key={category.id}
-                          onClick={() => {
-                            setActiveCategory(category.id);
-                            setActiveSubcategory(null);
-                          }}
-                          sx={theme => ({
-                            ...interactiveCardSx(theme),
-                            p: 1,
-                            borderRadius: "var(--radius-card)",
-                            border: 1,
-                            borderColor:
-                              activeCategory === category.id
-                                ? "primary.main"
-                                : "divider",
-                            backgroundColor: "background.paper",
-                            cursor: "pointer",
-                          })}
-                        >
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                          >
+                      {categories.map(category => {
+                        const isActiveCategory = activeCategory === category.id;
+                        return (
+                          <Box key={category.id}>
                             <Box
-                              sx={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: "50%",
-                                backgroundColor: category.color,
+                              onClick={() => {
+                                setActiveCategory(category.id);
+                                setActiveSubcategory(null);
                               }}
-                            />
-                            <Typography variant="body2">
-                              {category.name}
-                            </Typography>
-                            {fieldSettings.showCategoryCounts ? (
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  color: "text.secondary",
-                                  fontWeight: 600,
-                                  ml: "auto",
-                                }}
+                              sx={theme => ({
+                                ...interactiveItemSx(theme),
+                                p: 1,
+                                border: 1,
+                                borderColor: isActiveCategory
+                                  ? "primary.main"
+                                  : "divider",
+                                cursor: "pointer",
+                              })}
+                            >
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
                               >
-                                {
-                                  notes.filter(
-                                    note =>
-                                      note.archived === isArchiveView &&
-                                      note.categoryIds.includes(category.id)
-                                  ).length
-                                }
-                              </Typography>
-                            ) : null}
-                          </Stack>
-
-                          {fieldSettings.showSubcategories &&
-                          activeCategory === category.id ? (
-                            <Box sx={{ mt: 1, pl: 2 }}>
-                              {activeSubcategories.length ? (
-                                <Stack spacing={0.75}>
-                                  {activeSubcategories.map(subcategory => {
-                                    const isActive =
-                                      activeSubcategory === subcategory.id;
-                                    return (
-                                      <Box
-                                        key={subcategory.id}
-                                        onClick={event => {
-                                          event.stopPropagation();
-                                          setActiveSubcategory(prev =>
-                                            prev === subcategory.id
-                                              ? null
-                                              : subcategory.id
-                                          );
-                                        }}
-                                        sx={theme => ({
-                                          ...interactiveCardSx(theme),
-                                          px: 1,
-                                          py: 0.75,
-                                          borderRadius: "var(--radius-card)",
-                                          border: 1,
-                                          borderColor: isActive
-                                            ? "primary.main"
-                                            : "divider",
-                                          backgroundColor: "background.paper",
-                                          cursor: "pointer",
-                                        })}
-                                      >
-                                        <Stack
-                                          direction="row"
-                                          spacing={1}
-                                          alignItems="center"
-                                        >
-                                          <Box
-                                            sx={{
-                                              width: 8,
-                                              height: 8,
-                                              borderRadius: "50%",
-                                              backgroundColor:
-                                                subcategory.color ||
-                                                darkenColor(
-                                                  category.color,
-                                                  0.7
-                                                ),
-                                            }}
-                                          />
-                                          <Typography
-                                            variant="body2"
-                                            sx={{
-                                              color: "text.secondary",
-                                              fontWeight: 600,
-                                            }}
-                                          >
-                                            {subcategory.name}
-                                          </Typography>
-                                        </Stack>
-                                      </Box>
-                                    );
-                                  })}
-                                </Stack>
-                              ) : (
-                                <Typography
-                                  variant="body2"
-                                  sx={{ color: "text.secondary" }}
-                                >
-                                  Sem subcategorias.
+                                <Box
+                                  sx={{
+                                    width: 10,
+                                    height: 10,
+                                    borderRadius: "50%",
+                                    backgroundColor: category.color,
+                                  }}
+                                />
+                                <Typography variant="body2">
+                                  {category.name}
                                 </Typography>
-                              )}
+                                {fieldSettings.showCategoryCounts ? (
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      color: "text.secondary",
+                                      fontWeight: 600,
+                                      ml: "auto",
+                                    }}
+                                  >
+                                    {
+                                      notes.filter(
+                                        note =>
+                                          note.archived === isArchiveView &&
+                                          note.categoryIds.includes(category.id)
+                                      ).length
+                                    }
+                                  </Typography>
+                                ) : null}
+                              </Stack>
                             </Box>
-                          ) : null}
-                        </Box>
-                      ))}
+
+                            {fieldSettings.showSubcategories &&
+                            isActiveCategory ? (
+                              <Box sx={{ mt: 1, pl: 2 }}>
+                                {activeSubcategories.length ? (
+                                  <Stack spacing={0.75}>
+                                    {activeSubcategories.map(subcategory => {
+                                      const isActive =
+                                        activeSubcategory === subcategory.id;
+                                      return (
+                                        <Box
+                                          key={subcategory.id}
+                                          onClick={() => {
+                                            setActiveSubcategory(prev =>
+                                              prev === subcategory.id
+                                                ? null
+                                                : subcategory.id
+                                            );
+                                          }}
+                                          sx={theme => ({
+                                            ...interactiveItemSx(theme),
+                                            px: 1,
+                                            py: 0.75,
+                                            border: 1,
+                                            borderColor: isActive
+                                              ? "primary.main"
+                                              : "divider",
+                                            cursor: "pointer",
+                                          })}
+                                        >
+                                          <Stack
+                                            direction="row"
+                                            spacing={1}
+                                            alignItems="center"
+                                          >
+                                            <Box
+                                              sx={{
+                                                width: 8,
+                                                height: 8,
+                                                borderRadius: "50%",
+                                                backgroundColor:
+                                                  subcategory.color ||
+                                                  darkenColor(
+                                                    category.color,
+                                                    0.7
+                                                  ),
+                                              }}
+                                            />
+                                            <Typography
+                                              variant="body2"
+                                              sx={{
+                                                color: "text.secondary",
+                                                fontWeight: 600,
+                                              }}
+                                            >
+                                              {subcategory.name}
+                                            </Typography>
+                                          </Stack>
+                                        </Box>
+                                      );
+                                    })}
+                                  </Stack>
+                                ) : (
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ color: "text.secondary" }}
+                                  >
+                                    Sem subcategorias.
+                                  </Typography>
+                                )}
+                              </Box>
+                            ) : null}
+                          </Box>
+                        );
+                      })}
                     </Stack>
                   </Stack>
-                </Paper>
+                </CardSection>
               ) : null}
             </Stack>
           ) : null}
 
           <Stack spacing={2.5}>
             {!selectedNote ? (
-              <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+              <CardSection size="xs">
                 <Stack spacing={1.5}>
                   <TextField
                     label="Buscar nota"
@@ -1260,9 +1295,8 @@ export default function Notes() {
                               }
                             }}
                             sx={theme => ({
-                              ...interactiveCardSx(theme),
+                              ...interactiveItemSx(theme),
                               p: isExpanded ? 2.5 : 2,
-                              borderRadius: "var(--radius-card)",
                               border: 1,
                               borderColor: isExpanded
                                 ? "primary.main"
@@ -1348,11 +1382,11 @@ export default function Notes() {
                     </Typography>
                   )}
                 </Stack>
-              </Paper>
+              </CardSection>
             ) : null}
 
             {selectedNote ? (
-              <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+              <CardSection size="xs">
                 <Stack spacing={2}>
                   <Stack spacing={2}>
                     <Stack direction="row" spacing={1} alignItems="flex-start">
@@ -1591,7 +1625,7 @@ export default function Notes() {
                     }
                   />
                 </Stack>
-              </Paper>
+              </CardSection>
             ) : null}
           </Stack>
         </Box>
@@ -1633,115 +1667,23 @@ export default function Notes() {
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
-            <Accordion
-              elevation={0}
+            <AppAccordion
               expanded={settingsAccordion === "categories"}
               onChange={(_, isExpanded) =>
                 setSettingsAccordion(isExpanded ? "categories" : false)
               }
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
+              title="Categorias"
             >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Categorias
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={1.5}>
-                  {editingCategoryId ? (
-                    <Box
-                      sx={{
-                        p: 2,
-                        borderRadius: "var(--radius-card)",
-                        border: 1,
-                        borderColor: "divider",
-                        backgroundColor: "background.paper",
-                      }}
-                    >
-                      <Stack spacing={1.5}>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={editingCategoryName}
-                          onChange={event =>
-                            setEditingCategoryName(event.target.value)
-                          }
-                        />
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => setEditingCategoryColor(color)}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth:
-                                  editingCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Stack
-                          direction="row"
-                          spacing={2}
-                          justifyContent="flex-end"
-                        >
-                          <Button
-                            variant="outlined"
-                            onClick={cancelEditCategory}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button variant="contained" onClick={saveCategory}>
-                            Salvar
-                          </Button>
-                        </Stack>
-                      </Stack>
-                    </Box>
-                  ) : null}
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {categories.map(category => (
-                      <Chip
-                        key={category.id}
-                        label={category.name}
-                        onClick={() => startEditCategory(category)}
-                        onDelete={() =>
-                          setConfirmRemove({
-                            type: "category",
-                            id: category.id,
-                          })
-                        }
-                        sx={{
-                          color: "#e6edf3",
-                          backgroundColor: darkenColor(category.color, 0.5),
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                  {editingCategoryId ? null : (
+              <Stack spacing={1.5}>
+                {editingCategoryId ? (
+                  <CardSection size="xs">
                     <Stack spacing={1.5}>
                       <TextField
-                        label="Nova categoria"
+                        label="Nome"
                         fullWidth
-                        value={newCategoryName}
+                        value={editingCategoryName}
                         onChange={event =>
-                          setNewCategoryName(event.target.value)
+                          setEditingCategoryName(event.target.value)
                         }
                       />
                       <Stack
@@ -1753,244 +1695,7 @@ export default function Notes() {
                         {DEFAULT_COLORS.map(color => (
                           <Box
                             key={color}
-                            onClick={() => setNewCategoryColor(color)}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: 1,
-                              backgroundColor: color,
-                              borderStyle: "solid",
-                              borderWidth: newCategoryColor === color ? 2 : 1,
-                              borderColor: "divider",
-                              cursor: "pointer",
-                            }}
-                          />
-                        ))}
-                      </Stack>
-                      <Button
-                        variant="outlined"
-                        startIcon={<AddRoundedIcon />}
-                        onClick={addCategory}
-                        sx={{
-                          alignSelf: "flex-start",
-                          textTransform: "none",
-                          fontWeight: 600,
-                        }}
-                      >
-                        Criar categoria
-                      </Button>
-                    </Stack>
-                  )}
-                </Stack>
-              </AccordionDetails>
-            </Accordion>
-
-            <Accordion
-              elevation={0}
-              expanded={settingsAccordion === "subcategories"}
-              onChange={(_, isExpanded) =>
-                setSettingsAccordion(isExpanded ? "subcategories" : false)
-              }
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Subcategorias
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={1.5}>
-                  {editingSubcategoryId ? (
-                    <Box
-                      sx={{
-                        p: 2,
-                        borderRadius: "var(--radius-card)",
-                        border: 1,
-                        borderColor: "divider",
-                        backgroundColor: "background.paper",
-                      }}
-                    >
-                      <Stack spacing={1.5}>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={editingSubcategoryName}
-                          onChange={event =>
-                            setEditingSubcategoryName(event.target.value)
-                          }
-                        />
-                        <TextField
-                          select
-                          label="Categoria"
-                          value={editingSubcategoryCategory}
-                          onChange={event =>
-                            setEditingSubcategoryCategory(event.target.value)
-                          }
-                        >
-                          {categories.map(category => (
-                            <MenuItem key={category.id} value={category.id}>
-                              {category.name}
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => setEditingSubcategoryColor(color)}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth:
-                                  editingSubcategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Stack
-                          direction="row"
-                          spacing={2}
-                          justifyContent="flex-end"
-                        >
-                          <Button
-                            variant="outlined"
-                            onClick={cancelEditSubcategory}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button variant="contained" onClick={saveSubcategory}>
-                            Salvar
-                          </Button>
-                        </Stack>
-                      </Stack>
-                    </Box>
-                  ) : null}
-                  {!editingSubcategoryId ? (
-                    <TextField
-                      select
-                      label="Categoria"
-                      value={subcategoryFilter}
-                      onChange={event => {
-                        setSubcategoryFilter(event.target.value);
-                        setNewSubcategoryCategory(event.target.value);
-                      }}
-                    >
-                      {categories.map(category => (
-                        <MenuItem key={category.id} value={category.id}>
-                          {category.name}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  ) : null}
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {subcategories
-                      .filter(
-                        subcategory =>
-                          subcategory.categoryId === subcategoryFilter
-                      )
-                      .map(subcategory => {
-                        const parentCategory = categories.find(
-                          category => category.id === subcategory.categoryId
-                        );
-                        return (
-                          <Chip
-                            key={subcategory.id}
-                            label={`${parentCategory?.name || "Categoria"} - ${subcategory.name}`}
-                            onClick={() => startEditSubcategory(subcategory)}
-                            onDelete={() =>
-                              setConfirmRemove({
-                                type: "subcategory",
-                                id: subcategory.id,
-                              })
-                            }
-                            sx={{
-                              maxWidth: 320,
-                              minHeight: 32,
-                              color: "#e6edf3",
-                              backgroundColor: darkenColor(
-                                subcategory.color,
-                                0.7
-                              ),
-                              "& .MuiChip-label": {
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              },
-                            }}
-                          />
-                        );
-                      })}
-                    {!subcategories.filter(
-                      subcategory =>
-                        subcategory.categoryId === subcategoryFilter
-                    ).length ? (
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        Nenhuma subcategoria criada.
-                      </Typography>
-                    ) : null}
-                  </Stack>
-                  {editingSubcategoryId ? null : (
-                    <Stack spacing={1.5}>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <TextField
-                          select
-                          label="Categoria"
-                          value={newSubcategoryCategory}
-                          onChange={event =>
-                            setNewSubcategoryCategory(event.target.value)
-                          }
-                          sx={{ minWidth: 180 }}
-                        >
-                          {categories.map(category => (
-                            <MenuItem key={category.id} value={category.id}>
-                              {category.name}
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                        <TextField
-                          label="Nova subcategoria"
-                          fullWidth
-                          value={newSubcategoryName}
-                          onChange={event =>
-                            setNewSubcategoryName(event.target.value)
-                          }
-                        />
-                        <IconButton
-                          onClick={addSubcategory}
-                          aria-label="Adicionar subcategoria"
-                        >
-                          <AddRoundedIcon fontSize="small" />
-                        </IconButton>
-                      </Stack>
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        flexWrap="wrap"
-                        useFlexGap
-                      >
-                        {DEFAULT_COLORS.map(color => (
-                          <Box
-                            key={color}
-                            onClick={() => setNewSubcategoryColor(color)}
+                            onClick={() => setEditingCategoryColor(color)}
                             sx={{
                               width: 28,
                               height: 28,
@@ -1998,96 +1703,356 @@ export default function Notes() {
                               backgroundColor: color,
                               borderStyle: "solid",
                               borderWidth:
-                                newSubcategoryColor === color ? 2 : 1,
+                                editingCategoryColor === color ? 2 : 1,
                               borderColor: "divider",
                               cursor: "pointer",
                             }}
                           />
                         ))}
                       </Stack>
+                      <Stack
+                        direction="row"
+                        spacing={2}
+                        justifyContent="flex-end"
+                      >
+                        <Button variant="outlined" onClick={cancelEditCategory}>
+                          Cancelar
+                        </Button>
+                        <Button variant="contained" onClick={saveCategory}>
+                          Salvar
+                        </Button>
+                      </Stack>
                     </Stack>
-                  )}
+                  </CardSection>
+                ) : null}
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {categories.map(category => (
+                    <Chip
+                      key={category.id}
+                      label={category.name}
+                      onClick={() => startEditCategory(category)}
+                      onDelete={() =>
+                        setConfirmRemove({
+                          type: "category",
+                          id: category.id,
+                        })
+                      }
+                      sx={{
+                        color: "#e6edf3",
+                        backgroundColor: darkenColor(category.color, 0.5),
+                      }}
+                    />
+                  ))}
                 </Stack>
-              </AccordionDetails>
-            </Accordion>
+                {editingCategoryId ? null : (
+                  <Stack spacing={1.5}>
+                    <TextField
+                      label="Nova categoria"
+                      fullWidth
+                      value={newCategoryName}
+                      onChange={event => setNewCategoryName(event.target.value)}
+                    />
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      flexWrap="wrap"
+                      useFlexGap
+                    >
+                      {DEFAULT_COLORS.map(color => (
+                        <Box
+                          key={color}
+                          onClick={() => setNewCategoryColor(color)}
+                          sx={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 1,
+                            backgroundColor: color,
+                            borderStyle: "solid",
+                            borderWidth: newCategoryColor === color ? 2 : 1,
+                            borderColor: "divider",
+                            cursor: "pointer",
+                          }}
+                        />
+                      ))}
+                    </Stack>
+                    <Button
+                      variant="outlined"
+                      startIcon={<AddRoundedIcon />}
+                      onClick={addCategory}
+                      sx={{
+                        alignSelf: "flex-start",
+                        textTransform: "none",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Criar categoria
+                    </Button>
+                  </Stack>
+                )}
+              </Stack>
+            </AppAccordion>
 
-            <Accordion
-              elevation={0}
+            <AppAccordion
+              expanded={settingsAccordion === "subcategories"}
+              onChange={(_, isExpanded) =>
+                setSettingsAccordion(isExpanded ? "subcategories" : false)
+              }
+              title="Subcategorias"
+            >
+              <Stack spacing={1.5}>
+                {editingSubcategoryId ? (
+                  <CardSection size="xs">
+                    <Stack spacing={1.5}>
+                      <TextField
+                        label="Nome"
+                        fullWidth
+                        value={editingSubcategoryName}
+                        onChange={event =>
+                          setEditingSubcategoryName(event.target.value)
+                        }
+                      />
+                      <TextField
+                        select
+                        label="Categoria"
+                        value={editingSubcategoryCategory}
+                        onChange={event =>
+                          setEditingSubcategoryCategory(event.target.value)
+                        }
+                      >
+                        {categories.map(category => (
+                          <MenuItem key={category.id} value={category.id}>
+                            {category.name}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        {DEFAULT_COLORS.map(color => (
+                          <Box
+                            key={color}
+                            onClick={() => setEditingSubcategoryColor(color)}
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 1,
+                              backgroundColor: color,
+                              borderStyle: "solid",
+                              borderWidth:
+                                editingSubcategoryColor === color ? 2 : 1,
+                              borderColor: "divider",
+                              cursor: "pointer",
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                      <Stack
+                        direction="row"
+                        spacing={2}
+                        justifyContent="flex-end"
+                      >
+                        <Button
+                          variant="outlined"
+                          onClick={cancelEditSubcategory}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button variant="contained" onClick={saveSubcategory}>
+                          Salvar
+                        </Button>
+                      </Stack>
+                    </Stack>
+                  </CardSection>
+                ) : null}
+                {!editingSubcategoryId ? (
+                  <TextField
+                    select
+                    label="Categoria"
+                    value={subcategoryFilter}
+                    onChange={event => {
+                      setSubcategoryFilter(event.target.value);
+                      setNewSubcategoryCategory(event.target.value);
+                    }}
+                  >
+                    {categories.map(category => (
+                      <MenuItem key={category.id} value={category.id}>
+                        {category.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                ) : null}
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {subcategories
+                    .filter(
+                      subcategory =>
+                        subcategory.categoryId === subcategoryFilter
+                    )
+                    .map(subcategory => {
+                      const parentCategory = categories.find(
+                        category => category.id === subcategory.categoryId
+                      );
+                      return (
+                        <Chip
+                          key={subcategory.id}
+                          label={`${parentCategory?.name || "Categoria"} - ${subcategory.name}`}
+                          onClick={() => startEditSubcategory(subcategory)}
+                          onDelete={() =>
+                            setConfirmRemove({
+                              type: "subcategory",
+                              id: subcategory.id,
+                            })
+                          }
+                          sx={{
+                            maxWidth: 320,
+                            minHeight: 32,
+                            color: "#e6edf3",
+                            backgroundColor: darkenColor(
+                              subcategory.color,
+                              0.7
+                            ),
+                            "& .MuiChip-label": {
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            },
+                          }}
+                        />
+                      );
+                    })}
+                  {!subcategories.filter(
+                    subcategory => subcategory.categoryId === subcategoryFilter
+                  ).length ? (
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Nenhuma subcategoria criada.
+                    </Typography>
+                  ) : null}
+                </Stack>
+                {editingSubcategoryId ? null : (
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <TextField
+                        select
+                        label="Categoria"
+                        value={newSubcategoryCategory}
+                        onChange={event =>
+                          setNewSubcategoryCategory(event.target.value)
+                        }
+                        sx={{ minWidth: 180 }}
+                      >
+                        {categories.map(category => (
+                          <MenuItem key={category.id} value={category.id}>
+                            {category.name}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      <TextField
+                        label="Nova subcategoria"
+                        fullWidth
+                        value={newSubcategoryName}
+                        onChange={event =>
+                          setNewSubcategoryName(event.target.value)
+                        }
+                      />
+                      <IconButton
+                        onClick={addSubcategory}
+                        aria-label="Adicionar subcategoria"
+                      >
+                        <AddRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      flexWrap="wrap"
+                      useFlexGap
+                    >
+                      {DEFAULT_COLORS.map(color => (
+                        <Box
+                          key={color}
+                          onClick={() => setNewSubcategoryColor(color)}
+                          sx={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 1,
+                            backgroundColor: color,
+                            borderStyle: "solid",
+                            borderWidth: newSubcategoryColor === color ? 2 : 1,
+                            borderColor: "divider",
+                            cursor: "pointer",
+                          }}
+                        />
+                      ))}
+                    </Stack>
+                  </Stack>
+                )}
+              </Stack>
+            </AppAccordion>
+
+            <AppAccordion
               expanded={settingsAccordion === "display"}
               onChange={(_, isExpanded) =>
                 setSettingsAccordion(isExpanded ? "display" : false)
               }
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
+              title="Exibição"
             >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Exibição
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={1.5}>
-                  {[
-                    { key: "showCategories", label: "Mostrar categorias" },
-                    {
-                      key: "showSubcategories",
-                      label: "Mostrar subcategorias",
-                    },
-                    {
-                      key: "showCategoryCounts",
-                      label: "Mostrar contagem por categoria",
-                    },
-                    { key: "showLinks", label: "Mostrar links" },
-                    {
-                      key: "showUpdatedAt",
-                      label: "Mostrar última atualização",
-                    },
-                  ].map(item => (
-                    <Box
-                      key={item.key}
-                      sx={theme => ({
-                        ...interactiveCardSx(theme),
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        border: 1,
-                        borderColor: "divider",
-                        backgroundColor: "background.paper",
-                        cursor: "pointer",
-                      })}
-                      onClick={() =>
+              <Stack spacing={1.5}>
+                {[
+                  { key: "showCategories", label: "Mostrar categorias" },
+                  {
+                    key: "showSubcategories",
+                    label: "Mostrar subcategorias",
+                  },
+                  {
+                    key: "showCategoryCounts",
+                    label: "Mostrar contagem por categoria",
+                  },
+                  { key: "showLinks", label: "Mostrar links" },
+                  {
+                    key: "showUpdatedAt",
+                    label: "Mostrar última atualização",
+                  },
+                ].map(item => (
+                  <Box
+                    key={item.key}
+                    sx={theme => ({
+                      ...interactiveItemSx(theme),
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      cursor: "pointer",
+                    })}
+                    onClick={() =>
+                      setFieldSettings(prev => ({
+                        ...prev,
+                        [item.key]:
+                          !prev[item.key as keyof typeof fieldSettings],
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">{item.label}</Typography>
+                    <ToggleCheckbox
+                      checked={Boolean(
+                        fieldSettings[item.key as keyof typeof fieldSettings]
+                      )}
+                      onChange={event =>
                         setFieldSettings(prev => ({
                           ...prev,
-                          [item.key]:
-                            !prev[item.key as keyof typeof fieldSettings],
+                          [item.key]: event.target.checked,
                         }))
                       }
-                    >
-                      <Typography variant="subtitle2">{item.label}</Typography>
-                      <ToggleCheckbox
-                        checked={Boolean(
-                          fieldSettings[item.key as keyof typeof fieldSettings]
-                        )}
-                        onChange={event =>
-                          setFieldSettings(prev => ({
-                            ...prev,
-                            [item.key]: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </AccordionDetails>
-            </Accordion>
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                ))}
+              </Stack>
+            </AppAccordion>
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={2}
@@ -2191,7 +2156,7 @@ export default function Notes() {
           Configurações restauradas.
         </Alert>
       </Snackbar>
-    </Box>
+    </PageContainer>
   );
 }
 
@@ -2384,8 +2349,8 @@ function RichTextEditor({
         </Tooltip>
       </Stack>
       <Box
-        sx={{
-          borderRadius: "var(--radius-card)",
+        sx={theme => ({
+          borderRadius: APP_RADIUS_PX,
           border: 1,
           borderColor: "divider",
           backgroundColor: "background.paper",
@@ -2404,7 +2369,7 @@ function RichTextEditor({
             height: 0,
             pointerEvents: "none",
           },
-        }}
+        })}
       >
         <EditorContent editor={editor} />
       </Box>

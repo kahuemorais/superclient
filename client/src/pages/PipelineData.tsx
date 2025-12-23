@@ -497,7 +497,6 @@ export default function PipelineData() {
                     onClick={() => openDeal(deal)}
                     sx={theme => ({
                       p: 2,
-                      borderRadius: "var(--radius-card)",
                       cursor: "pointer",
                       ...interactiveCardSx(theme),
                     })}

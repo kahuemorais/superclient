@@ -6,13 +6,14 @@ import {
   Checkbox,
   Chip,
   Divider,
-  Paper,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "wouter";
 import { interactiveCardSx } from "../styles/interactiveCard";
+import CardSection from "../components/layout/CardSection";
+import PageContainer from "../components/layout/PageContainer";
 
 type Category = {
   id: string;
@@ -229,7 +230,7 @@ export default function CalendarCompleted() {
   }, [doneTasksByDate]);
 
   return (
-    <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
+    <PageContainer>
       <Stack spacing={3}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
@@ -255,7 +256,7 @@ export default function CalendarCompleted() {
           </Button>
         </Stack>
 
-        <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+        <CardSection size="xs">
           <Stack spacing={2} direction={{ xs: "column", md: "row" }}>
             <Autocomplete
               multiple
@@ -322,26 +323,21 @@ export default function CalendarCompleted() {
               sx={{ flex: 1, minWidth: 260 }}
             />
           </Stack>
-        </Paper>
+        </CardSection>
 
         {agendaDays.length === 0 ? (
-          <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+          <CardSection size="xs">
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
               Nenhuma tarefa concluida ainda.
             </Typography>
-          </Paper>
+          </CardSection>
         ) : (
           <Stack spacing={2}>
             {agendaDays.map(day => {
               const dateKey = formatDateKey(day);
               const dayTasks = doneTasksByDate.get(dateKey) || [];
               return (
-                <Paper
-                  key={dateKey}
-                  elevation={0}
-                  variant="outlined"
-                  sx={{ p: 2 }}
-                >
+                <CardSection key={dateKey} size="xs">
                   <Stack spacing={1.5}>
                     <Stack
                       direction="row"
@@ -370,13 +366,10 @@ export default function CalendarCompleted() {
                     <Divider />
                     <Stack spacing={1.5}>
                       {dayTasks.map(task => (
-                        <Paper
+                        <CardSection
                           key={task.id}
-                          elevation={0}
+                          size="compact"
                           sx={theme => ({
-                            p: 1.5,
-                            borderRadius: "var(--radius-card)",
-                            borderColor: "divider",
                             ...interactiveCardSx(theme),
                           })}
                         >
@@ -470,16 +463,16 @@ export default function CalendarCompleted() {
                               </Button>
                             </Stack>
                           </Stack>
-                        </Paper>
+                        </CardSection>
                       ))}
                     </Stack>
                   </Stack>
-                </Paper>
+                </CardSection>
               );
             })}
           </Stack>
         )}
       </Stack>
-    </Box>
+    </PageContainer>
   );
 }

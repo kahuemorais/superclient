@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -10,7 +7,6 @@ import {
   Dialog,
   DialogContent,
   IconButton,
-  Paper,
   Snackbar,
   Stack,
   Tooltip,
@@ -20,11 +16,12 @@ import { Link as RouterLink } from "wouter";
 import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import SettingsIconButton from "../components/SettingsIconButton";
 import PageContainer from "../components/layout/PageContainer";
 import AppCard from "../components/layout/AppCard";
+import AppAccordion from "../components/layout/AppAccordion";
+import CardSection from "../components/layout/CardSection";
 import { interactiveCardSx } from "../styles/interactiveCard";
 
 type Deal = {
@@ -746,7 +743,7 @@ export default function Dashboard() {
               ).map(section => {
                 const enabled = sections[section.key];
                 return (
-                  <Accordion
+                  <AppAccordion
                     key={section.key}
                     expanded={homeConfigAccordion === section.key}
                     onChange={(_, expanded) =>
@@ -754,26 +751,7 @@ export default function Dashboard() {
                     }
                     disableGutters
                     elevation={0}
-                    sx={theme => ({
-                      borderColor: "divider",
-                      borderRadius: "var(--radius-card)",
-                      overflow: "hidden",
-                      "&:before": { display: "none" },
-                      ...interactiveCardSx(theme),
-                      ...(homeConfigAccordion === section.key ? {} : { mb: 0 }),
-                    })}
-                  >
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreRoundedIcon />}
-                      sx={{
-                        px: 2,
-                        py: 0.5,
-                        "& .MuiAccordionSummary-content": {
-                          my: 1,
-                          alignItems: "center",
-                        },
-                      }}
-                    >
+                    summary={
                       <Box
                         sx={{
                           display: "flex",
@@ -797,346 +775,322 @@ export default function Dashboard() {
                           onClick={event => event.stopPropagation()}
                         />
                       </Box>
-                    </AccordionSummary>
-
-                    <AccordionDetails sx={{ pt: 0, px: 2, pb: 2 }}>
-                      <Stack
-                        spacing={1}
-                        sx={{
-                          opacity: enabled ? 1 : 0.5,
-                        }}
-                      >
-                        {section.key === "pipeline" ? (
-                          <>
-                            <Paper
-                              variant="outlined"
-                              onClick={() =>
-                                enabled
-                                  ? setItems(prev => ({
-                                      ...prev,
-                                      pipeline: {
-                                        ...prev.pipeline,
-                                        totalCards: !prev.pipeline.totalCards,
-                                      },
-                                    }))
-                                  : undefined
-                              }
-                              sx={theme => ({
-                                p: 1.5,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                cursor: enabled ? "pointer" : "default",
-                                ...interactiveCardSx(theme),
-                              })}
-                            >
-                              <Typography variant="body2">
-                                Total de cards
-                              </Typography>
-                              <ToggleCheckbox
-                                checked={items.pipeline.totalCards}
-                                disabled={!enabled}
-                                onChange={event =>
-                                  setItems(prev => ({
+                    }
+                    sx={theme => ({
+                      borderColor: "divider",
+                      overflow: "hidden",
+                      "&:before": { display: "none" },
+                      ...interactiveCardSx(theme),
+                      ...(homeConfigAccordion === section.key ? {} : { mb: 0 }),
+                      "& .MuiAccordionSummary-content": {
+                        my: 1,
+                        alignItems: "center",
+                      },
+                    })}
+                  >
+                    <Stack spacing={1} sx={{ opacity: enabled ? 1 : 0.5 }}>
+                      {section.key === "pipeline" ? (
+                        <>
+                          <CardSection
+                            size="compact"
+                            onClick={() =>
+                              enabled
+                                ? setItems(prev => ({
                                     ...prev,
                                     pipeline: {
                                       ...prev.pipeline,
-                                      totalCards: event.target.checked,
+                                      totalCards: !prev.pipeline.totalCards,
                                     },
                                   }))
-                                }
-                                onClick={event => event.stopPropagation()}
-                              />
-                            </Paper>
-
-                            <Paper
-                              variant="outlined"
-                              onClick={() =>
-                                enabled
-                                  ? setItems(prev => ({
-                                      ...prev,
-                                      pipeline: {
-                                        ...prev.pipeline,
-                                        totalValue: !prev.pipeline.totalValue,
-                                      },
-                                    }))
-                                  : undefined
+                                : undefined
+                            }
+                            sx={theme => ({
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              cursor: enabled ? "pointer" : "default",
+                              ...interactiveCardSx(theme),
+                            })}
+                          >
+                            <Typography variant="body2">
+                              Total de cards
+                            </Typography>
+                            <ToggleCheckbox
+                              checked={items.pipeline.totalCards}
+                              disabled={!enabled}
+                              onChange={event =>
+                                setItems(prev => ({
+                                  ...prev,
+                                  pipeline: {
+                                    ...prev.pipeline,
+                                    totalCards: event.target.checked,
+                                  },
+                                }))
                               }
-                              sx={theme => ({
-                                p: 1.5,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                cursor: enabled ? "pointer" : "default",
-                                ...interactiveCardSx(theme),
-                              })}
-                            >
-                              <Typography variant="body2">
-                                Valor total
-                              </Typography>
-                              <ToggleCheckbox
-                                checked={items.pipeline.totalValue}
-                                disabled={!enabled}
-                                onChange={event =>
-                                  setItems(prev => ({
+                              onClick={event => event.stopPropagation()}
+                            />
+                          </CardSection>
+
+                          <CardSection
+                            size="compact"
+                            onClick={() =>
+                              enabled
+                                ? setItems(prev => ({
                                     ...prev,
                                     pipeline: {
                                       ...prev.pipeline,
-                                      totalValue: event.target.checked,
+                                      totalValue: !prev.pipeline.totalValue,
                                     },
                                   }))
-                                }
-                                onClick={event => event.stopPropagation()}
-                              />
-                            </Paper>
-
-                            <Paper
-                              variant="outlined"
-                              onClick={() =>
-                                enabled
-                                  ? setItems(prev => ({
-                                      ...prev,
-                                      pipeline: {
-                                        ...prev.pipeline,
-                                        avgTicket: !prev.pipeline.avgTicket,
-                                      },
-                                    }))
-                                  : undefined
+                                : undefined
+                            }
+                            sx={theme => ({
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              cursor: enabled ? "pointer" : "default",
+                              ...interactiveCardSx(theme),
+                            })}
+                          >
+                            <Typography variant="body2">Valor total</Typography>
+                            <ToggleCheckbox
+                              checked={items.pipeline.totalValue}
+                              disabled={!enabled}
+                              onChange={event =>
+                                setItems(prev => ({
+                                  ...prev,
+                                  pipeline: {
+                                    ...prev.pipeline,
+                                    totalValue: event.target.checked,
+                                  },
+                                }))
                               }
-                              sx={theme => ({
-                                p: 1.5,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                cursor: enabled ? "pointer" : "default",
-                                ...interactiveCardSx(theme),
-                              })}
-                            >
-                              <Typography variant="body2">
-                                Ticket medio
-                              </Typography>
-                              <ToggleCheckbox
-                                checked={items.pipeline.avgTicket}
-                                disabled={!enabled}
-                                onChange={event =>
-                                  setItems(prev => ({
+                              onClick={event => event.stopPropagation()}
+                            />
+                          </CardSection>
+
+                          <CardSection
+                            size="compact"
+                            onClick={() =>
+                              enabled
+                                ? setItems(prev => ({
                                     ...prev,
                                     pipeline: {
                                       ...prev.pipeline,
-                                      avgTicket: event.target.checked,
+                                      avgTicket: !prev.pipeline.avgTicket,
                                     },
                                   }))
-                                }
-                                onClick={event => event.stopPropagation()}
-                              />
-                            </Paper>
-                          </>
-                        ) : null}
-
-                        {section.key === "finance" ? (
-                          <>
-                            <Paper
-                              variant="outlined"
-                              onClick={() =>
-                                enabled
-                                  ? setItems(prev => ({
-                                      ...prev,
-                                      finance: {
-                                        ...prev.finance,
-                                        totalSpend: !prev.finance.totalSpend,
-                                      },
-                                    }))
-                                  : undefined
+                                : undefined
+                            }
+                            sx={theme => ({
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              cursor: enabled ? "pointer" : "default",
+                              ...interactiveCardSx(theme),
+                            })}
+                          >
+                            <Typography variant="body2">
+                              Ticket medio
+                            </Typography>
+                            <ToggleCheckbox
+                              checked={items.pipeline.avgTicket}
+                              disabled={!enabled}
+                              onChange={event =>
+                                setItems(prev => ({
+                                  ...prev,
+                                  pipeline: {
+                                    ...prev.pipeline,
+                                    avgTicket: event.target.checked,
+                                  },
+                                }))
                               }
-                              sx={theme => ({
-                                p: 1.5,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                cursor: enabled ? "pointer" : "default",
-                                ...interactiveCardSx(theme),
-                              })}
-                            >
-                              <Typography variant="body2">
-                                Total de gastos
-                              </Typography>
-                              <ToggleCheckbox
-                                checked={items.finance.totalSpend}
-                                disabled={!enabled}
-                                onChange={event =>
-                                  setItems(prev => ({
+                              onClick={event => event.stopPropagation()}
+                            />
+                          </CardSection>
+                        </>
+                      ) : null}
+
+                      {section.key === "finance" ? (
+                        <>
+                          <CardSection
+                            size="compact"
+                            onClick={() =>
+                              enabled
+                                ? setItems(prev => ({
                                     ...prev,
                                     finance: {
                                       ...prev.finance,
-                                      totalSpend: event.target.checked,
+                                      totalSpend: !prev.finance.totalSpend,
                                     },
                                   }))
-                                }
-                                onClick={event => event.stopPropagation()}
-                              />
-                            </Paper>
-
-                            <Paper
-                              variant="outlined"
-                              onClick={() =>
-                                enabled
-                                  ? setItems(prev => ({
-                                      ...prev,
-                                      finance: {
-                                        ...prev.finance,
-                                        topCategory: !prev.finance.topCategory,
-                                      },
-                                    }))
-                                  : undefined
+                                : undefined
+                            }
+                            sx={theme => ({
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              cursor: enabled ? "pointer" : "default",
+                              ...interactiveCardSx(theme),
+                            })}
+                          >
+                            <Typography variant="body2">
+                              Total de gastos
+                            </Typography>
+                            <ToggleCheckbox
+                              checked={items.finance.totalSpend}
+                              disabled={!enabled}
+                              onChange={event =>
+                                setItems(prev => ({
+                                  ...prev,
+                                  finance: {
+                                    ...prev.finance,
+                                    totalSpend: event.target.checked,
+                                  },
+                                }))
                               }
-                              sx={theme => ({
-                                p: 1.5,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                cursor: enabled ? "pointer" : "default",
-                                ...interactiveCardSx(theme),
-                              })}
-                            >
-                              <Typography variant="body2">
-                                Categoria em destaque
-                              </Typography>
-                              <ToggleCheckbox
-                                checked={items.finance.topCategory}
-                                disabled={!enabled}
-                                onChange={event =>
-                                  setItems(prev => ({
+                              onClick={event => event.stopPropagation()}
+                            />
+                          </CardSection>
+
+                          <CardSection
+                            size="compact"
+                            onClick={() =>
+                              enabled
+                                ? setItems(prev => ({
                                     ...prev,
                                     finance: {
                                       ...prev.finance,
-                                      topCategory: event.target.checked,
+                                      topCategory: !prev.finance.topCategory,
                                     },
                                   }))
-                                }
-                                onClick={event => event.stopPropagation()}
-                              />
-                            </Paper>
-                          </>
-                        ) : null}
-
-                        {section.key === "access" ? (
-                          <>
-                            <Paper
-                              variant="outlined"
-                              onClick={() =>
-                                enabled
-                                  ? setItems(prev => ({
-                                      ...prev,
-                                      access: {
-                                        ...prev.access,
-                                        roles: !prev.access.roles,
-                                      },
-                                    }))
-                                  : undefined
+                                : undefined
+                            }
+                            sx={theme => ({
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              cursor: enabled ? "pointer" : "default",
+                              ...interactiveCardSx(theme),
+                            })}
+                          >
+                            <Typography variant="body2">
+                              Categoria em destaque
+                            </Typography>
+                            <ToggleCheckbox
+                              checked={items.finance.topCategory}
+                              disabled={!enabled}
+                              onChange={event =>
+                                setItems(prev => ({
+                                  ...prev,
+                                  finance: {
+                                    ...prev.finance,
+                                    topCategory: event.target.checked,
+                                  },
+                                }))
                               }
-                              sx={theme => ({
-                                p: 1.5,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                cursor: enabled ? "pointer" : "default",
-                                ...interactiveCardSx(theme),
-                              })}
-                            >
-                              <Typography variant="body2">
-                                Papéis ativos
-                              </Typography>
-                              <ToggleCheckbox
-                                checked={items.access.roles}
-                                disabled={!enabled}
-                                onChange={event =>
-                                  setItems(prev => ({
+                              onClick={event => event.stopPropagation()}
+                            />
+                          </CardSection>
+                        </>
+                      ) : null}
+
+                      {section.key === "access" ? (
+                        <>
+                          <CardSection
+                            size="compact"
+                            onClick={() =>
+                              enabled
+                                ? setItems(prev => ({
                                     ...prev,
                                     access: {
                                       ...prev.access,
-                                      roles: event.target.checked,
+                                      roles: !prev.access.roles,
                                     },
                                   }))
-                                }
-                                onClick={event => event.stopPropagation()}
-                              />
-                            </Paper>
-
-                            <Paper
-                              variant="outlined"
-                              onClick={() =>
-                                enabled
-                                  ? setItems(prev => ({
-                                      ...prev,
-                                      access: {
-                                        ...prev.access,
-                                        modules: !prev.access.modules,
-                                      },
-                                    }))
-                                  : undefined
+                                : undefined
+                            }
+                            sx={theme => ({
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              cursor: enabled ? "pointer" : "default",
+                              ...interactiveCardSx(theme),
+                            })}
+                          >
+                            <Typography variant="body2">
+                              Papéis ativos
+                            </Typography>
+                            <ToggleCheckbox
+                              checked={items.access.roles}
+                              disabled={!enabled}
+                              onChange={event =>
+                                setItems(prev => ({
+                                  ...prev,
+                                  access: {
+                                    ...prev.access,
+                                    roles: event.target.checked,
+                                  },
+                                }))
                               }
-                              sx={theme => ({
-                                p: 1.5,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                cursor: enabled ? "pointer" : "default",
-                                ...interactiveCardSx(theme),
-                              })}
-                            >
-                              <Typography variant="body2">
-                                Modulos ativos
-                              </Typography>
-                              <ToggleCheckbox
-                                checked={items.access.modules}
-                                disabled={!enabled}
-                                onChange={event =>
-                                  setItems(prev => ({
+                              onClick={event => event.stopPropagation()}
+                            />
+                          </CardSection>
+
+                          <CardSection
+                            size="compact"
+                            onClick={() =>
+                              enabled
+                                ? setItems(prev => ({
                                     ...prev,
                                     access: {
                                       ...prev.access,
-                                      modules: event.target.checked,
+                                      modules: !prev.access.modules,
                                     },
                                   }))
-                                }
-                                onClick={event => event.stopPropagation()}
-                              />
-                            </Paper>
-                          </>
-                        ) : null}
-                      </Stack>
-                    </AccordionDetails>
-                  </Accordion>
+                                : undefined
+                            }
+                            sx={theme => ({
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              cursor: enabled ? "pointer" : "default",
+                              ...interactiveCardSx(theme),
+                            })}
+                          >
+                            <Typography variant="body2">
+                              Modulos ativos
+                            </Typography>
+                            <ToggleCheckbox
+                              checked={items.access.modules}
+                              disabled={!enabled}
+                              onChange={event =>
+                                setItems(prev => ({
+                                  ...prev,
+                                  access: {
+                                    ...prev.access,
+                                    modules: event.target.checked,
+                                  },
+                                }))
+                              }
+                              onClick={event => event.stopPropagation()}
+                            />
+                          </CardSection>
+                        </>
+                      ) : null}
+                    </Stack>
+                  </AppAccordion>
                 );
               })}
 
-              <Accordion
+              <AppAccordion
                 expanded={homeConfigAccordion === "links"}
                 onChange={(_, expanded) =>
                   setHomeConfigAccordion(expanded ? "links" : false)
                 }
                 disableGutters
                 elevation={0}
-                sx={theme => ({
-                  borderColor: "divider",
-                  borderRadius: "var(--radius-card)",
-                  overflow: "hidden",
-                  "&:before": { display: "none" },
-                  ...interactiveCardSx(theme),
-                  ...(homeConfigAccordion === "links" ? {} : { mb: 0 }),
-                })}
-              >
-                <AccordionSummary
-                  expandIcon={<ExpandMoreRoundedIcon />}
-                  sx={{
-                    px: 2,
-                    py: 0.5,
-                    "& .MuiAccordionSummary-content": {
-                      my: 1,
-                      alignItems: "center",
-                    },
-                  }}
-                >
+                summary={
                   <Box
                     sx={{
                       display: "flex",
@@ -1155,50 +1109,59 @@ export default function Dashboard() {
                       onClick={event => event.stopPropagation()}
                     />
                   </Box>
-                </AccordionSummary>
-                <AccordionDetails sx={{ pt: 0, px: 2, pb: 2 }}>
-                  <Stack
-                    spacing={1}
-                    sx={{ opacity: quickLinksEnabled ? 1 : 0.5 }}
-                  >
-                    {dashboardQuickLinks.map(link => (
-                      <Paper
-                        key={link.href}
-                        variant="outlined"
-                        onClick={() =>
-                          quickLinksEnabled
-                            ? setQuickLinksVisible(prev => ({
-                                ...prev,
-                                [link.href]: !prev[link.href],
-                              }))
-                            : undefined
-                        }
-                        sx={theme => ({
-                          p: 1.5,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          cursor: quickLinksEnabled ? "pointer" : "default",
-                          ...interactiveCardSx(theme),
-                        })}
-                      >
-                        <Typography variant="body2">{link.label}</Typography>
-                        <ToggleCheckbox
-                          checked={Boolean(quickLinksVisible[link.href])}
-                          disabled={!quickLinksEnabled}
-                          onChange={event =>
-                            setQuickLinksVisible(prev => ({
+                }
+                sx={theme => ({
+                  borderColor: "divider",
+                  overflow: "hidden",
+                  "&:before": { display: "none" },
+                  ...interactiveCardSx(theme),
+                  ...(homeConfigAccordion === "links" ? {} : { mb: 0 }),
+                  "& .MuiAccordionSummary-content": {
+                    my: 1,
+                    alignItems: "center",
+                  },
+                })}
+              >
+                <Stack
+                  spacing={1}
+                  sx={{ opacity: quickLinksEnabled ? 1 : 0.5 }}
+                >
+                  {dashboardQuickLinks.map(link => (
+                    <CardSection
+                      size="compact"
+                      key={link.href}
+                      onClick={() =>
+                        quickLinksEnabled
+                          ? setQuickLinksVisible(prev => ({
                               ...prev,
-                              [link.href]: event.target.checked,
+                              [link.href]: !prev[link.href],
                             }))
-                          }
-                          onClick={event => event.stopPropagation()}
-                        />
-                      </Paper>
-                    ))}
-                  </Stack>
-                </AccordionDetails>
-              </Accordion>
+                          : undefined
+                      }
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        cursor: quickLinksEnabled ? "pointer" : "default",
+                        ...interactiveCardSx(theme),
+                      })}
+                    >
+                      <Typography variant="body2">{link.label}</Typography>
+                      <ToggleCheckbox
+                        checked={Boolean(quickLinksVisible[link.href])}
+                        disabled={!quickLinksEnabled}
+                        onChange={event =>
+                          setQuickLinksVisible(prev => ({
+                            ...prev,
+                            [link.href]: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </CardSection>
+                  ))}
+                </Stack>
+              </AppAccordion>
             </Stack>
             <Stack
               direction={{ xs: "column", sm: "row" }}

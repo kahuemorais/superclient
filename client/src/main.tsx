@@ -8,7 +8,11 @@ import "@fontsource/roboto/700.css";
 import App from "./App.tsx";
 import "./index.css";
 
+import { applyDesignTokensToCssVars } from "./designTokens";
+
 const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+
+applyDesignTokensToCssVars();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

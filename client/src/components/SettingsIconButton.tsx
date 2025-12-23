@@ -26,7 +26,7 @@ export default function SettingsIconButton({
           disabled={disabled}
           size={size}
           sx={theme => ({
-            borderRadius: 999,
+            borderRadius: theme.shape.borderRadius,
             border: 1,
             borderColor: disabled
               ? theme.palette.action.disabled

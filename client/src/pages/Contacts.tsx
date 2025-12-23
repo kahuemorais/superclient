@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Autocomplete,
   Alert,
   Box,
@@ -21,6 +18,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { APP_RADIUS_PX } from "../designTokens";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
@@ -28,13 +26,13 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import SettingsIconButton from "../components/SettingsIconButton";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import PageContainer from "../components/layout/PageContainer";
-import AppCard from "../components/layout/AppCard";
+import CardSection from "../components/layout/CardSection";
+import AppAccordion from "../components/layout/AppAccordion";
 import { loadUserStorage, saveUserStorage } from "../userStorage";
 
 type Contact = {
@@ -911,22 +909,36 @@ export default function Contacts() {
             <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               Contatos
             </Typography>
-            <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Button
+                variant="outlined"
+                onClick={openNewContact}
+                sx={{
+                  display: { xs: "none", sm: "inline-flex" },
+                  textTransform: "none",
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Adicionar contato
+              </Button>
+              <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+            </Stack>
           </Stack>
 
           <Box
             sx={{
-              display: "flex",
-              justifyContent: { xs: "stretch", sm: "flex-end" },
+              display: { xs: "flex", sm: "none" },
+              justifyContent: "stretch",
             }}
           >
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={openNewContact}
               sx={{
                 textTransform: "none",
                 fontWeight: 600,
-                width: { xs: "100%", sm: "auto" },
+                width: "100%",
               }}
             >
               Adicionar contato
@@ -935,11 +947,11 @@ export default function Contacts() {
         </Stack>
 
         {contacts.length === 0 ? (
-          <AppCard sx={{ p: 3 }}>
+          <CardSection>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
               Nenhum contato cadastrado ainda.
             </Typography>
-          </AppCard>
+          </CardSection>
         ) : (
           <Stack spacing={2}>
             <Stack
@@ -1062,11 +1074,11 @@ export default function Contacts() {
                             ? 136
                             : 160;
                     return (
-                      <AppCard
+                      <CardSection
                         key={contact.id}
                         onClick={() => openContact(contact)}
+                        size="sm"
                         sx={theme => ({
-                          p: 2.5,
                           minHeight,
                           cursor: "pointer",
                           ...interactiveCardSx(theme),
@@ -1115,7 +1127,7 @@ export default function Contacts() {
                             </Typography>
                           ) : null}
                         </Stack>
-                      </AppCard>
+                      </CardSection>
                     );
                   })()
                 )}
@@ -1495,15 +1507,15 @@ export default function Contacts() {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
               PaperProps={{
-                sx: {
+                sx: theme => ({
                   mt: 1,
                   p: 2,
-                  borderRadius: "var(--radius-card)",
+                  borderRadius: APP_RADIUS_PX,
                   border: 1,
                   borderColor: "divider",
                   backgroundColor: "background.paper",
                   minWidth: 280,
-                },
+                }),
               }}
             >
               <Stack spacing={1.5}>
@@ -1953,380 +1965,319 @@ export default function Contacts() {
               </IconButton>
             </Box>
 
-            <Accordion
+            <AppAccordion
               expanded={settingsAccordion === "categories"}
               onChange={(_, isExpanded) =>
                 setSettingsAccordion(isExpanded ? "categories" : false)
               }
-              elevation={0}
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
+              title="Categorias"
             >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Categorias
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={1.5}>
-                  {editingCategoryId ? (
-                    <Box
-                      sx={{
-                        p: 2,
-                        borderRadius: "var(--radius-card)",
-                        border: 1,
-                        borderColor: "divider",
-                        backgroundColor: "background.paper",
-                      }}
-                    >
-                      <Stack spacing={1.5}>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: 600 }}
-                        >
-                          Editar categoria
-                        </Typography>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={editingCategoryName}
-                          onChange={event =>
-                            setEditingCategoryName(event.target.value)
-                          }
-                        />
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => setEditingCategoryColor(color)}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth:
-                                  editingCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Stack
-                          direction="row"
-                          spacing={2}
-                          justifyContent="flex-end"
-                        >
-                          <Button
-                            variant="outlined"
-                            onClick={cancelEditCategory}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button variant="contained" onClick={saveCategory}>
-                            Salvar
-                          </Button>
-                        </Stack>
-                      </Stack>
-                    </Box>
-                  ) : null}
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {categories.map(cat => (
-                      <Chip
-                        key={cat.id}
-                        label={cat.name}
-                        onClick={() => startEditCategory(cat)}
-                        onDelete={() => handleRemoveCategory(cat.id)}
-                        sx={{
-                          color: "#e6edf3",
-                          backgroundColor: darkenColor(cat.color, 0.5),
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                  {editingCategoryId ? null : (
-                    <Box>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary", mb: 1 }}
-                      >
-                        Nova categoria
+              <Stack spacing={1.5}>
+                {editingCategoryId ? (
+                  <CardSection size="xs">
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Editar categoria
                       </Typography>
-                      <Stack spacing={1.5}>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={newCategoryName}
-                          onChange={event =>
-                            setNewCategoryName(event.target.value)
-                          }
-                        />
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => setNewCategoryColor(color)}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth: newCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Button
-                          variant="outlined"
-                          onClick={handleAddCategory}
-                          startIcon={<AddRoundedIcon />}
-                          sx={{
-                            alignSelf: "flex-start",
-                            textTransform: "none",
-                            fontWeight: 600,
-                          }}
-                        >
-                          Criar categoria
+                      <TextField
+                        label="Nome"
+                        fullWidth
+                        value={editingCategoryName}
+                        onChange={event =>
+                          setEditingCategoryName(event.target.value)
+                        }
+                      />
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        {DEFAULT_COLORS.map(color => (
+                          <Box
+                            key={color}
+                            onClick={() => setEditingCategoryColor(color)}
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 1,
+                              backgroundColor: color,
+                              borderStyle: "solid",
+                              borderWidth:
+                                editingCategoryColor === color ? 2 : 1,
+                              borderColor: "divider",
+                              cursor: "pointer",
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                      <Stack
+                        direction="row"
+                        spacing={2}
+                        justifyContent="flex-end"
+                      >
+                        <Button variant="outlined" onClick={cancelEditCategory}>
+                          Cancelar
+                        </Button>
+                        <Button variant="contained" onClick={saveCategory}>
+                          Salvar
                         </Button>
                       </Stack>
-                    </Box>
-                  )}
+                    </Stack>
+                  </CardSection>
+                ) : null}
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {categories.map(cat => (
+                    <Chip
+                      key={cat.id}
+                      label={cat.name}
+                      onClick={() => startEditCategory(cat)}
+                      onDelete={() => handleRemoveCategory(cat.id)}
+                      sx={{
+                        color: "#e6edf3",
+                        backgroundColor: darkenColor(cat.color, 0.5),
+                      }}
+                    />
+                  ))}
                 </Stack>
-              </AccordionDetails>
-            </Accordion>
+                {editingCategoryId ? null : (
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary", mb: 1 }}
+                    >
+                      Nova categoria
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      <TextField
+                        label="Nome"
+                        fullWidth
+                        value={newCategoryName}
+                        onChange={event =>
+                          setNewCategoryName(event.target.value)
+                        }
+                      />
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        {DEFAULT_COLORS.map(color => (
+                          <Box
+                            key={color}
+                            onClick={() => setNewCategoryColor(color)}
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 1,
+                              backgroundColor: color,
+                              borderStyle: "solid",
+                              borderWidth: newCategoryColor === color ? 2 : 1,
+                              borderColor: "divider",
+                              cursor: "pointer",
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                      <Button
+                        variant="outlined"
+                        onClick={handleAddCategory}
+                        startIcon={<AddRoundedIcon />}
+                        sx={{
+                          alignSelf: "flex-start",
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Criar categoria
+                      </Button>
+                    </Stack>
+                  </Box>
+                )}
+              </Stack>
+            </AppAccordion>
 
-            <Accordion
+            <AppAccordion
               expanded={settingsAccordion === "cards"}
               onChange={(_, isExpanded) =>
                 setSettingsAccordion(isExpanded ? "cards" : false)
               }
-              elevation={0}
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
+              title="Detalhes do card"
             >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Detalhes do card
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 1.5,
+                }}
+              >
                 <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 1.5,
-                  }}
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() =>
+                    setCardFields(prev => ({ ...prev, phones: !prev.phones }))
+                  }
                 >
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setCardFields(prev => ({ ...prev, phones: !prev.phones }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Telefones</Typography>
-                    <ToggleCheckbox
-                      checked={cardFields.phones}
-                      onChange={event =>
-                        setCardFields(prev => ({
-                          ...prev,
-                          phones: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setCardFields(prev => ({ ...prev, emails: !prev.emails }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Emails</Typography>
-                    <ToggleCheckbox
-                      checked={cardFields.emails}
-                      onChange={event =>
-                        setCardFields(prev => ({
-                          ...prev,
-                          emails: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
+                  <Typography variant="subtitle2">Telefones</Typography>
+                  <ToggleCheckbox
+                    checked={cardFields.phones}
+                    onChange={event =>
                       setCardFields(prev => ({
                         ...prev,
-                        addresses: !prev.addresses,
+                        phones: event.target.checked,
                       }))
                     }
-                  >
-                    <Typography variant="subtitle2">Endereços</Typography>
-                    <ToggleCheckbox
-                      checked={cardFields.addresses}
-                      onChange={event =>
-                        setCardFields(prev => ({
-                          ...prev,
-                          addresses: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderRadius: "var(--radius-card)",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setCardFields(prev => ({
-                        ...prev,
-                        categories: !prev.categories,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Categorias</Typography>
-                    <ToggleCheckbox
-                      checked={cardFields.categories}
-                      onChange={event =>
-                        setCardFields(prev => ({
-                          ...prev,
-                          categories: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
+                    onClick={event => event.stopPropagation()}
+                  />
                 </Box>
-              </AccordionDetails>
-            </Accordion>
+                <Box
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() =>
+                    setCardFields(prev => ({ ...prev, emails: !prev.emails }))
+                  }
+                >
+                  <Typography variant="subtitle2">Emails</Typography>
+                  <ToggleCheckbox
+                    checked={cardFields.emails}
+                    onChange={event =>
+                      setCardFields(prev => ({
+                        ...prev,
+                        emails: event.target.checked,
+                      }))
+                    }
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Box>
+                <Box
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() =>
+                    setCardFields(prev => ({
+                      ...prev,
+                      addresses: !prev.addresses,
+                    }))
+                  }
+                >
+                  <Typography variant="subtitle2">Endereços</Typography>
+                  <ToggleCheckbox
+                    checked={cardFields.addresses}
+                    onChange={event =>
+                      setCardFields(prev => ({
+                        ...prev,
+                        addresses: event.target.checked,
+                      }))
+                    }
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Box>
+                <Box
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() =>
+                    setCardFields(prev => ({
+                      ...prev,
+                      categories: !prev.categories,
+                    }))
+                  }
+                >
+                  <Typography variant="subtitle2">Categorias</Typography>
+                  <ToggleCheckbox
+                    checked={cardFields.categories}
+                    onChange={event =>
+                      setCardFields(prev => ({
+                        ...prev,
+                        categories: event.target.checked,
+                      }))
+                    }
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Box>
+              </Box>
+            </AppAccordion>
 
-            <Accordion
+            <AppAccordion
               expanded={settingsAccordion === "details"}
               onChange={(_, isExpanded) =>
                 setSettingsAccordion(isExpanded ? "details" : false)
               }
-              elevation={0}
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
+              title="Detalhes do contato"
             >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Detalhes do contato
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 1.5,
-                  }}
-                >
-                  {[
-                    { key: "birthday", label: "Aniversário" },
-                    { key: "categories", label: "Categorias" },
-                    { key: "phones", label: "Telefones" },
-                    { key: "emails", label: "Emails" },
-                    { key: "addresses", label: "Endereços" },
-                    { key: "comments", label: "Comentarios" },
-                  ].map(item => (
-                    <Box
-                      key={item.key}
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 1.5,
+                }}
+              >
+                {[
+                  { key: "birthday", label: "Aniversário" },
+                  { key: "categories", label: "Categorias" },
+                  { key: "phones", label: "Telefones" },
+                  { key: "emails", label: "Emails" },
+                  { key: "addresses", label: "Endereços" },
+                  { key: "comments", label: "Comentarios" },
+                ].map(item => (
+                  <Box
+                    key={item.key}
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
+                      setDetailFields(prev => ({
+                        ...prev,
+                        [item.key]:
+                          !prev[item.key as keyof typeof detailFields],
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">{item.label}</Typography>
+                    <ToggleCheckbox
+                      checked={Boolean(
+                        detailFields[item.key as keyof typeof detailFields]
+                      )}
+                      onChange={event =>
                         setDetailFields(prev => ({
                           ...prev,
-                          [item.key]:
-                            !prev[item.key as keyof typeof detailFields],
+                          [item.key]: event.target.checked,
                         }))
                       }
-                    >
-                      <Typography variant="subtitle2">{item.label}</Typography>
-                      <ToggleCheckbox
-                        checked={Boolean(
-                          detailFields[item.key as keyof typeof detailFields]
-                        )}
-                        onChange={event =>
-                          setDetailFields(prev => ({
-                            ...prev,
-                            [item.key]: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                  ))}
-                </Box>
-              </AccordionDetails>
-            </Accordion>
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            </AppAccordion>
 
             <Stack
               direction={{ xs: "column", sm: "row" }}

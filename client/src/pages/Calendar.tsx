@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Autocomplete,
   Alert,
   Box,
@@ -47,7 +44,6 @@ import CalendarTodayRoundedIcon from "@mui/icons-material/CalendarTodayRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import FormatBoldRoundedIcon from "@mui/icons-material/FormatBoldRounded";
 import FormatItalicRoundedIcon from "@mui/icons-material/FormatItalicRounded";
 import FormatListBulletedRoundedIcon from "@mui/icons-material/FormatListBulletedRounded";
@@ -60,11 +56,20 @@ import BackspaceRoundedIcon from "@mui/icons-material/BackspaceRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import api from "../api";
+import { APP_RADIUS_PX } from "../designTokens";
 import ToggleCheckbox from "../components/ToggleCheckbox";
-import { interactiveCardSx } from "../styles/interactiveCard";
+import {
+  clickableCardSx,
+  getInteractiveItemRadiusPx,
+  interactiveItemSx,
+  staticCardSx,
+} from "../styles/interactiveCard";
 import SettingsIconButton from "../components/SettingsIconButton";
 import PageContainer from "../components/layout/PageContainer";
 import AppCard from "../components/layout/AppCard";
+import CardSection from "../components/layout/CardSection";
+import AppAccordion from "../components/layout/AppAccordion";
+import { CategoryChip } from "../components/CategoryChip";
 import { loadUserStorage, saveUserStorage } from "../userStorage";
 
 type Category = {
@@ -191,28 +196,6 @@ const defaultCalendarSettings = {
   showNotifications: true,
 };
 
-const darkenColor = (value: string, factor: number) => {
-  const color = value.replace("#", "");
-  if (color.length !== 6) {
-    return value;
-  }
-  const r = Math.max(
-    0,
-    Math.min(255, Math.floor(parseInt(color.slice(0, 2), 16) * factor))
-  );
-  const g = Math.max(
-    0,
-    Math.min(255, Math.floor(parseInt(color.slice(2, 4), 16) * factor))
-  );
-  const b = Math.max(
-    0,
-    Math.min(255, Math.floor(parseInt(color.slice(4, 6), 16) * factor))
-  );
-  return `#${r.toString(16).padStart(2, "0")}${g
-    .toString(16)
-    .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-};
-
 const formatDateKey = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -248,13 +231,15 @@ const getCalendarDays = (base: Date) => {
 const getSampleTasks = (base: Date): CalendarTask[] => {
   const year = base.getFullYear();
   const month = base.getMonth();
-  const makeDate = (day: number) => formatDateKey(new Date(year, month, day));
+  const makeDate = (day: number) =>
+    formatDateKey(new Date(year, month, day));
+
   return [
     {
       id: "cal-sample-1",
-      name: "Reuniao de kickoff",
+      name: "Reunião de alinhamento",
       calendarId: "cal-equipe",
-      categoryIds: ["cat-reunioes"],
+      categoryIds: ["cat-reunioes", "cat-trabalho"],
       date: makeDate(3),
       startTime: "09:00",
       endTime: "10:00",
@@ -1038,8 +1023,8 @@ export default function Calendar() {
         {...attributes}
         {...listeners}
         sx={theme => ({
+          ...clickableCardSx(theme),
           p: 1.5,
-          borderRadius: "var(--radius-card)",
           borderColor: "divider",
           cursor: isDragging ? "grabbing" : "grab",
           opacity: isDragging ? 0.7 : 1,
@@ -1048,7 +1033,7 @@ export default function Calendar() {
           transform: CSS.Transform.toString(stableTransform),
           touchAction: "none",
           userSelect: "none",
-          ...interactiveCardSx(theme),
+          borderRadius: APP_RADIUS_PX,
         })}
       >
         {children}
@@ -1071,13 +1056,14 @@ export default function Calendar() {
       <Paper
         ref={setNodeRef}
         elevation={0}
-        variant="outlined"
-        sx={{
+        sx={theme => ({
+          ...staticCardSx(theme),
           p: 2,
           borderColor: isOver ? "primary.main" : "divider",
           backgroundColor: isOver ? "action.hover" : "background.paper",
           transition: "border-color 0.2s ease, background-color 0.2s ease",
-        }}
+          borderRadius: APP_RADIUS_PX,
+        })}
       >
         {children}
       </Paper>
@@ -1278,14 +1264,14 @@ export default function Calendar() {
       variant="outlined"
       onClick={() => handleCreateTask(date)}
       sx={theme => ({
+        ...clickableCardSx(theme),
         p: 1.5,
-        borderRadius: "var(--radius-card)",
         borderColor: "divider",
         cursor: "pointer",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        ...interactiveCardSx(theme),
+        borderRadius: APP_RADIUS_PX,
       })}
     >
       <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -1309,50 +1295,47 @@ export default function Calendar() {
             <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               Calendário
             </Typography>
-            <SettingsIconButton onClick={() => setCalendarSettingsOpen(true)} />
-          </Stack>
-
-          <Stack
-            direction={{ xs: "row", sm: "row" }}
-            spacing={1.5}
-            alignItems="center"
-          >
-            {!isSmDown ? (
-              <Button
-                variant="outlined"
-                component={RouterLink}
-                href="/calendario/concluidas"
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 600,
-                  flex: { xs: 1, sm: "0 0 auto" },
-                  minWidth: 0,
-                }}
-              >
-                tarefas feitas
-              </Button>
-            ) : null}
-            {!isSmDown ? (
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  const today = new Date();
-                  setSelectedDate(today);
-                  setSelectedMonth(
-                    new Date(today.getFullYear(), today.getMonth(), 1)
-                  );
-                  setAgendaPage(1);
-                }}
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 600,
-                  flex: { xs: 1, sm: "0 0 auto" },
-                  minWidth: 0,
-                }}
-              >
-                Hoje
-              </Button>
-            ) : null}
+            <Stack direction="row" spacing={1} alignItems="center">
+              {!isSmDown ? (
+                <Button
+                  variant="outlined"
+                  component={RouterLink}
+                  href="/calendario/concluidas"
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    minWidth: 0,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Tarefas feitas
+                </Button>
+              ) : null}
+              {!isSmDown ? (
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    const today = new Date();
+                    setSelectedDate(today);
+                    setSelectedMonth(
+                      new Date(today.getFullYear(), today.getMonth(), 1)
+                    );
+                    setAgendaPage(1);
+                  }}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    minWidth: 0,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Hoje
+                </Button>
+              ) : null}
+              <SettingsIconButton
+                onClick={() => setCalendarSettingsOpen(true)}
+              />
+            </Stack>
           </Stack>
         </Stack>
 
@@ -1395,7 +1378,7 @@ export default function Calendar() {
                 ))
               }
             />
-            <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+            <CardSection size="xs">
               <Stack spacing={2}>
                 <Stack
                   direction="row"
@@ -1475,12 +1458,11 @@ export default function Calendar() {
                           setAgendaPage(1);
                         }}
                         sx={theme => ({
-                          ...interactiveCardSx(theme),
+                          ...interactiveItemSx(theme),
                           height: 36,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          borderRadius: "12px",
                           border: isSelected ? 1 : "1px solid transparent",
                           borderColor: isSelected
                             ? "primary.main"
@@ -1513,9 +1495,9 @@ export default function Calendar() {
                   })}
                 </Box>
               </Stack>
-            </Paper>
+            </CardSection>
 
-            <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+            <CardSection size="xs">
               <Stack spacing={2}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                   Calendários
@@ -1539,9 +1521,8 @@ export default function Calendar() {
                         justifyContent: "space-between",
                         px: 1,
                         py: 0.5,
-                        borderRadius: "var(--radius-card)",
                         cursor: "pointer",
-                        ...interactiveCardSx(theme),
+                        ...interactiveItemSx(theme),
                       })}
                     >
                       <Stack direction="row" spacing={1.5} alignItems="center">
@@ -1573,7 +1554,7 @@ export default function Calendar() {
                   ))}
                 </Stack>
               </Stack>
-            </Paper>
+            </CardSection>
           </Stack>
 
           <Stack spacing={{ xs: 2, md: 2.5 }}>
@@ -1646,11 +1627,6 @@ export default function Calendar() {
                   variant="outlined"
                   shape="rounded"
                   size="medium"
-                  sx={{
-                    "& .MuiPaginationItem-root": {
-                      borderRadius: "999px",
-                    },
-                  }}
                 />
               </Stack>
               {agendaDays.length === 0 ? (
@@ -1776,21 +1752,15 @@ export default function Calendar() {
                                                   cat => cat.id === id
                                                 )
                                               )
-                                              .filter(Boolean)
+                                              .filter(
+                                                (cat): cat is Category =>
+                                                  Boolean(cat)
+                                              )
                                               .map(cat => (
-                                                <Chip
-                                                  key={cat?.id}
-                                                  label={cat?.name}
-                                                  size="small"
-                                                  sx={{
-                                                    color: "#e6edf3",
-                                                    backgroundColor: cat
-                                                      ? darkenColor(
-                                                          cat.color,
-                                                          0.5
-                                                        )
-                                                      : "transparent",
-                                                  }}
+                                                <CategoryChip
+                                                  key={cat.id}
+                                                  label={cat.name}
+                                                  categoryColor={cat.color}
                                                 />
                                               ))
                                           : null}
@@ -1860,9 +1830,6 @@ export default function Calendar() {
                   size="medium"
                   sx={{
                     width: "100%",
-                    "& .MuiPaginationItem-root": {
-                      borderRadius: "999px",
-                    },
                     "& .MuiPagination-ul": {
                       width: "100%",
                       justifyContent: "center",
@@ -1920,16 +1887,13 @@ export default function Calendar() {
             <Divider />
             <Stack spacing={1.5}>
               {viewingTask ? (
-                <Paper
-                  variant="outlined"
+                <CardSection
+                  size="compact"
                   sx={{
-                    p: 1.5,
-                    borderRadius: "var(--radius-card)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 2,
-                    backgroundColor: "background.paper",
                   }}
                 >
                   <Stack direction="row" spacing={1.5} alignItems="center">
@@ -1969,7 +1933,7 @@ export default function Calendar() {
                     }
                     sx={{ fontWeight: 600 }}
                   />
-                </Paper>
+                </CardSection>
               ) : null}
               <Typography variant="body2">
                 {viewingTask?.date
@@ -2020,37 +1984,25 @@ export default function Calendar() {
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {viewingTask.categoryIds
                     .map(id => categories.find(cat => cat.id === id))
-                    .filter(Boolean)
+                    .filter((cat): cat is Category => Boolean(cat))
                     .map(cat => (
-                      <Chip
-                        key={cat?.id}
-                        label={cat?.name}
-                        size="small"
-                        sx={{
-                          color: "#e6edf3",
-                          backgroundColor: cat
-                            ? darkenColor(cat.color, 0.5)
-                            : "transparent",
-                        }}
+                      <CategoryChip
+                        key={cat.id}
+                        label={cat.name}
+                        categoryColor={cat.color}
                       />
                     ))}
                 </Stack>
               ) : null}
               {calendarSettings.showDescription &&
               viewingTask?.descriptionHtml ? (
-                <Box
-                  sx={{
-                    borderRadius: "var(--radius-card)",
-                    border: 1,
-                    borderColor: "divider",
-                    p: 2,
-                    backgroundColor: "background.paper",
-                    "& p": { margin: 0 },
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: viewingTask.descriptionHtml,
-                  }}
-                />
+                <CardSection size="xs" sx={{ "& p": { margin: 0 } }}>
+                  <Box
+                    dangerouslySetInnerHTML={{
+                      __html: viewingTask.descriptionHtml,
+                    }}
+                  />
+                </CardSection>
               ) : null}
             </Stack>
             <Stack
@@ -2124,7 +2076,7 @@ export default function Calendar() {
               }
             />
 
-            <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+            <CardSection size="xs">
               <Stack spacing={2}>
                 <Stack
                   direction="row"
@@ -2205,12 +2157,11 @@ export default function Calendar() {
                           setMobileSidebarOpen(false);
                         }}
                         sx={theme => ({
-                          ...interactiveCardSx(theme),
+                          ...interactiveItemSx(theme),
                           height: 36,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          borderRadius: "12px",
                           border: isSelected ? 1 : "1px solid transparent",
                           borderColor: isSelected
                             ? "primary.main"
@@ -2243,9 +2194,9 @@ export default function Calendar() {
                   })}
                 </Box>
               </Stack>
-            </Paper>
+            </CardSection>
 
-            <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+            <CardSection size="xs">
               <Stack spacing={2}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                   Calendários
@@ -2269,9 +2220,8 @@ export default function Calendar() {
                         justifyContent: "space-between",
                         px: 1,
                         py: 0.5,
-                        borderRadius: "var(--radius-card)",
                         cursor: "pointer",
-                        ...interactiveCardSx(theme),
+                        ...interactiveItemSx(theme),
                       })}
                     >
                       <Stack direction="row" spacing={1.5} alignItems="center">
@@ -2303,7 +2253,7 @@ export default function Calendar() {
                   ))}
                 </Stack>
               </Stack>
-            </Paper>
+            </CardSection>
           </Stack>
         </DialogContent>
       </Dialog>
@@ -2475,15 +2425,11 @@ export default function Calendar() {
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
-                    <Chip
+                    <CategoryChip
                       {...getTagProps({ index })}
                       key={option.id}
                       label={option.name}
-                      size="small"
-                      sx={{
-                        color: "#e6edf3",
-                        backgroundColor: darkenColor(option.color, 0.5),
-                      }}
+                      categoryColor={option.color}
                     />
                   ))
                 }
@@ -2778,12 +2724,11 @@ export default function Calendar() {
                       setDatePickerOpen(false);
                     }}
                     sx={theme => ({
-                      ...interactiveCardSx(theme),
+                      ...interactiveItemSx(theme),
                       height: 32,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      borderRadius: "10px",
                       border: isSelected ? 1 : "1px solid transparent",
                       borderColor: isSelected ? "primary.main" : "transparent",
                       cursor: day ? "pointer" : "default",
@@ -2827,246 +2772,200 @@ export default function Calendar() {
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
-            <Accordion
-              elevation={0}
+            <AppAccordion
               expanded={configAccordion === "fields"}
               onChange={(_, isExpanded) =>
                 setConfigAccordion(isExpanded ? "fields" : false)
               }
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
+              title="Campos do evento"
             >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Campos do evento
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 1.5,
-                  }}
-                >
-                  {[
-                    { key: "showAllDay", label: "Campo dia todo" },
-                    { key: "showTime", label: "Horário" },
-                    { key: "showLocation", label: "Local" },
-                    { key: "showParticipants", label: "Participantes" },
-                    { key: "showMeetingLink", label: "Link da reuniao" },
-                    { key: "showReminders", label: "Lembretes" },
-                    { key: "showRepeat", label: "Repetição" },
-                    { key: "showCategories", label: "Categorias" },
-                    { key: "showDescription", label: "Descrição" },
-                    { key: "showVisibility", label: "Visibilidade" },
-                    { key: "showNotifications", label: "Notificações" },
-                  ].map(item => (
-                    <Box
-                      key={item.key}
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        p: 1.5,
-                        borderRadius: "var(--radius-card)",
-                        borderColor: "divider",
-                        cursor: "pointer",
-                        ...interactiveCardSx(theme),
-                      })}
-                      onClick={() =>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 1.5,
+                }}
+              >
+                {[
+                  { key: "showAllDay", label: "Campo dia todo" },
+                  { key: "showTime", label: "Horário" },
+                  { key: "showLocation", label: "Local" },
+                  { key: "showParticipants", label: "Participantes" },
+                  { key: "showMeetingLink", label: "Link da reuniao" },
+                  { key: "showReminders", label: "Lembretes" },
+                  { key: "showRepeat", label: "Repetição" },
+                  { key: "showCategories", label: "Categorias" },
+                  { key: "showDescription", label: "Descrição" },
+                  { key: "showVisibility", label: "Visibilidade" },
+                  { key: "showNotifications", label: "Notificações" },
+                ].map(item => (
+                  <Box
+                    key={item.key}
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      borderColor: "divider",
+                      cursor: "pointer",
+                      ...interactiveItemSx(theme),
+                    })}
+                    onClick={() =>
+                      setCalendarSettings(prev => ({
+                        ...prev,
+                        [item.key]:
+                          !prev[item.key as keyof typeof calendarSettings],
+                      }))
+                    }
+                  >
+                    <Typography variant="subtitle2">{item.label}</Typography>
+                    <ToggleCheckbox
+                      checked={Boolean(
+                        calendarSettings[
+                          item.key as keyof typeof calendarSettings
+                        ]
+                      )}
+                      onChange={event =>
                         setCalendarSettings(prev => ({
                           ...prev,
-                          [item.key]:
-                            !prev[item.key as keyof typeof calendarSettings],
+                          [item.key]: event.target.checked,
                         }))
                       }
-                    >
-                      <Typography variant="subtitle2">{item.label}</Typography>
-                      <ToggleCheckbox
-                        checked={Boolean(
-                          calendarSettings[
-                            item.key as keyof typeof calendarSettings
-                          ]
-                        )}
-                        onChange={event =>
-                          setCalendarSettings(prev => ({
-                            ...prev,
-                            [item.key]: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                  ))}
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-            <Accordion
-              elevation={0}
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            </AppAccordion>
+            <AppAccordion
               expanded={configAccordion === "categories"}
               onChange={(_, isExpanded) =>
                 setConfigAccordion(isExpanded ? "categories" : false)
               }
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
+              title="Categorias"
             >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Categorias
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={1.5}>
-                  {editingCategoryId ? (
-                    <Box
-                      sx={{
-                        p: 2,
-                        borderRadius: "var(--radius-card)",
-                        border: 1,
-                        borderColor: "divider",
-                        backgroundColor: "background.paper",
-                      }}
-                    >
-                      <Stack spacing={1.5}>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: 600 }}
-                        >
-                          Editar categoria
-                        </Typography>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={editingCategoryName}
-                          onChange={event =>
-                            setEditingCategoryName(event.target.value)
-                          }
-                        />
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => setEditingCategoryColor(color)}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth:
-                                  editingCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Stack
-                          direction="row"
-                          spacing={2}
-                          justifyContent="flex-end"
-                        >
-                          <Button
-                            variant="outlined"
-                            onClick={cancelEditCategory}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button variant="contained" onClick={saveCategory}>
-                            Salvar
-                          </Button>
-                        </Stack>
-                      </Stack>
-                    </Box>
-                  ) : null}
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {categories.map(cat => (
-                      <Chip
-                        key={cat.id}
-                        label={cat.name}
-                        onClick={() => startEditCategory(cat)}
-                        onDelete={() => handleRemoveCategory(cat.id)}
-                        sx={{
-                          color: "#e6edf3",
-                          backgroundColor: darkenColor(cat.color, 0.5),
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                  {editingCategoryId ? null : (
-                    <Box>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary", mb: 1 }}
-                      >
-                        Nova categoria
+              <Stack spacing={1.5}>
+                {editingCategoryId ? (
+                  <CardSection size="xs">
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Editar categoria
                       </Typography>
-                      <Stack spacing={1.5}>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={newCategoryName}
-                          onChange={event =>
-                            setNewCategoryName(event.target.value)
-                          }
-                        />
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => setNewCategoryColor(color)}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth: newCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Button
-                          variant="outlined"
-                          onClick={handleAddCategory}
-                          startIcon={<AddRoundedIcon />}
-                          sx={{
-                            alignSelf: "flex-start",
-                            textTransform: "none",
-                            fontWeight: 600,
-                          }}
-                        >
-                          Criar categoria
+                      <TextField
+                        label="Nome"
+                        fullWidth
+                        value={editingCategoryName}
+                        onChange={event =>
+                          setEditingCategoryName(event.target.value)
+                        }
+                      />
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        {DEFAULT_COLORS.map(color => (
+                          <Box
+                            key={color}
+                            onClick={() => setEditingCategoryColor(color)}
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: APP_RADIUS_PX,
+                              backgroundColor: color,
+                              borderStyle: "solid",
+                              borderWidth:
+                                editingCategoryColor === color ? 2 : 1,
+                              borderColor: "divider",
+                              cursor: "pointer",
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                      <Stack
+                        direction="row"
+                        spacing={2}
+                        justifyContent="flex-end"
+                      >
+                        <Button variant="outlined" onClick={cancelEditCategory}>
+                          Cancelar
+                        </Button>
+                        <Button variant="contained" onClick={saveCategory}>
+                          Salvar
                         </Button>
                       </Stack>
-                    </Box>
-                  )}
+                    </Stack>
+                  </CardSection>
+                ) : null}
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {categories.map(cat => (
+                    <CategoryChip
+                      key={cat.id}
+                      label={cat.name}
+                      onClick={() => startEditCategory(cat)}
+                      onDelete={() => handleRemoveCategory(cat.id)}
+                      categoryColor={cat.color}
+                    />
+                  ))}
                 </Stack>
-              </AccordionDetails>
-            </Accordion>
+                {editingCategoryId ? null : (
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary", mb: 1 }}
+                    >
+                      Nova categoria
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      <TextField
+                        label="Nome"
+                        fullWidth
+                        value={newCategoryName}
+                        onChange={event =>
+                          setNewCategoryName(event.target.value)
+                        }
+                      />
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        {DEFAULT_COLORS.map(color => (
+                          <Box
+                            key={color}
+                            onClick={() => setNewCategoryColor(color)}
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: APP_RADIUS_PX,
+                              backgroundColor: color,
+                              borderStyle: "solid",
+                              borderWidth: newCategoryColor === color ? 2 : 1,
+                              borderColor: "divider",
+                              cursor: "pointer",
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                      <Button
+                        variant="outlined"
+                        onClick={handleAddCategory}
+                        startIcon={<AddRoundedIcon />}
+                        sx={{
+                          alignSelf: "flex-start",
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Criar categoria
+                      </Button>
+                    </Stack>
+                  </Box>
+                )}
+              </Stack>
+            </AppAccordion>
 
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -3320,8 +3219,8 @@ function RichTextEditor({
         </Tooltip>
       </Stack>
       <Box
-        sx={{
-          borderRadius: "var(--radius-card)",
+        sx={theme => ({
+          borderRadius: APP_RADIUS_PX,
           border: 1,
           borderColor: "divider",
           backgroundColor: "background.paper",
@@ -3333,7 +3232,10 @@ function RichTextEditor({
           "& .tiptap h1": { fontSize: "1.25rem", fontWeight: 700 },
           "& .tiptap h2": { fontSize: "1.1rem", fontWeight: 700 },
           "& .tiptap h3": { fontSize: "1rem", fontWeight: 700 },
-          "& .tiptap img": { maxWidth: "100%", borderRadius: "12px" },
+          "& .tiptap img": {
+            maxWidth: "100%",
+            borderRadius: APP_RADIUS_PX,
+          },
           "& .tiptap img.ProseMirror-selectednode": {
             outline: "2px solid",
             outlineColor: "primary.main",
@@ -3346,7 +3248,7 @@ function RichTextEditor({
             height: 0,
             pointerEvents: "none",
           },
-        }}
+        })}
       >
         <EditorContent editor={editor} />
       </Box>

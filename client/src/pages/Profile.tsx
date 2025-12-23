@@ -1,9 +1,6 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Button,
   Dialog,
@@ -18,9 +15,10 @@ import {
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import { useLocation } from "wouter";
+import PageContainer from "../components/layout/PageContainer";
+import AppAccordion from "../components/layout/AppAccordion";
 import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import { interactiveCardSx } from "../styles/interactiveCard";
@@ -746,7 +744,7 @@ export default function Profile() {
   );
 
   return (
-    <Box sx={{ maxWidth: 980, mx: "auto" }}>
+    <PageContainer>
       <Stack spacing={3}>
         <Stack
           direction={{ xs: "column", md: "row" }}
@@ -754,7 +752,9 @@ export default function Profile() {
           alignItems={{ xs: "flex-start", md: "center" }}
           justifyContent="space-between"
         >
-          <Typography variant="h4">Perfil</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Perfil
+          </Typography>
           <TextField
             select
             label="Idioma"
@@ -770,736 +770,256 @@ export default function Profile() {
           </TextField>
         </Stack>
 
-        <Accordion
+        <AppAccordion
           expanded={expanded === "main"}
           onChange={(_, isExpanded) => setExpanded(isExpanded ? "main" : false)}
+          title="Dados principais"
         >
-          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-            <Typography variant="h6">Dados principais</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2.5}>
-              <TextField
-                label="Nome"
-                fullWidth
-                value={name}
-                onChange={event => setName(event.target.value)}
-              />
-              <TextField
-                label="Time"
-                fullWidth
-                value={team}
-                onChange={event => setTeam(event.target.value)}
-              />
-              <TextField
-                label="Cargo"
-                fullWidth
-                value={role}
-                onChange={event => setRole(event.target.value)}
-              />
-              <TextField
-                label="Fuso horario"
-                fullWidth
-                value={timezone}
-                onChange={event => setTimezone(event.target.value)}
-              />
+          <Stack spacing={2.5}>
+            <TextField
+              label="Nome"
+              fullWidth
+              value={name}
+              onChange={event => setName(event.target.value)}
+            />
+            <TextField
+              label="Time"
+              fullWidth
+              value={team}
+              onChange={event => setTeam(event.target.value)}
+            />
+            <TextField
+              label="Cargo"
+              fullWidth
+              value={role}
+              onChange={event => setRole(event.target.value)}
+            />
+            <TextField
+              label="Fuso horario"
+              fullWidth
+              value={timezone}
+              onChange={event => setTimezone(event.target.value)}
+            />
 
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Telefones
-                </Typography>
-                {phones.map((phone, index) => (
-                  <Stack
-                    key={`phone-${index}`}
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                  >
-                    <TextField
-                      label={`Telefone ${index + 1}`}
-                      fullWidth
-                      value={phone}
-                      onChange={event =>
-                        updateListItem(
-                          setPhones,
-                          index,
-                          event.target.value,
-                          sanitizePhone
-                        )
-                      }
-                      inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
-                    />
-                    <IconButton
-                      onClick={() => removeListItem(setPhones, index)}
-                    >
-                      <CloseRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                ))}
-                <Button
-                  variant="outlined"
-                  startIcon={<AddRoundedIcon />}
-                  onClick={() => addListItem(setPhones)}
-                  sx={{
-                    alignSelf: "flex-start",
-                    textTransform: "none",
-                    fontWeight: 600,
-                  }}
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                Telefones
+              </Typography>
+              {phones.map((phone, index) => (
+                <Stack
+                  key={`phone-${index}`}
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
                 >
-                  Adicionar telefone
-                </Button>
-              </Stack>
-
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Emails de login
-                </Typography>
-                <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                  Adicione emails secundarios para entrar na mesma conta.
-                </Typography>
-                {emails.map((item, index) => (
-                  <Stack
-                    key={`email-${index}`}
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                  >
-                    <TextField
-                      label={`Email de login ${index + 1}`}
-                      fullWidth
-                      value={item}
-                      onChange={event =>
-                        updateListItem(setEmails, index, event.target.value)
-                      }
-                    />
-                    <IconButton
-                      onClick={() => removeListItem(setEmails, index)}
-                    >
-                      <CloseRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                ))}
-                <Button
-                  variant="outlined"
-                  startIcon={<AddRoundedIcon />}
-                  onClick={() => addListItem(setEmails)}
-                  sx={{
-                    alignSelf: "flex-start",
-                    textTransform: "none",
-                    fontWeight: 600,
-                  }}
-                >
-                  Adicionar email de login
-                </Button>
-              </Stack>
-
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Endereços
-                </Typography>
-                {addresses.map((address, index) => (
-                  <Stack
-                    key={`address-${index}`}
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                  >
-                    <TextField
-                      label={`Endereço ${index + 1}`}
-                      fullWidth
-                      value={address}
-                      onChange={event =>
-                        updateListItem(setAddresses, index, event.target.value)
-                      }
-                    />
-                    <IconButton
-                      component="a"
-                      href={
-                        address
-                          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                              address
-                            )}`
-                          : undefined
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      disabled={!address}
-                    >
-                      <LinkRoundedIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => removeListItem(setAddresses, index)}
-                    >
-                      <CloseRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                ))}
-                <Button
-                  variant="outlined"
-                  startIcon={<AddRoundedIcon />}
-                  onClick={() => addListItem(setAddresses)}
-                  sx={{
-                    alignSelf: "flex-start",
-                    textTransform: "none",
-                    fontWeight: 600,
-                  }}
-                >
-                  Adicionar endereco
-                </Button>
-              </Stack>
-
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Comentarios
-                </Typography>
-                {comments.map((comment, index) => (
-                  <Stack
-                    key={`comment-${index}`}
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                  >
-                    <TextField
-                      label={`Comentario ${index + 1}`}
-                      fullWidth
-                      multiline
-                      minRows={2}
-                      value={comment}
-                      onChange={event =>
-                        updateListItem(setComments, index, event.target.value)
-                      }
-                    />
-                    <IconButton
-                      onClick={() => removeListItem(setComments, index)}
-                    >
-                      <CloseRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                ))}
-                <Button
-                  variant="outlined"
-                  startIcon={<AddRoundedIcon />}
-                  onClick={() => addListItem(setComments)}
-                  sx={{
-                    alignSelf: "flex-start",
-                    textTransform: "none",
-                    fontWeight: 600,
-                  }}
-                >
-                  Adicionar comentario
-                </Button>
-              </Stack>
-
+                  <TextField
+                    label={`Telefone ${index + 1}`}
+                    fullWidth
+                    value={phone}
+                    onChange={event =>
+                      updateListItem(
+                        setPhones,
+                        index,
+                        event.target.value,
+                        sanitizePhone
+                      )
+                    }
+                    inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+                  />
+                  <IconButton onClick={() => removeListItem(setPhones, index)}>
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              ))}
               <Button
                 variant="outlined"
-                size="large"
-                onClick={saveProfile}
-                sx={{ alignSelf: "flex-start" }}
+                startIcon={<AddRoundedIcon />}
+                onClick={() => addListItem(setPhones)}
+                sx={{
+                  alignSelf: "flex-start",
+                  textTransform: "none",
+                  fontWeight: 600,
+                }}
               >
-                Salvar alterações
+                Adicionar telefone
               </Button>
             </Stack>
-          </AccordionDetails>
-        </Accordion>
 
-        <Accordion
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                Emails de login
+              </Typography>
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                Adicione emails secundarios para entrar na mesma conta.
+              </Typography>
+              {emails.map((item, index) => (
+                <Stack
+                  key={`email-${index}`}
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                >
+                  <TextField
+                    label={`Email de login ${index + 1}`}
+                    fullWidth
+                    value={item}
+                    onChange={event =>
+                      updateListItem(setEmails, index, event.target.value)
+                    }
+                  />
+                  <IconButton onClick={() => removeListItem(setEmails, index)}>
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              ))}
+              <Button
+                variant="outlined"
+                startIcon={<AddRoundedIcon />}
+                onClick={() => addListItem(setEmails)}
+                sx={{
+                  alignSelf: "flex-start",
+                  textTransform: "none",
+                  fontWeight: 600,
+                }}
+              >
+                Adicionar email de login
+              </Button>
+            </Stack>
+
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                Endereços
+              </Typography>
+              {addresses.map((address, index) => (
+                <Stack
+                  key={`address-${index}`}
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                >
+                  <TextField
+                    label={`Endereço ${index + 1}`}
+                    fullWidth
+                    value={address}
+                    onChange={event =>
+                      updateListItem(setAddresses, index, event.target.value)
+                    }
+                  />
+                  <IconButton
+                    component="a"
+                    href={
+                      address
+                        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            address
+                          )}`
+                        : undefined
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    disabled={!address}
+                  >
+                    <LinkRoundedIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => removeListItem(setAddresses, index)}
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              ))}
+              <Button
+                variant="outlined"
+                startIcon={<AddRoundedIcon />}
+                onClick={() => addListItem(setAddresses)}
+                sx={{
+                  alignSelf: "flex-start",
+                  textTransform: "none",
+                  fontWeight: 600,
+                }}
+              >
+                Adicionar endereco
+              </Button>
+            </Stack>
+
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                Comentarios
+              </Typography>
+              {comments.map((comment, index) => (
+                <Stack
+                  key={`comment-${index}`}
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                >
+                  <TextField
+                    label={`Comentario ${index + 1}`}
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    value={comment}
+                    onChange={event =>
+                      updateListItem(setComments, index, event.target.value)
+                    }
+                  />
+                  <IconButton
+                    onClick={() => removeListItem(setComments, index)}
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              ))}
+              <Button
+                variant="outlined"
+                startIcon={<AddRoundedIcon />}
+                onClick={() => addListItem(setComments)}
+                sx={{
+                  alignSelf: "flex-start",
+                  textTransform: "none",
+                  fontWeight: 600,
+                }}
+              >
+                Adicionar comentario
+              </Button>
+            </Stack>
+
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={saveProfile}
+              sx={{ alignSelf: "flex-start" }}
+            >
+              Salvar alterações
+            </Button>
+          </Stack>
+        </AppAccordion>
+
+        <AppAccordion
           expanded={expanded === "notifications"}
           onChange={(_, isExpanded) =>
             setExpanded(isExpanded ? "notifications" : false)
           }
+          title="Notificações"
         >
-          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-            <Typography variant="h6">Notificações</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2.5}>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                  gap: 2,
-                }}
-              >
-                <Paper
-                  variant="outlined"
-                  onClick={() =>
-                    setPreferences(prev => ({
-                      ...prev,
-                      notifyEmail: !prev.notifyEmail,
-                    }))
-                  }
-                  sx={theme => ({
-                    p: 2.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                >
-                  <Stack spacing={1.5}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 2,
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        Notificações por email
-                      </Typography>
-                      <ToggleCheckbox
-                        checked={preferences.notifyEmail}
-                        onChange={event =>
-                          setPreferences(prev => ({
-                            ...prev,
-                            notifyEmail: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Receba alertas relevantes no email.
-                    </Typography>
-                  </Stack>
-                </Paper>
-                <Paper
-                  variant="outlined"
-                  onClick={() =>
-                    setPreferences(prev => ({
-                      ...prev,
-                      notifyMentions: !prev.notifyMentions,
-                    }))
-                  }
-                  sx={theme => ({
-                    p: 2.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                >
-                  <Stack spacing={1.5}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 2,
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        Mencoes e atribuicoes
-                      </Typography>
-                      <ToggleCheckbox
-                        checked={preferences.notifyMentions}
-                        onChange={event =>
-                          setPreferences(prev => ({
-                            ...prev,
-                            notifyMentions: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Avise quando voce for mencionado em tarefas.
-                    </Typography>
-                  </Stack>
-                </Paper>
-                <Paper
-                  variant="outlined"
-                  onClick={() =>
-                    setPreferences(prev => ({
-                      ...prev,
-                      notifyPipelineUpdates: !prev.notifyPipelineUpdates,
-                    }))
-                  }
-                  sx={theme => ({
-                    p: 2.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                >
-                  <Stack spacing={1.5}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 2,
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        Atualizacoes da pipeline
-                      </Typography>
-                      <ToggleCheckbox
-                        checked={preferences.notifyPipelineUpdates}
-                        onChange={event =>
-                          setPreferences(prev => ({
-                            ...prev,
-                            notifyPipelineUpdates: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Movimentacoes e mudancas de status.
-                    </Typography>
-                  </Stack>
-                </Paper>
-                <Paper
-                  variant="outlined"
-                  onClick={() =>
-                    setPreferences(prev => ({
-                      ...prev,
-                      notifyFinanceAlerts: !prev.notifyFinanceAlerts,
-                    }))
-                  }
-                  sx={theme => ({
-                    p: 2.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                >
-                  <Stack spacing={1.5}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 2,
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        Alertas financeiros
-                      </Typography>
-                      <ToggleCheckbox
-                        checked={preferences.notifyFinanceAlerts}
-                        onChange={event =>
-                          setPreferences(prev => ({
-                            ...prev,
-                            notifyFinanceAlerts: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Limites e variacoes relevantes.
-                    </Typography>
-                  </Stack>
-                </Paper>
-                <Paper
-                  variant="outlined"
-                  onClick={() =>
-                    setPreferences(prev => ({
-                      ...prev,
-                      notifyWeeklySummary: !prev.notifyWeeklySummary,
-                    }))
-                  }
-                  sx={theme => ({
-                    p: 2.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                >
-                  <Stack spacing={1.5}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 2,
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        Resumo semanal
-                      </Typography>
-                      <ToggleCheckbox
-                        checked={preferences.notifyWeeklySummary}
-                        onChange={event =>
-                          setPreferences(prev => ({
-                            ...prev,
-                            notifyWeeklySummary: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Relatório semanal da conta.
-                    </Typography>
-                  </Stack>
-                </Paper>
-                <Paper
-                  variant="outlined"
-                  onClick={() =>
-                    setPreferences(prev => ({
-                      ...prev,
-                      notifyProductUpdates: !prev.notifyProductUpdates,
-                    }))
-                  }
-                  sx={theme => ({
-                    p: 2.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                >
-                  <Stack spacing={1.5}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 2,
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        Novidades do produto
-                      </Typography>
-                      <ToggleCheckbox
-                        checked={preferences.notifyProductUpdates}
-                        onChange={event =>
-                          setPreferences(prev => ({
-                            ...prev,
-                            notifyProductUpdates: event.target.checked,
-                          }))
-                        }
-                        onClick={event => event.stopPropagation()}
-                      />
-                    </Box>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Novos recursos e melhorias.
-                    </Typography>
-                  </Stack>
-                </Paper>
-              </Box>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion
-          expanded={expanded === "modules"}
-          onChange={(_, isExpanded) =>
-            setExpanded(isExpanded ? "modules" : false)
-          }
-        >
-          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-            <Typography variant="h6">Modulos</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2.5}>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                  gap: 2,
-                }}
-              >
-                {(
-                  Object.keys(coreModuleLabels) as Array<
-                    | "modulePipeline"
-                    | "moduleFinance"
-                    | "moduleContacts"
-                    | "moduleCalendar"
-                    | "moduleNotes"
-                  >
-                ).map(key => (
-                  <Paper
-                    key={key}
-                    variant="outlined"
-                    onClick={() => requestModuleToggle(key, !preferences[key])}
-                    sx={theme => ({
-                      p: 2.5,
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                  >
-                    <Stack spacing={1.5}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 2,
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: 600 }}
-                        >
-                          {coreModuleLabels[key].title}
-                        </Typography>
-                        <ToggleCheckbox
-                          checked={preferences[key]}
-                          onClick={event => {
-                            event.stopPropagation();
-                            requestModuleToggle(key, !preferences[key]);
-                          }}
-                          onChange={() => {}}
-                        />
-                      </Box>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        {coreModuleLabels[key].description}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        {coreModuleLabels[key].price}
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                ))}
-              </Box>
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Modulos administrativos
-                </Typography>
-                {accessModulesToShow.length ? (
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                      gap: 2,
-                    }}
-                  >
-                    {accessModulesToShow.map(module => (
-                      <Paper
-                        key={module.id}
-                        variant="outlined"
-                        onClick={() =>
-                          requestAccessModuleToggle(module, !module.enabled)
-                        }
-                        sx={theme => ({
-                          p: 2,
-                          cursor: "pointer",
-                          ...interactiveCardSx(theme),
-                        })}
-                      >
-                        <Stack spacing={1}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: 2,
-                            }}
-                          >
-                            <Typography
-                              variant="subtitle2"
-                              sx={{ fontWeight: 600 }}
-                            >
-                              {module.name}
-                            </Typography>
-                            <ToggleCheckbox
-                              checked={module.enabled}
-                              disabled={!canToggleAccessModules}
-                              onClick={event => {
-                                event.stopPropagation();
-                                requestAccessModuleToggle(
-                                  module,
-                                  !module.enabled
-                                );
-                              }}
-                              onChange={() => {}}
-                            />
-                          </Box>
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "text.secondary" }}
-                          >
-                            {module.description}
-                          </Typography>
-                        </Stack>
-                      </Paper>
-                    ))}
-                  </Box>
-                ) : (
-                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Nenhum módulo adicional encontrado.
-                  </Typography>
-                )}
-              </Stack>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion
-          expanded={expanded === "security"}
-          onChange={(_, isExpanded) =>
-            setExpanded(isExpanded ? "security" : false)
-          }
-        >
-          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-            <Typography variant="h6">Senha</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={3}>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                  gap: 2,
-                }}
-              >
-                <TextField label="Senha atual" type="password" fullWidth />
-                <TextField label="Nova senha" type="password" fullWidth />
-              </Box>
-              <Button
-                variant="outlined"
-                size="large"
-                sx={{ alignSelf: "flex-start" }}
-              >
-                Atualizar senha
-              </Button>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion
-          expanded={expanded === "account"}
-          onChange={(_, isExpanded) =>
-            setExpanded(isExpanded ? "account" : false)
-          }
-        >
-          <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-            <Typography variant="h6">Conta</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2.5}>
+          <Stack spacing={2.5}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: 2,
+              }}
+            >
               <Paper
                 variant="outlined"
                 onClick={() =>
                   setPreferences(prev => ({
                     ...prev,
-                    singleSession: !prev.singleSession,
+                    notifyEmail: !prev.notifyEmail,
                   }))
                 }
                 sx={theme => ({
                   p: 2.5,
                   cursor: "pointer",
-                  maxWidth: 420,
                   ...interactiveCardSx(theme),
                 })}
               >
@@ -1513,14 +1033,14 @@ export default function Profile() {
                     }}
                   >
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                      Sessao unica
+                      Notificações por email
                     </Typography>
                     <ToggleCheckbox
-                      checked={preferences.singleSession}
+                      checked={preferences.notifyEmail}
                       onChange={event =>
                         setPreferences(prev => ({
                           ...prev,
-                          singleSession: event.target.checked,
+                          notifyEmail: event.target.checked,
                         }))
                       }
                       onClick={event => event.stopPropagation()}
@@ -1530,32 +1050,482 @@ export default function Profile() {
                     variant="caption"
                     sx={{ color: "text.secondary" }}
                   >
-                    Desconecte outras sessoes ao entrar novamente.
+                    Receba alertas relevantes no email.
                   </Typography>
                 </Stack>
               </Paper>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <Button
-                  color="error"
-                  variant="contained"
-                  size="large"
-                  onClick={handleLogout}
-                  sx={{ textTransform: "none", fontWeight: 600 }}
+              <Paper
+                variant="outlined"
+                onClick={() =>
+                  setPreferences(prev => ({
+                    ...prev,
+                    notifyMentions: !prev.notifyMentions,
+                  }))
+                }
+                sx={theme => ({
+                  p: 2.5,
+                  cursor: "pointer",
+                  ...interactiveCardSx(theme),
+                })}
+              >
+                <Stack spacing={1.5}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Mencoes e atribuicoes
+                    </Typography>
+                    <ToggleCheckbox
+                      checked={preferences.notifyMentions}
+                      onChange={event =>
+                        setPreferences(prev => ({
+                          ...prev,
+                          notifyMentions: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
+                    Avise quando voce for mencionado em tarefas.
+                  </Typography>
+                </Stack>
+              </Paper>
+              <Paper
+                variant="outlined"
+                onClick={() =>
+                  setPreferences(prev => ({
+                    ...prev,
+                    notifyPipelineUpdates: !prev.notifyPipelineUpdates,
+                  }))
+                }
+                sx={theme => ({
+                  p: 2.5,
+                  cursor: "pointer",
+                  ...interactiveCardSx(theme),
+                })}
+              >
+                <Stack spacing={1.5}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Atualizacoes da pipeline
+                    </Typography>
+                    <ToggleCheckbox
+                      checked={preferences.notifyPipelineUpdates}
+                      onChange={event =>
+                        setPreferences(prev => ({
+                          ...prev,
+                          notifyPipelineUpdates: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
+                    Movimentacoes e mudancas de status.
+                  </Typography>
+                </Stack>
+              </Paper>
+              <Paper
+                variant="outlined"
+                onClick={() =>
+                  setPreferences(prev => ({
+                    ...prev,
+                    notifyFinanceAlerts: !prev.notifyFinanceAlerts,
+                  }))
+                }
+                sx={theme => ({
+                  p: 2.5,
+                  cursor: "pointer",
+                  ...interactiveCardSx(theme),
+                })}
+              >
+                <Stack spacing={1.5}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Alertas financeiros
+                    </Typography>
+                    <ToggleCheckbox
+                      checked={preferences.notifyFinanceAlerts}
+                      onChange={event =>
+                        setPreferences(prev => ({
+                          ...prev,
+                          notifyFinanceAlerts: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
+                    Limites e variacoes relevantes.
+                  </Typography>
+                </Stack>
+              </Paper>
+              <Paper
+                variant="outlined"
+                onClick={() =>
+                  setPreferences(prev => ({
+                    ...prev,
+                    notifyWeeklySummary: !prev.notifyWeeklySummary,
+                  }))
+                }
+                sx={theme => ({
+                  p: 2.5,
+                  cursor: "pointer",
+                  ...interactiveCardSx(theme),
+                })}
+              >
+                <Stack spacing={1.5}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Resumo semanal
+                    </Typography>
+                    <ToggleCheckbox
+                      checked={preferences.notifyWeeklySummary}
+                      onChange={event =>
+                        setPreferences(prev => ({
+                          ...prev,
+                          notifyWeeklySummary: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
+                    Relatório semanal da conta.
+                  </Typography>
+                </Stack>
+              </Paper>
+              <Paper
+                variant="outlined"
+                onClick={() =>
+                  setPreferences(prev => ({
+                    ...prev,
+                    notifyProductUpdates: !prev.notifyProductUpdates,
+                  }))
+                }
+                sx={theme => ({
+                  p: 2.5,
+                  cursor: "pointer",
+                  ...interactiveCardSx(theme),
+                })}
+              >
+                <Stack spacing={1.5}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Novidades do produto
+                    </Typography>
+                    <ToggleCheckbox
+                      checked={preferences.notifyProductUpdates}
+                      onChange={event =>
+                        setPreferences(prev => ({
+                          ...prev,
+                          notifyProductUpdates: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
+                    Novos recursos e melhorias.
+                  </Typography>
+                </Stack>
+              </Paper>
+            </Box>
+          </Stack>
+        </AppAccordion>
+
+        <AppAccordion
+          expanded={expanded === "modules"}
+          onChange={(_, isExpanded) =>
+            setExpanded(isExpanded ? "modules" : false)
+          }
+          title="Modulos"
+        >
+          <Stack spacing={2.5}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: 2,
+              }}
+            >
+              {(
+                Object.keys(coreModuleLabels) as Array<
+                  | "modulePipeline"
+                  | "moduleFinance"
+                  | "moduleContacts"
+                  | "moduleCalendar"
+                  | "moduleNotes"
                 >
-                  Sair
-                </Button>
-                <Button
+              ).map(key => (
+                <Paper
+                  key={key}
                   variant="outlined"
-                  size="large"
-                  onClick={handleSwitchAccount}
-                  sx={{ textTransform: "none", fontWeight: 600 }}
+                  onClick={() => requestModuleToggle(key, !preferences[key])}
+                  sx={theme => ({
+                    p: 2.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
                 >
-                  Trocar de conta
-                </Button>
-              </Stack>
+                  <Stack spacing={1.5}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {coreModuleLabels[key].title}
+                      </Typography>
+                      <ToggleCheckbox
+                        checked={preferences[key]}
+                        onClick={event => {
+                          event.stopPropagation();
+                          requestModuleToggle(key, !preferences[key]);
+                        }}
+                        onChange={() => {}}
+                      />
+                    </Box>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {coreModuleLabels[key].description}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {coreModuleLabels[key].price}
+                    </Typography>
+                  </Stack>
+                </Paper>
+              ))}
+            </Box>
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                Modulos administrativos
+              </Typography>
+              {accessModulesToShow.length ? (
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 2,
+                  }}
+                >
+                  {accessModulesToShow.map(module => (
+                    <Paper
+                      key={module.id}
+                      variant="outlined"
+                      onClick={() =>
+                        requestAccessModuleToggle(module, !module.enabled)
+                      }
+                      sx={theme => ({
+                        p: 2,
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                    >
+                      <Stack spacing={1}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 2,
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            {module.name}
+                          </Typography>
+                          <ToggleCheckbox
+                            checked={module.enabled}
+                            disabled={!canToggleAccessModules}
+                            onClick={event => {
+                              event.stopPropagation();
+                              requestAccessModuleToggle(
+                                module,
+                                !module.enabled
+                              );
+                            }}
+                            onChange={() => {}}
+                          />
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary" }}
+                        >
+                          {module.description}
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  Nenhum módulo adicional encontrado.
+                </Typography>
+              )}
             </Stack>
-          </AccordionDetails>
-        </Accordion>
+          </Stack>
+        </AppAccordion>
+
+        <AppAccordion
+          expanded={expanded === "security"}
+          onChange={(_, isExpanded) =>
+            setExpanded(isExpanded ? "security" : false)
+          }
+          title="Senha"
+        >
+          <Stack spacing={3}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: 2,
+              }}
+            >
+              <TextField label="Senha atual" type="password" fullWidth />
+              <TextField label="Nova senha" type="password" fullWidth />
+            </Box>
+            <Button
+              variant="outlined"
+              size="large"
+              sx={{ alignSelf: "flex-start" }}
+            >
+              Atualizar senha
+            </Button>
+          </Stack>
+        </AppAccordion>
+
+        <AppAccordion
+          expanded={expanded === "account"}
+          onChange={(_, isExpanded) =>
+            setExpanded(isExpanded ? "account" : false)
+          }
+          title="Conta"
+        >
+          <Stack spacing={2.5}>
+            <Paper
+              variant="outlined"
+              onClick={() =>
+                setPreferences(prev => ({
+                  ...prev,
+                  singleSession: !prev.singleSession,
+                }))
+              }
+              sx={theme => ({
+                p: 2.5,
+                cursor: "pointer",
+                maxWidth: 420,
+                ...interactiveCardSx(theme),
+              })}
+            >
+              <Stack spacing={1.5}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 2,
+                  }}
+                >
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Sessao unica
+                  </Typography>
+                  <ToggleCheckbox
+                    checked={preferences.singleSession}
+                    onChange={event =>
+                      setPreferences(prev => ({
+                        ...prev,
+                        singleSession: event.target.checked,
+                      }))
+                    }
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Box>
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  Desconecte outras sessoes ao entrar novamente.
+                </Typography>
+              </Stack>
+            </Paper>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <Button
+                color="error"
+                variant="contained"
+                size="large"
+                onClick={handleLogout}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                Sair
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={handleSwitchAccount}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                Trocar de conta
+              </Button>
+            </Stack>
+          </Stack>
+        </AppAccordion>
       </Stack>
 
       <Dialog
@@ -1855,6 +1825,6 @@ export default function Profile() {
           </Button>
         }
       />
-    </Box>
+    </PageContainer>
   );
 }

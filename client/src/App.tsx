@@ -23,6 +23,7 @@ import { Link as RouterLink, Route, Switch, useLocation } from "wouter";
 import theme from "./theme";
 import api from "./api";
 import Login from "./pages/Login";
+import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import AccessManagement from "./pages/AccessManagement";
 import NotFound from "./pages/NotFound";
@@ -118,9 +119,8 @@ function App() {
         if (stored) {
           try {
             const parsed = JSON.parse(stored) as { name?: string };
-            setIsLoggedIn(true);
+            setIsLoggedIn(false);
             setUserName(parsed?.name || "");
-            return;
           } catch {
             window.localStorage.removeItem("sc_user");
           }
@@ -203,7 +203,7 @@ function App() {
     if (isLoggedIn) {
       return;
     }
-    if (!["/", "/login", "/signup"].includes(location)) {
+    if (!["/", "/login", "/signup", "/support"].includes(location)) {
       setLocation("/login");
     }
   }, [isLoggedIn, location, setLocation]);
@@ -237,10 +237,11 @@ function App() {
   }, [isLoggedIn, location, moduleAccess, setLocation]);
 
   const isActive = (href: string) => {
+    if (href === "/") {
+      return location === "/";
+    }
     if (href === "/login") {
-      return (
-        location === "/" || location === "/login" || location === "/signup"
-      );
+      return location === "/login" || location === "/signup";
     }
     if (href === "/home") {
       return location === "/home";
@@ -273,7 +274,11 @@ function App() {
         }
         return true;
       })
-    : [{ label: "Home", href: "/login" }];
+    : [
+        { label: "Início", href: "/" },
+        { label: "Suporte", href: "/support" },
+        { label: "Entrar", href: "/login" },
+      ];
 
   const breadcrumbMap: Record<string, string> = {
     "/home": "Home",
@@ -294,7 +299,8 @@ function App() {
   const normalizeBreadcrumbLabel = (value: string) =>
     value.replace(/\s+/g, " ").trim();
 
-  const showBreadcrumbs = !["/", "/login", "/signup"].includes(location);
+  const showBreadcrumbs =
+    isLoggedIn && !["/", "/login", "/signup"].includes(location);
   const currentLabel = normalizeBreadcrumbLabel(
     breadcrumbMap[location] ?? "Página"
   );
@@ -546,7 +552,7 @@ function App() {
             >
               <Button
                 component={RouterLink}
-                href="/home"
+                href={isLoggedIn ? "/home" : "/"}
                 variant="text"
                 color="inherit"
                 sx={{
@@ -648,17 +654,17 @@ function App() {
                     href="/profile"
                     variant="text"
                     color="inherit"
-                    sx={{
+                    sx={theme => ({
                       minWidth: 0,
                       p: 0,
-                      borderRadius: "999px",
+                      borderRadius: theme.shape.borderRadius,
                       border: isActive("/profile")
                         ? "1px solid rgba(34, 201, 166, 0.6)"
                         : "1px solid transparent",
                       backgroundColor: isActive("/profile")
                         ? "rgba(34, 201, 166, 0.12)"
                         : "transparent",
-                    }}
+                    })}
                   >
                     <Avatar
                       sx={{
@@ -824,7 +830,7 @@ function App() {
               }}
             >
               <Switch>
-                <Route path="/" component={Login} />
+                <Route path="/" component={Home} />
                 <Route path="/login" component={Login} />
                 <Route path="/signup" component={Login} />
                 <Route path="/home" component={Dashboard} />

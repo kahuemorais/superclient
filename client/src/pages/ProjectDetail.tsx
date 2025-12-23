@@ -1,7 +1,21 @@
-import { useParams, useLocation } from "wouter";
-import { ArrowLeft, ExternalLink } from "lucide-react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import {
+  Box,
+  Button,
+  Chip,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  Typography,
+} from "@mui/material";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import { useLocation, useParams } from "wouter";
+import CardSection from "../components/layout/CardSection";
+import PageContainer from "../components/layout/PageContainer";
 
 const projectsData: Record<string, any> = {
   picpay: {
@@ -149,151 +163,182 @@ export default function ProjectDetail() {
 
   if (!project || !projectsData[project]) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container py-20 text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Project not found
-          </h1>
-          <button
-            onClick={() => setLocation("/")}
-            className="inline-flex items-center gap-2 text-accent hover:gap-3 transition-all font-semibold"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to home
-          </button>
-        </div>
-        <Footer />
-      </div>
+      <PageContainer>
+        <Stack spacing={2.5} sx={{ width: "100%", maxWidth: 900, mx: "auto" }}>
+          <Stack spacing={0.75}>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              Projeto não encontrado
+            </Typography>
+            <Typography variant="body1" sx={{ color: "text.secondary" }}>
+              Esse link não existe ou foi removido.
+            </Typography>
+          </Stack>
+          <Box>
+            <Button
+              startIcon={<ArrowBackRoundedIcon />}
+              variant="outlined"
+              onClick={() => setLocation("/")}
+              sx={{ textTransform: "none", fontWeight: 700 }}
+            >
+              Voltar para o início
+            </Button>
+          </Box>
+        </Stack>
+      </PageContainer>
     );
   }
 
   const data = projectsData[project];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-
-      <div className="pt-32 pb-20">
-        <div className="container max-w-4xl mx-auto">
-          <button
-            onClick={() => setLocation("/#projects")}
-            className="inline-flex items-center gap-2 text-accent hover:gap-3 transition-all font-semibold mb-8"
+    <PageContainer>
+      <Stack spacing={2} sx={{ width: "100%", maxWidth: 900, mx: "auto" }}>
+        <Box>
+          <Button
+            startIcon={<ArrowBackRoundedIcon />}
+            variant="text"
+            onClick={() => setLocation("/")}
+            sx={{ textTransform: "none", fontWeight: 700 }}
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to projects
-          </button>
+            Voltar
+          </Button>
+        </Box>
 
-          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-4">
+        <Stack spacing={1}>
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: 900, letterSpacing: -0.3 }}
+          >
             {data.title}
-          </h1>
-          <p className="text-xl text-foreground/70 mb-8">{data.subtitle}</p>
-
-          <div className="flex flex-wrap gap-2 mb-12">
+          </Typography>
+          <Typography variant="body1" sx={{ color: "text.secondary" }}>
+            {data.subtitle}
+          </Typography>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
             {data.tags.map((tag: string) => (
-              <span
-                key={tag}
-                className="px-4 py-2 bg-accent/10 border border-accent/30 rounded-full text-sm text-accent font-medium"
-              >
-                {tag}
-              </span>
+              <Chip key={tag} label={tag} size="small" variant="outlined" />
             ))}
-          </div>
+          </Stack>
+        </Stack>
 
-          {data.image && (
-            <img
+        {data.image ? (
+          <CardSection size="flush" sx={{ overflow: "hidden" }}>
+            <Box
+              component="img"
               src={data.image}
               alt={data.title}
-              className="w-full rounded-[var(--radius-card)] mb-12 border border-border"
+              sx={{ width: "100%", display: "block" }}
             />
-          )}
+          </CardSection>
+        ) : null}
 
-          <div className="space-y-12">
-            <section>
-              <h2 className="text-3xl font-bold text-foreground mb-4">
+        <CardSection>
+          <Stack spacing={2.5}>
+            <Stack spacing={0.75}>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 Overview
-              </h2>
-              <p className="text-lg text-foreground/75 leading-relaxed">
+              </Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 {data.overview}
-              </p>
-            </section>
+              </Typography>
+            </Stack>
 
-            <section>
-              <h2 className="text-3xl font-bold text-foreground mb-4">
+            <Divider />
+
+            <Stack spacing={0.75}>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 Challenge
-              </h2>
-              <p className="text-lg text-foreground/75 leading-relaxed">
+              </Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 {data.challenge}
-              </p>
-            </section>
+              </Typography>
+            </Stack>
 
-            <section>
-              <h2 className="text-3xl font-bold text-foreground mb-4">
+            <Divider />
+
+            <Stack spacing={0.75}>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 Solution
-              </h2>
-              <p className="text-lg text-foreground/75 leading-relaxed">
+              </Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 {data.solution}
-              </p>
-            </section>
+              </Typography>
+            </Stack>
 
-            <section>
-              <h2 className="text-3xl font-bold text-foreground mb-6">
-                Results
-              </h2>
-              <ul className="space-y-3">
-                {data.results.map((result: string) => (
-                  <li
-                    key={result}
-                    className="flex items-start gap-3 text-lg text-foreground/75"
-                  >
-                    <span className="text-accent font-bold mt-1">✓</span>
-                    {result}
-                  </li>
-                ))}
-              </ul>
-            </section>
+            {Array.isArray(data.results) && data.results.length ? (
+              <>
+                <Divider />
+                <Stack spacing={1}>
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                    Results
+                  </Typography>
+                  <List dense disablePadding>
+                    {data.results.map((result: string) => (
+                      <ListItem key={result} disableGutters>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          <CheckRoundedIcon fontSize="small" color="primary" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={result}
+                          primaryTypographyProps={{
+                            variant: "body2",
+                            sx: { color: "text.secondary" },
+                          }}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Stack>
+              </>
+            ) : null}
 
-            <section>
-              <h2 className="text-3xl font-bold text-foreground mb-4">
+            <Divider />
+
+            <Stack spacing={0.75}>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 Process
-              </h2>
-              <p className="text-lg text-foreground/75 leading-relaxed">
+              </Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 {data.process}
-              </p>
-            </section>
+              </Typography>
+            </Stack>
 
-            <section>
-              <h2 className="text-3xl font-bold text-foreground mb-6">
-                Skills Used
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {data.skills.map((skill: string) => (
-                  <div
-                    key={skill}
-                    className="px-4 py-3 bg-card border border-border rounded-[var(--radius-card)] text-sm text-foreground/70 font-medium"
+            {Array.isArray(data.skills) && data.skills.length ? (
+              <>
+                <Divider />
+                <Stack spacing={1}>
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                    Skills Used
+                  </Typography>
+                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    {data.skills.map((skill: string) => (
+                      <Chip key={skill} label={skill} size="small" />
+                    ))}
+                  </Stack>
+                </Stack>
+              </>
+            ) : null}
+
+            {typeof data.link === "string" && data.link ? (
+              <>
+                <Divider />
+                <Box>
+                  <Button
+                    href={data.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="contained"
+                    endIcon={<OpenInNewRoundedIcon />}
+                    sx={{ textTransform: "none", fontWeight: 800 }}
                   >
-                    {skill}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="pt-8 border-t border-border">
-              <a
-                href={data.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-[var(--radius-button)] font-semibold hover:opacity-90 transition-opacity shadow-md hover:shadow-lg"
-              >
-                View on Behance
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </section>
-          </div>
-        </div>
-      </div>
-
-      <Footer />
-    </div>
+                    Ver no Behance
+                  </Button>
+                </Box>
+              </>
+            ) : null}
+          </Stack>
+        </CardSection>
+      </Stack>
+    </PageContainer>
   );
 }

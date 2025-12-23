@@ -1,8 +1,10 @@
 import { createTheme } from "@mui/material/styles";
 
+import { APP_RADIUS_PX } from "./designTokens";
+
 const theme = createTheme({
   shape: {
-    borderRadius: 12,
+    borderRadius: APP_RADIUS_PX,
   },
   palette: {
     mode: "dark",
@@ -42,7 +44,7 @@ const theme = createTheme({
         root: ({ theme }) => ({
           textTransform: "none",
           fontWeight: 600,
-          borderRadius: 999,
+          borderRadius: theme.shape.borderRadius,
           paddingInline: theme.spacing(2.5),
         }),
       },
@@ -60,8 +62,9 @@ const theme = createTheme({
         elevation: 0,
       },
       styleOverrides: {
-        root: () => ({
+        root: ({ theme }) => ({
           backgroundImage: "none",
+          borderRadius: theme.shape.borderRadius,
         }),
         outlined: ({ theme }) => ({
           borderColor: theme.palette.divider,
@@ -98,8 +101,10 @@ const theme = createTheme({
       styleOverrides: {
         root: () => ({
           minHeight: 56,
+          backgroundColor: "transparent",
           "&.Mui-expanded": {
             minHeight: 56,
+            backgroundColor: "transparent",
           },
         }),
         content: {

@@ -1,56 +1,52 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Alert,
+  Autocomplete,
   Box,
   Button,
   Chip,
   Checkbox,
   Dialog,
   DialogContent,
-  Autocomplete,
   IconButton,
   InputAdornment,
   MenuItem,
   Paper,
   Snackbar,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Stack,
   TextField,
   Tooltip,
   Typography,
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import SettingsIconButton from "../components/SettingsIconButton";
-import PageContainer from "../components/layout/PageContainer";
-import AppCard from "../components/layout/AppCard";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  BarChart,
   Bar,
+  BarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import { useLocation } from "wouter";
 import api from "../api";
+import SettingsIconButton from "../components/SettingsIconButton";
 import ToggleCheckbox from "../components/ToggleCheckbox";
+import AppAccordion from "../components/layout/AppAccordion";
+import CardSection from "../components/layout/CardSection";
+import PageContainer from "../components/layout/PageContainer";
 import { interactiveCardSx } from "../styles/interactiveCard";
-
 type Category = {
   id: string;
   name: string;
@@ -833,7 +829,7 @@ export default function Financas() {
 
   const chartsSection = (
     <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-      <AppCard sx={{ p: 3, flex: 1, overflow: "hidden" }}>
+      <CardSection sx={{ flex: 1, overflow: "hidden" }}>
         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
           Gastos por categoria
         </Typography>
@@ -867,9 +863,9 @@ export default function Financas() {
             </PieChart>
           </ResponsiveContainer>
         </Box>
-      </AppCard>
+      </CardSection>
 
-      <AppCard sx={{ p: 3, flex: 1, overflow: "hidden" }}>
+      <CardSection sx={{ flex: 1, overflow: "hidden" }}>
         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
           Evolucao mensal
         </Typography>
@@ -893,12 +889,12 @@ export default function Financas() {
             </BarChart>
           </ResponsiveContainer>
         </Box>
-      </AppCard>
+      </CardSection>
     </Stack>
   );
 
   const tableSection = (
-    <Paper variant="outlined" sx={{ p: 3 }}>
+    <CardSection size="md">
       <Stack
         direction={{ xs: "column", md: "row" }}
         spacing={2}
@@ -1091,7 +1087,7 @@ export default function Financas() {
           </TableBody>
         </Table>
       </TableContainer>
-    </Paper>
+    </CardSection>
   );
 
   return (
@@ -1108,16 +1104,38 @@ export default function Financas() {
             <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
               Finanças
             </Typography>
-            <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setEditingExpenseId(null);
+                  setTitle("");
+                  setAmount("");
+                  setComment("");
+                  setCategoryId(categories[0]?.id || "");
+                  setContactIds([]);
+                  setOpen(true);
+                }}
+                sx={{
+                  display: { xs: "none", sm: "inline-flex" },
+                  textTransform: "none",
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Adicionar gasto
+              </Button>
+              <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+            </Stack>
           </Stack>
           <Box
             sx={{
-              display: "flex",
-              justifyContent: { xs: "stretch", sm: "flex-end" },
+              display: { xs: "flex", sm: "none" },
+              justifyContent: "stretch",
             }}
           >
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={() => {
                 setEditingExpenseId(null);
                 setTitle("");
@@ -1130,7 +1148,7 @@ export default function Financas() {
               sx={{
                 textTransform: "none",
                 fontWeight: 600,
-                width: { xs: "100%", sm: "auto" },
+                width: "100%",
               }}
             >
               Adicionar gasto
@@ -1304,346 +1322,312 @@ export default function Financas() {
               </IconButton>
             </Box>
 
-            <Accordion
+            <AppAccordion
               expanded={settingsAccordion === "categories"}
               onChange={(_, isExpanded) =>
                 setSettingsAccordion(isExpanded ? "categories" : false)
               }
-              elevation={0}
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
+              title="Categorias"
             >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Categorias
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={1.5}>
-                  {editingCategoryId ? (
-                    <Paper variant="outlined" sx={{ p: 2 }}>
-                      <Stack spacing={1.5}>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: 600 }}
-                        >
-                          Editar categoria
-                        </Typography>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={editingCategoryName}
-                          onChange={event =>
-                            setEditingCategoryName(event.target.value)
-                          }
-                        />
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => {
-                                setEditingCategoryColor(color);
-                              }}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth:
-                                  editingCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Stack
-                          direction="row"
-                          spacing={2}
-                          justifyContent="flex-end"
-                        >
-                          <Button
-                            variant="outlined"
-                            onClick={cancelEditCategory}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button variant="contained" onClick={saveCategory}>
-                            Salvar
-                          </Button>
-                        </Stack>
-                      </Stack>
-                    </Paper>
-                  ) : null}
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {categories.map(cat => (
-                      <Chip
-                        key={cat.id}
-                        label={cat.name}
-                        onClick={() => startEditCategory(cat)}
-                        onDelete={() => handleRemoveCategory(cat.id)}
-                        sx={{
-                          color: "#e6edf3",
-                          backgroundColor: darkenColor(cat.color, 0.5),
-                        }}
-                      />
-                    ))}
-                  </Stack>
-
-                  {editingCategoryId ? null : (
-                    <Box>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary", mb: 1 }}
-                      >
-                        Nova categoria
+              <Stack spacing={1.5}>
+                {editingCategoryId ? (
+                  <CardSection size="xs">
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Editar categoria
                       </Typography>
-                      <Stack spacing={1.5}>
-                        <TextField
-                          label="Nome"
-                          fullWidth
-                          value={newCategoryName}
-                          onChange={event =>
-                            setNewCategoryName(event.target.value)
-                          }
-                        />
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => {
-                                setNewCategoryColor(color);
-                              }}
-                              sx={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 1,
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth: newCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        <Button
-                          variant="outlined"
-                          onClick={handleAddCategory}
-                          startIcon={<AddRoundedIcon />}
-                          sx={{
-                            alignSelf: "flex-start",
-                            textTransform: "none",
-                            fontWeight: 600,
-                          }}
-                        >
-                          Criar categoria
+                      <TextField
+                        label="Nome"
+                        fullWidth
+                        value={editingCategoryName}
+                        onChange={event =>
+                          setEditingCategoryName(event.target.value)
+                        }
+                      />
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        {DEFAULT_COLORS.map(color => (
+                          <Box
+                            key={color}
+                            onClick={() => {
+                              setEditingCategoryColor(color);
+                            }}
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 1,
+                              backgroundColor: color,
+                              borderStyle: "solid",
+                              borderWidth:
+                                editingCategoryColor === color ? 2 : 1,
+                              borderColor: "divider",
+                              cursor: "pointer",
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                      <Stack
+                        direction="row"
+                        spacing={2}
+                        justifyContent="flex-end"
+                      >
+                        <Button variant="outlined" onClick={cancelEditCategory}>
+                          Cancelar
+                        </Button>
+                        <Button variant="contained" onClick={saveCategory}>
+                          Salvar
                         </Button>
                       </Stack>
-                    </Box>
-                  )}
+                    </Stack>
+                  </CardSection>
+                ) : null}
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {categories.map(cat => (
+                    <Chip
+                      key={cat.id}
+                      label={cat.name}
+                      onClick={() => startEditCategory(cat)}
+                      onDelete={() => handleRemoveCategory(cat.id)}
+                      sx={{
+                        color: "#e6edf3",
+                        backgroundColor: darkenColor(cat.color, 0.5),
+                      }}
+                    />
+                  ))}
                 </Stack>
-              </AccordionDetails>
-            </Accordion>
 
-            <Accordion
+                {editingCategoryId ? null : (
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary", mb: 1 }}
+                    >
+                      Nova categoria
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      <TextField
+                        label="Nome"
+                        fullWidth
+                        value={newCategoryName}
+                        onChange={event =>
+                          setNewCategoryName(event.target.value)
+                        }
+                      />
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        {DEFAULT_COLORS.map(color => (
+                          <Box
+                            key={color}
+                            onClick={() => {
+                              setNewCategoryColor(color);
+                            }}
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 1,
+                              backgroundColor: color,
+                              borderStyle: "solid",
+                              borderWidth: newCategoryColor === color ? 2 : 1,
+                              borderColor: "divider",
+                              cursor: "pointer",
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                      <Button
+                        variant="outlined"
+                        onClick={handleAddCategory}
+                        startIcon={<AddRoundedIcon />}
+                        sx={{
+                          alignSelf: "flex-start",
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Criar categoria
+                      </Button>
+                    </Stack>
+                  </Box>
+                )}
+              </Stack>
+            </AppAccordion>
+
+            <AppAccordion
               expanded={settingsAccordion === "table"}
               onChange={(_, isExpanded) =>
                 setSettingsAccordion(isExpanded ? "table" : false)
               }
-              elevation={0}
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "var(--radius-card)",
-                backgroundColor: "background.paper",
-                "&:before": { display: "none" },
-              }}
+              title="Tabela de financas"
             >
-              <AccordionSummary expandIcon={<ExpandMoreRoundedIcon />}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Tabela de financas
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <TextField
-                  select
-                  label="Posição da tabela"
-                  value={tablePosition}
-                  onChange={event =>
-                    setTablePosition(event.target.value as "below" | "above")
+              <TextField
+                select
+                label="Posição da tabela"
+                value={tablePosition}
+                onChange={event =>
+                  setTablePosition(event.target.value as "below" | "above")
+                }
+                fullWidth
+                sx={{ mb: 2 }}
+              >
+                <MenuItem value="below">Abaixo dos gráficos</MenuItem>
+                <MenuItem value="above">Acima dos gráficos</MenuItem>
+              </TextField>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 1.5,
+                }}
+              >
+                <Paper
+                  variant="outlined"
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() =>
+                    setTableFields(prev => ({ ...prev, title: !prev.title }))
                   }
-                  fullWidth
-                  sx={{ mb: 2 }}
                 >
-                  <MenuItem value="below">Abaixo dos gráficos</MenuItem>
-                  <MenuItem value="above">Acima dos gráficos</MenuItem>
-                </TextField>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 1.5,
-                  }}
+                  <Typography variant="subtitle2">Titulo</Typography>
+                  <ToggleCheckbox
+                    checked={tableFields.title}
+                    onChange={event =>
+                      setTableFields(prev => ({
+                        ...prev,
+                        title: event.target.checked,
+                      }))
+                    }
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() =>
+                    setTableFields(prev => ({
+                      ...prev,
+                      category: !prev.category,
+                    }))
+                  }
                 >
-                  <Paper
-                    variant="outlined"
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTableFields(prev => ({ ...prev, title: !prev.title }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Titulo</Typography>
-                    <ToggleCheckbox
-                      checked={tableFields.title}
-                      onChange={event =>
-                        setTableFields(prev => ({
-                          ...prev,
-                          title: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Paper>
-                  <Paper
-                    variant="outlined"
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
+                  <Typography variant="subtitle2">Categoria</Typography>
+                  <ToggleCheckbox
+                    checked={tableFields.category}
+                    onChange={event =>
                       setTableFields(prev => ({
                         ...prev,
-                        category: !prev.category,
+                        category: event.target.checked,
                       }))
                     }
-                  >
-                    <Typography variant="subtitle2">Categoria</Typography>
-                    <ToggleCheckbox
-                      checked={tableFields.category}
-                      onChange={event =>
-                        setTableFields(prev => ({
-                          ...prev,
-                          category: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Paper>
-                  <Paper
-                    variant="outlined"
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() =>
+                    setTableFields(prev => ({
+                      ...prev,
+                      amount: !prev.amount,
+                    }))
+                  }
+                >
+                  <Typography variant="subtitle2">Valor</Typography>
+                  <ToggleCheckbox
+                    checked={tableFields.amount}
+                    onChange={event =>
                       setTableFields(prev => ({
                         ...prev,
-                        amount: !prev.amount,
+                        amount: event.target.checked,
                       }))
                     }
-                  >
-                    <Typography variant="subtitle2">Valor</Typography>
-                    <ToggleCheckbox
-                      checked={tableFields.amount}
-                      onChange={event =>
-                        setTableFields(prev => ({
-                          ...prev,
-                          amount: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Paper>
-                  <Paper
-                    variant="outlined"
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTableFields(prev => ({ ...prev, date: !prev.date }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Data</Typography>
-                    <ToggleCheckbox
-                      checked={tableFields.date}
-                      onChange={event =>
-                        setTableFields(prev => ({
-                          ...prev,
-                          date: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Paper>
-                  <Paper
-                    variant="outlined"
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() =>
+                    setTableFields(prev => ({ ...prev, date: !prev.date }))
+                  }
+                >
+                  <Typography variant="subtitle2">Data</Typography>
+                  <ToggleCheckbox
+                    checked={tableFields.date}
+                    onChange={event =>
                       setTableFields(prev => ({
                         ...prev,
-                        comment: !prev.comment,
+                        date: event.target.checked,
                       }))
                     }
-                  >
-                    <Typography variant="subtitle2">Comentario</Typography>
-                    <ToggleCheckbox
-                      checked={tableFields.comment}
-                      onChange={event =>
-                        setTableFields(prev => ({
-                          ...prev,
-                          comment: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Paper>
-                </Box>
-              </AccordionDetails>
-            </Accordion>
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Paper>
+                <Paper
+                  variant="outlined"
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    cursor: "pointer",
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() =>
+                    setTableFields(prev => ({
+                      ...prev,
+                      comment: !prev.comment,
+                    }))
+                  }
+                >
+                  <Typography variant="subtitle2">Comentario</Typography>
+                  <ToggleCheckbox
+                    checked={tableFields.comment}
+                    onChange={event =>
+                      setTableFields(prev => ({
+                        ...prev,
+                        comment: event.target.checked,
+                      }))
+                    }
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Paper>
+              </Box>
+            </AppAccordion>
 
             <Stack
               direction={{ xs: "column", sm: "row" }}
