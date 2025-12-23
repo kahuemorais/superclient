@@ -426,6 +426,12 @@ export default function Login() {
                   variant="outlined"
                   value={loginEmail}
                   onChange={event => setLoginEmail(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleLogin();
+                    }
+                  }}
                 />
                 <TextField
                   label="Senha"
@@ -434,6 +440,12 @@ export default function Login() {
                   variant="outlined"
                   value={loginPassword}
                   onChange={event => setLoginPassword(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleLogin();
+                    }
+                  }}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">

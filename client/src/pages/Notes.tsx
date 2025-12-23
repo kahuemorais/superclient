@@ -44,6 +44,7 @@ import ToggleCheckbox from "../components/ToggleCheckbox";
 import CardSection from "../components/layout/CardSection";
 import AppAccordion from "../components/layout/AppAccordion";
 import PageContainer from "../components/layout/PageContainer";
+import CategoryFilter from "../components/CategoryFilter";
 import { Link as RouterLink, useLocation } from "wouter";
 
 type NoteCategory = {
@@ -600,6 +601,16 @@ export default function Notes() {
       setActiveSubcategory(null);
     }
   }, [activeCategory, activeSubcategory, subcategories]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && selectedNoteId) {
+        setSelectedNoteId(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedNoteId]);
 
   const activeSubcategories = useMemo(
     () => subcategories.filter(item => item.categoryId === activeCategory),
@@ -1463,14 +1474,10 @@ export default function Notes() {
                     </Stack>
                     <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                       {fieldSettings.showCategories ? (
-                        <Autocomplete
-                          multiple
-                          options={categories}
-                          value={categories.filter(item =>
-                            selectedNote.categoryIds.includes(item.id)
-                          )}
-                          onChange={(_, value) => {
-                            const nextIds = value.map(item => item.id);
+                        <CategoryFilter
+                          categories={categories}
+                          selectedIds={selectedNote.categoryIds}
+                          onChange={nextIds => {
                             updateNote({
                               ...selectedNote,
                               categoryIds: nextIds,
@@ -1478,63 +1485,33 @@ export default function Notes() {
                             });
                             if (nextIds.length) {
                               setActiveCategory(nextIds[0]);
+                              setSelectedNoteId(null);
                             }
                           }}
-                          getOptionLabel={option => option.name}
-                          renderOption={(props, option, { selected }) => (
-                            <li {...props}>
-                              <Checkbox
-                                checked={selected}
-                                size="small"
-                                sx={{ mr: 1 }}
-                              />
-                              {option.name}
-                            </li>
-                          )}
-                          renderInput={params => (
-                            <TextField
-                              {...params}
-                              label="Categorias"
-                              fullWidth
-                            />
-                          )}
+                          label="Categorias"
+                          fullWidth
                           sx={{ minWidth: 240, flex: 1 }}
                         />
                       ) : null}
                       {fieldSettings.showSubcategories ? (
-                        <Autocomplete
-                          multiple
-                          options={subcategories.filter(item =>
+                        <CategoryFilter
+                          categories={subcategories.filter(item =>
                             selectedNote.categoryIds.includes(item.categoryId)
                           )}
-                          value={subcategories.filter(item =>
-                            selectedNote.subcategoryIds.includes(item.id)
-                          )}
-                          onChange={(_, value) =>
+                          selectedIds={selectedNote.subcategoryIds}
+                          onChange={nextIds => {
                             updateNote({
                               ...selectedNote,
-                              subcategoryIds: value.map(item => item.id),
+                              subcategoryIds: nextIds,
                               updatedAt: new Date().toISOString(),
-                            })
-                          }
-                          getOptionLabel={option => option.name}
-                          renderOption={(props, option, { selected }) => (
-                            <li {...props}>
-                              <Checkbox
-                                checked={selected}
-                                size="small"
-                                sx={{ mr: 1 }}
-                              />
-                              {option.name}
-                            </li>
-                          )}
-                          renderInput={params => (
-                            <TextField
-                              {...params}
-                              label="Subcategorias"
-                              fullWidth
-                            />
-                          )}
+                            });
+                            if (nextIds.length) {
+                              setActiveSubcategory(nextIds[0]);
+                              setSelectedNoteId(null);
+                            }
+                          }}
+                          label="Subcategorias"
+                          fullWidth
                           sx={{ minWidth: 240, flex: 1 }}
                         />
                       ) : null}
