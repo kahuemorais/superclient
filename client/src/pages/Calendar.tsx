@@ -1696,42 +1696,40 @@ export default function Calendar() {
             sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
           >
             <Stack direction="row" spacing={1} alignItems="center">
-              {!isSmDown ? (
-                <Button
-                  variant="outlined"
-                  component={RouterLink}
-                  href="/calendario/concluidas"
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
-                    minWidth: 0,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Tarefas feitas
-                </Button>
-              ) : null}
-              {!isSmDown ? (
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    const today = new Date();
-                    setSelectedDate(today);
-                    setSelectedMonth(
-                      new Date(today.getFullYear(), today.getMonth(), 1)
-                    );
-                    setAgendaPage(1);
-                  }}
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
-                    minWidth: 0,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Hoje
-                </Button>
-              ) : null}
+              <Button
+                variant="outlined"
+                size="small"
+                component={RouterLink}
+                href="/calendario/concluidas"
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                  minWidth: 0,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Tarefas feitas
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  const today = new Date();
+                  setSelectedDate(today);
+                  setSelectedMonth(
+                    new Date(today.getFullYear(), today.getMonth(), 1)
+                  );
+                  setAgendaPage(1);
+                }}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                  minWidth: 0,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Hoje
+              </Button>
               <SettingsIconButton
                 onClick={() => setCalendarSettingsOpen(true)}
               />
