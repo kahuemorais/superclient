@@ -4392,6 +4392,12 @@ function RichTextEditor({
   value: string;
   onChange: (nextValue: string) => void;
 }) {
+  const [, setToolbarRenderTick] = useState(0);
+
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkHref, setLinkHref] = useState("");
+  const [linkText, setLinkText] = useState("");
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -4403,7 +4409,7 @@ function RichTextEditor({
       }),
       Underline,
       Link.configure({
-        openOnClick: true,
+        openOnClick: false,
         HTMLAttributes: {
           target: "_blank",
           rel: "noopener noreferrer",
@@ -4467,19 +4473,122 @@ function RichTextEditor({
     }
   }, [editor, value]);
 
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    const rerenderToolbar = () => {
+      setToolbarRenderTick(tick => (tick + 1) % 1_000_000);
+    };
+
+    editor.on("selectionUpdate", rerenderToolbar);
+    editor.on("transaction", rerenderToolbar);
+    editor.on("focus", rerenderToolbar);
+    editor.on("blur", rerenderToolbar);
+
+    return () => {
+      editor.off("selectionUpdate", rerenderToolbar);
+      editor.off("transaction", rerenderToolbar);
+      editor.off("focus", rerenderToolbar);
+      editor.off("blur", rerenderToolbar);
+    };
+  }, [editor]);
+
+  const openLinkDialogFromSelection = () => {
+    if (!editor) {
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").run();
+    const href = String(editor.getAttributes("link")?.href || "");
+    const { from, to } = editor.state.selection;
+    const text = editor.state.doc.textBetween(from, to, " ", " ");
+    setLinkHref(href);
+    setLinkText(text);
+    setLinkDialogOpen(true);
+  };
+
+  const closeLinkDialog = () => {
+    setLinkDialogOpen(false);
+  };
+
+  const applyLinkDialog = () => {
+    if (!editor) {
+      closeLinkDialog();
+      return;
+    }
+    const nextHref = linkHref.trim();
+    const nextText = linkText;
+
+    editor.chain().focus().extendMarkRange("link").run();
+    const { from, to } = editor.state.selection;
+    const hasSelection = from !== to;
+
+    if (!nextHref) {
+      if (hasSelection) {
+        editor.commands.unsetLink();
+      }
+      closeLinkDialog();
+      return;
+    }
+
+    if (!hasSelection) {
+      const basePos = editor.state.selection.from;
+      const textToInsert = (nextText || nextHref).trim();
+      if (!textToInsert) {
+        closeLinkDialog();
+        return;
+      }
+      editor.commands.insertContent(textToInsert);
+      editor.commands.setTextSelection({
+        from: basePos,
+        to: basePos + textToInsert.length,
+      });
+      editor.commands.setLink({ href: nextHref });
+      closeLinkDialog();
+      return;
+    }
+
+    const currentText = editor.state.doc.textBetween(from, to, " ", " ");
+    const desiredText = nextText;
+    if (desiredText && desiredText !== currentText) {
+      editor.commands.insertContentAt({ from, to }, desiredText);
+      editor.commands.setTextSelection({
+        from,
+        to: from + desiredText.length,
+      });
+    }
+
+    editor.commands.setLink({ href: nextHref });
+    closeLinkDialog();
+  };
+
+  const removeLinkInDialog = () => {
+    if (!editor) {
+      closeLinkDialog();
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    closeLinkDialog();
+  };
+
   const iconButtonProps = {
     size: "small" as const,
     sx: {
       border: 1,
       borderColor: "divider",
       backgroundColor: "background.paper",
+      width: 40,
+      height: 40,
+      borderRadius: 9999,
+      p: 0,
       "&:hover": { backgroundColor: "action.hover" },
     },
   };
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" spacing={1} flexWrap="wrap">
+      <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
         <Tooltip title="Negrito" placement="top">
           <IconButton
             {...iconButtonProps}
@@ -4513,14 +4622,7 @@ function RichTextEditor({
         <Tooltip title="Link" placement="top">
           <IconButton
             {...iconButtonProps}
-            onClick={() => {
-              const url = window.prompt("URL do link:");
-              if (url) {
-                editor?.chain().focus().setLink({ href: url }).run();
-              } else if (url === "") {
-                editor?.chain().focus().unsetLink().run();
-              }
-            }}
+            onClick={openLinkDialogFromSelection}
             color={editor?.isActive("link") ? "primary" : "default"}
             aria-label="Link"
           >
@@ -4617,8 +4719,14 @@ function RichTextEditor({
           border: 1,
           borderColor: "divider",
           backgroundColor: "background.paper",
+          minHeight: 180,
+          display: "flex",
+          flexDirection: "column",
+          cursor: "text",
           "& .tiptap": {
-            minHeight: 180,
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
             outline: "none",
             padding: "16px",
           },
@@ -4628,8 +4736,8 @@ function RichTextEditor({
           "& .tiptap em, & .tiptap i": { fontStyle: "italic !important" },
           "& .tiptap strong, & .tiptap b": { fontWeight: "700 !important" },
           "& .tiptap u": { textDecoration: "underline !important" },
-          "& .tiptap a": { 
-            color: "#22c9a6",
+          "& .tiptap a": {
+            color: theme.palette.primary.main,
             textDecoration: "underline",
             cursor: "pointer",
           },
@@ -4664,11 +4772,11 @@ function RichTextEditor({
           "& .tiptap img.ProseMirror-selectednode": {
             outline: "2px solid",
             outlineColor: "primary.main",
-            boxShadow: "0 0 0 4px rgba(34, 201, 166, 0.2)",
+            boxShadow: `0 0 0 4px ${theme.palette.primary.main}33`,
           },
           "& .tiptap p.is-editor-empty:first-of-type::before": {
             content: "attr(data-placeholder)",
-            color: "rgba(230, 237, 243, 0.5)",
+            color: theme.palette.text.disabled,
             float: "left",
             height: 0,
             pointerEvents: "none",
@@ -4677,6 +4785,48 @@ function RichTextEditor({
       >
         <EditorContent editor={editor} />
       </Box>
+
+      <Dialog open={linkDialogOpen} onClose={closeLinkDialog} maxWidth="xs" fullWidth>
+        <DialogContent>
+          <Stack spacing={2}>
+            <Box>
+              <Typography variant="h6">Link</Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                Cole uma URL ou remova o link.
+              </Typography>
+            </Box>
+            <TextField
+              label="URL"
+              autoFocus
+              fullWidth
+              value={linkHref}
+              onChange={event => setLinkHref(event.target.value)}
+            />
+            <TextField
+              label="Texto (opcional)"
+              fullWidth
+              value={linkText}
+              onChange={event => setLinkText(event.target.value)}
+            />
+            <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap">
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={removeLinkInDialog}
+                disabled={!editor?.isActive("link")}
+              >
+                Remover
+              </Button>
+              <Button variant="outlined" onClick={closeLinkDialog}>
+                Cancelar
+              </Button>
+              <Button variant="contained" onClick={applyLinkDialog}>
+                Aplicar
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
     </Stack>
   );
 }
