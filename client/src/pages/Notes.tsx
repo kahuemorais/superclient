@@ -2097,6 +2097,8 @@ function RichTextEditor({
   const linkMenuAnchorElRef = useRef<HTMLAnchorElement | null>(null);
   const skipNextLinkClickRef = useRef(false);
 
+  const [, setToolbarRenderTick] = useState(0);
+
   useEffect(() => {
     slashIndexRef.current = slashIndex;
   }, [slashIndex]);
@@ -2335,6 +2337,28 @@ function RichTextEditor({
       onChange(editor.getHTML());
     },
   });
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    const rerenderToolbar = () => {
+      setToolbarRenderTick(tick => (tick + 1) % 1_000_000);
+    };
+
+    editor.on("selectionUpdate", rerenderToolbar);
+    editor.on("transaction", rerenderToolbar);
+    editor.on("focus", rerenderToolbar);
+    editor.on("blur", rerenderToolbar);
+
+    return () => {
+      editor.off("selectionUpdate", rerenderToolbar);
+      editor.off("transaction", rerenderToolbar);
+      editor.off("focus", rerenderToolbar);
+      editor.off("blur", rerenderToolbar);
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (!autoFocus) {
