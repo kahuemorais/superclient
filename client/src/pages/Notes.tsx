@@ -679,13 +679,25 @@ export default function Notes() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && selectedNoteId) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (emojiPickerAnchor) {
+        event.preventDefault();
+        event.stopPropagation();
+        setEmojiPickerAnchor(null);
+        setEmojiSearch("");
+        return;
+      }
+
+      if (selectedNoteId) {
         setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNoteId, isArchiveView, setLocation]);
+  }, [emojiPickerAnchor, selectedNoteId, isArchiveView, setLocation]);
 
   const stripHtml = (value: string) => value.replace(/<[^>]+>/g, " ");
 
@@ -1068,11 +1080,7 @@ export default function Notes() {
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
-                ...(depth > 0
-                  ? {
-                      color: "text.secondary",
-                    }
-                  : null),
+                color: "text.primary",
               }}
             >
               {note.emoji} {note.title || "Sem título"}
