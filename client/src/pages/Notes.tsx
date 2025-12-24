@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Autocomplete,
   Alert,
@@ -6,11 +6,14 @@ import {
   Button,
   Checkbox,
   Chip,
+  ClickAwayListener,
   Dialog,
   DialogContent,
   IconButton,
-  MenuItem,
-  Paper,
+  List,
+  ListItemButton,
+  ListItemText,
+  Popper,
   Snackbar,
   Stack,
   TextField,
@@ -24,6 +27,9 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import FormatBoldRoundedIcon from "@mui/icons-material/FormatBoldRounded";
 import FormatItalicRoundedIcon from "@mui/icons-material/FormatItalicRounded";
 import FormatListBulletedRoundedIcon from "@mui/icons-material/FormatListBulletedRounded";
@@ -36,32 +42,24 @@ import UnarchiveRoundedIcon from "@mui/icons-material/UnarchiveRounded";
 import BackspaceRoundedIcon from "@mui/icons-material/BackspaceRounded";
 import FormatUnderlinedRoundedIcon from "@mui/icons-material/FormatUnderlinedRounded";
 import { EditorContent, useEditor } from "@tiptap/react";
+import { Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
+import Suggestion from "@tiptap/suggestion";
 import { APP_RADIUS, APP_RADIUS_PX } from "../designTokens";
-import { interactiveItemSx } from "../styles/interactiveCard";
+import { interactiveItemSx, interactiveCardSx } from "../styles/interactiveCard";
 import SettingsIconButton from "../components/SettingsIconButton";
+import { usePageActions } from "../hooks/usePageActions";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import CardSection from "../components/layout/CardSection";
+import AppCard from "../components/layout/AppCard";
 import AppAccordion from "../components/layout/AppAccordion";
 import PageContainer from "../components/layout/PageContainer";
-import CategoryFilter from "../components/CategoryFilter";
+import SettingsDialog from "../components/SettingsDialog";
 import { Link as RouterLink, useLocation } from "wouter";
-
-type NoteCategory = {
-  id: string;
-  name: string;
-  color: string;
-};
-
-type NoteSubcategory = {
-  id: string;
-  name: string;
-  categoryId: string;
-  color: string;
-};
+import { loadUserStorage, saveUserStorage } from "../userStorage";
 
 type NoteLink = {
   id: string;
@@ -69,13 +67,23 @@ type NoteLink = {
   url: string;
 };
 
+type NoteAttachment = {
+  id: string;
+  name: string;
+  mime: string;
+  size: number;
+  dataUrl: string;
+  uploadedAt: string;
+};
+
 type Note = {
   id: string;
   title: string;
-  categoryIds: string[];
-  subcategoryIds: string[];
+  emoji: string;
   contentHtml: string;
   links: NoteLink[];
+  attachments: NoteAttachment[];
+  createdAt: string;
   updatedAt: string;
   archived: boolean;
   isDraft?: boolean;
@@ -83,10 +91,15 @@ type Note = {
   relatedNoteIds?: string[];
 };
 
-const STORAGE_NOTES = "notes_v1";
-const STORAGE_NOTE_CATEGORIES = "note_categories_v1";
-const STORAGE_NOTE_SUBCATEGORIES = "note_subcategories_v1";
-const STORAGE_NOTE_FIELDS = "note_fields_v1";
+type LegacyNote = Note & {
+  categoryIds?: string[];
+  subcategoryIds?: string[];
+  categoryId?: string;
+  subcategoryId?: string;
+};
+
+const STORAGE_NOTES = "notes_v2";
+const STORAGE_NOTE_FIELDS = "note_fields_v2";
 
 const DEFAULT_COLORS = [
   "#0f766e",
@@ -101,32 +114,122 @@ const DEFAULT_COLORS = [
   "#312e81",
 ];
 
-const defaultCategories: NoteCategory[] = [
-  { id: "note-cat-pessoal", name: "Pessoal", color: "#3b82f6" },
-  { id: "note-cat-trabalho", name: "Trabalho", color: "#f59e0b" },
-  { id: "note-cat-ideias", name: "Ideias", color: "#8b5cf6" },
-  { id: "note-cat-listas", name: "Listas", color: "#10b981" },
-  { id: "note-cat-projetos", name: "Projetos", color: "#ef4444" },
-  { id: "note-cat-estudos", name: "Estudos", color: "#06b6d4" },
+const NOTE_EMOJIS: { emoji: string; label: string }[] = [
+  // Escrita e documentos
+  { emoji: "📝", label: "memo nota escrita" },
+  { emoji: "📒", label: "caderno amarelo" },
+  { emoji: "📓", label: "caderno" },
+  { emoji: "📔", label: "caderno decorado" },
+  { emoji: "📕", label: "livro vermelho" },
+  { emoji: "📗", label: "livro verde" },
+  { emoji: "📘", label: "livro azul" },
+  { emoji: "📙", label: "livro laranja" },
+  { emoji: "📚", label: "livros pilha" },
+  { emoji: "📖", label: "livro aberto" },
+  { emoji: "✏️", label: "lapis escrever" },
+  { emoji: "🖊️", label: "caneta" },
+  { emoji: "🖋️", label: "caneta tinteiro" },
+  { emoji: "✒️", label: "pena escrever" },
+  { emoji: "📌", label: "tachinha pin" },
+  { emoji: "📍", label: "marcador local" },
+  { emoji: "🔖", label: "marcador favorito" },
+  { emoji: "💡", label: "lampada ideia" },
+  { emoji: "💭", label: "balao pensamento" },
+  { emoji: "💬", label: "balao conversa chat" },
+  // Arte e entretenimento
+  { emoji: "🎯", label: "alvo meta objetivo" },
+  { emoji: "🎨", label: "paleta arte pintura" },
+  { emoji: "🎭", label: "teatro mascaras" },
+  { emoji: "🎪", label: "circo tenda" },
+  { emoji: "🎬", label: "cinema filme claquete" },
+  { emoji: "🎵", label: "musica nota" },
+  { emoji: "🎶", label: "musica notas" },
+  { emoji: "🎤", label: "microfone canto" },
+  { emoji: "🎧", label: "fone ouvir" },
+  { emoji: "🎹", label: "piano teclado" },
+  // Natureza
+  { emoji: "🌟", label: "estrela brilho" },
+  { emoji: "⭐", label: "estrela favorito" },
+  { emoji: "🌈", label: "arcoiris" },
+  { emoji: "🌸", label: "flor cerejeira" },
+  { emoji: "🌺", label: "flor hibisco" },
+  { emoji: "🌻", label: "girassol" },
+  { emoji: "🌼", label: "flor margarida" },
+  { emoji: "🌷", label: "tulipa" },
+  { emoji: "🍀", label: "trevo sorte" },
+  { emoji: "🌿", label: "folha planta" },
+  // Viagem e lugares
+  { emoji: "🚀", label: "foguete espaco" },
+  { emoji: "✈️", label: "aviao viagem" },
+  { emoji: "🚗", label: "carro" },
+  { emoji: "🏠", label: "casa lar" },
+  { emoji: "🏢", label: "predio escritorio" },
+  { emoji: "🏛️", label: "banco governo" },
+  { emoji: "⛰️", label: "montanha" },
+  { emoji: "🏖️", label: "praia ferias" },
+  { emoji: "🌍", label: "mundo terra" },
+  { emoji: "🗺️", label: "mapa" },
+  // Trabalho e negócios
+  { emoji: "💼", label: "maleta trabalho" },
+  { emoji: "📊", label: "grafico barras" },
+  { emoji: "📈", label: "grafico subindo crescimento" },
+  { emoji: "📉", label: "grafico descendo" },
+  { emoji: "🗂️", label: "pasta arquivos" },
+  { emoji: "📁", label: "pasta" },
+  { emoji: "🗄️", label: "arquivo gaveta" },
+  { emoji: "📋", label: "clipboard lista" },
+  { emoji: "📑", label: "separador abas" },
+  { emoji: "🗒️", label: "bloco notas" },
+  // Corações e amor
+  { emoji: "❤️", label: "coracao vermelho amor" },
+  { emoji: "🧡", label: "coracao laranja" },
+  { emoji: "💛", label: "coracao amarelo" },
+  { emoji: "💚", label: "coracao verde" },
+  { emoji: "💙", label: "coracao azul" },
+  { emoji: "💜", label: "coracao roxo" },
+  { emoji: "🖤", label: "coracao preto" },
+  { emoji: "🤍", label: "coracao branco" },
+  { emoji: "💖", label: "coracao brilhante" },
+  { emoji: "💝", label: "coracao presente" },
+  // Celebração
+  { emoji: "🎁", label: "presente gift" },
+  { emoji: "🎀", label: "laco fita" },
+  { emoji: "🎊", label: "confete festa" },
+  { emoji: "🎉", label: "festa celebracao" },
+  { emoji: "🏆", label: "trofeu vitoria" },
+  { emoji: "🥇", label: "medalha ouro primeiro" },
+  { emoji: "🏅", label: "medalha" },
+  { emoji: "🎖️", label: "medalha militar" },
+  { emoji: "👑", label: "coroa rei rainha" },
+  { emoji: "💎", label: "diamante joia" },
+  // Elementos
+  { emoji: "🔥", label: "fogo chama hot" },
+  { emoji: "⚡", label: "raio energia" },
+  { emoji: "💫", label: "estrela tontura" },
+  { emoji: "✨", label: "brilho sparkle" },
+  { emoji: "🌙", label: "lua noite" },
+  { emoji: "☀️", label: "sol dia" },
+  { emoji: "🌤️", label: "sol nuvem" },
+  { emoji: "🌊", label: "onda mar" },
+  { emoji: "❄️", label: "neve frio" },
+  { emoji: "🌪️", label: "tornado" },
+  // Comida
+  { emoji: "🍕", label: "pizza" },
+  { emoji: "🍔", label: "hamburguer" },
+  { emoji: "🍦", label: "sorvete" },
+  { emoji: "🎂", label: "bolo aniversario" },
+  { emoji: "🍰", label: "fatia bolo" },
+  { emoji: "☕", label: "cafe" },
+  { emoji: "🍵", label: "cha" },
+  { emoji: "🥤", label: "copo bebida" },
+  { emoji: "🍷", label: "vinho" },
+  { emoji: "🍻", label: "cerveja brinde" },
 ];
 
-const defaultSubcategories: NoteSubcategory[] = [
-  { id: "note-sub-diario", name: "Diário", categoryId: "note-cat-pessoal", color: "#3b82f6" },
-  { id: "note-sub-saude", name: "Saúde", categoryId: "note-cat-pessoal", color: "#22c55e" },
-  { id: "note-sub-financas", name: "Finanças", categoryId: "note-cat-pessoal", color: "#eab308" },
-  { id: "note-sub-reunioes", name: "Reuniões", categoryId: "note-cat-trabalho", color: "#f59e0b" },
-  { id: "note-sub-tarefas", name: "Tarefas", categoryId: "note-cat-trabalho", color: "#f97316" },
-  { id: "note-sub-brainstorm", name: "Brainstorm", categoryId: "note-cat-ideias", color: "#8b5cf6" },
-  { id: "note-sub-inspiracao", name: "Inspiração", categoryId: "note-cat-ideias", color: "#a855f7" },
-  { id: "note-sub-compras", name: "Compras", categoryId: "note-cat-listas", color: "#10b981" },
-  { id: "note-sub-metas", name: "Metas", categoryId: "note-cat-listas", color: "#14b8a6" },
-  { id: "note-sub-andamento", name: "Em andamento", categoryId: "note-cat-projetos", color: "#ef4444" },
-  { id: "note-sub-concluidos", name: "Concluídos", categoryId: "note-cat-projetos", color: "#22c55e" },
-  { id: "note-sub-cursos", name: "Cursos", categoryId: "note-cat-estudos", color: "#06b6d4" },
-  { id: "note-sub-livros", name: "Livros", categoryId: "note-cat-estudos", color: "#0ea5e9" },
-];
+const getRandomEmoji = () =>
+  NOTE_EMOJIS[Math.floor(Math.random() * NOTE_EMOJIS.length)]!.emoji;
 
-const defaultNotes: Note[] = [
+const defaultNotes: unknown[] = [
   // Pessoal
   {
     id: "note-1",
@@ -314,147 +417,58 @@ const darkenColor = (value: string, factor: number) => {
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 };
 
-const emptyNote = (categoryId: string): Note => ({
+const emptyNote = (): Note => ({
   id: `note-${Date.now()}`,
   title: "Nova nota",
-  categoryIds: [categoryId],
-  subcategoryIds: [],
+  emoji: getRandomEmoji(),
   contentHtml: "",
   links: [],
+  attachments: [],
+  createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   archived: false,
   isDraft: true,
   relatedNoteIds: [],
 });
 const defaultNoteFieldSettings = {
-  showCategories: true,
-  showSubcategories: true,
   showLinks: false,
-  showUpdatedAt: true,
-  showCategoryCounts: true,
+  showFiles: false,
 };
 
 export default function Notes() {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const isArchiveView = location.startsWith("/notas/arquivo");
-  const [categories, setCategories] =
-    useState<NoteCategory[]>(defaultCategories);
-  const [subcategories, setSubcategories] =
-    useState<NoteSubcategory[]>(defaultSubcategories);
   const [notes, setNotes] = useState<Note[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>(
-    defaultCategories[0]?.id || ""
-  );
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-  const [activeSubcategory, setActiveSubcategory] = useState<string | null>(
-    null
-  );
-  const [mobileCategoriesExpanded, setMobileCategoriesExpanded] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
-    null
-  );
-  const [editingCategoryName, setEditingCategoryName] = useState("");
-  const [editingCategoryColor, setEditingCategoryColor] = useState(
-    DEFAULT_COLORS[0]
-  );
-  const [newSubcategoryName, setNewSubcategoryName] = useState("");
-  const [newSubcategoryCategory, setNewSubcategoryCategory] = useState(
-    defaultCategories[0]?.id || ""
-  );
-  const [editingSubcategoryId, setEditingSubcategoryId] = useState<
-    string | null
-  >(null);
-  const [editingSubcategoryName, setEditingSubcategoryName] = useState("");
-  const [editingSubcategoryCategory, setEditingSubcategoryCategory] = useState(
-    defaultCategories[0]?.id || ""
-  );
-  const [editingSubcategoryColor, setEditingSubcategoryColor] = useState(
-    DEFAULT_COLORS[0]
-  );
-  const [newSubcategoryColor, setNewSubcategoryColor] = useState(
-    DEFAULT_COLORS[0]
-  );
+  const [mobileNotesExpanded, setMobileNotesExpanded] = useState(false);
   const [noteQuery, setNoteQuery] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsAccordion, setSettingsAccordion] = useState<
-    "categories" | "subcategories" | "display" | false
+    "display" | false
   >(false);
   const [fieldSettings, setFieldSettings] = useState({
     ...defaultNoteFieldSettings,
   });
-  const [confirmRemove, setConfirmRemove] = useState<{
-    type: "category" | "subcategory";
-    id: string;
-  } | null>(null);
   const [noteConfirm, setNoteConfirm] = useState<{
     type: "archive" | "restore" | "delete";
     id: string;
   } | null>(null);
-  const [subcategoryFilter, setSubcategoryFilter] = useState<string>(
-    defaultCategories[0]?.id || ""
-  );
   const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
+  const [emojiPickerAnchor, setEmojiPickerAnchor] = useState<HTMLElement | null>(null);
+  const [emojiSearch, setEmojiSearch] = useState("");
   const restoreDefaultsSnapshotRef = useRef<{
-    categories: NoteCategory[];
-    subcategories: NoteSubcategory[];
     fieldSettings: typeof fieldSettings;
-    activeCategory: string;
-    subcategoryFilter: string;
-    activeSubcategory: string | null;
     settingsAccordion: typeof settingsAccordion;
-    newCategoryName: string;
-    newCategoryColor: string;
-    editingCategoryId: string | null;
-    editingCategoryName: string;
-    editingCategoryColor: string;
-    newSubcategoryName: string;
-    newSubcategoryCategory: string;
-    newSubcategoryColor: string;
-    editingSubcategoryId: string | null;
-    editingSubcategoryName: string;
-    editingSubcategoryCategory: string;
-    editingSubcategoryColor: string;
   } | null>(null);
   const [restoreDefaultsSnackbarOpen, setRestoreDefaultsSnackbarOpen] =
     useState(false);
   const handleRestoreNoteDefaults = () => {
     restoreDefaultsSnapshotRef.current = {
-      categories,
-      subcategories,
       fieldSettings,
-      activeCategory,
-      subcategoryFilter,
-      activeSubcategory,
       settingsAccordion,
-      newCategoryName,
-      newCategoryColor,
-      editingCategoryId,
-      editingCategoryName,
-      editingCategoryColor,
-      newSubcategoryName,
-      newSubcategoryCategory,
-      newSubcategoryColor,
-      editingSubcategoryId,
-      editingSubcategoryName,
-      editingSubcategoryCategory,
-      editingSubcategoryColor,
     };
-    setCategories(defaultCategories);
-    setSubcategories(defaultSubcategories);
     setFieldSettings({ ...defaultNoteFieldSettings });
-    setActiveCategory(defaultCategories[0]?.id || "");
-    setSubcategoryFilter(defaultCategories[0]?.id || "");
-    setActiveSubcategory(null);
-    cancelEditCategory();
-    cancelEditSubcategory();
-    setNewCategoryName("");
-    setNewCategoryColor(DEFAULT_COLORS[0]);
-    setNewSubcategoryName("");
-    setNewSubcategoryCategory(defaultCategories[0]?.id || "");
-    setNewSubcategoryColor(DEFAULT_COLORS[0]);
     setSettingsAccordion(false);
     setRestoreDefaultsSnackbarOpen(true);
   };
@@ -465,25 +479,8 @@ export default function Notes() {
       setRestoreDefaultsSnackbarOpen(false);
       return;
     }
-    setCategories(snapshot.categories);
-    setSubcategories(snapshot.subcategories);
     setFieldSettings(snapshot.fieldSettings);
-    setActiveCategory(snapshot.activeCategory);
-    setSubcategoryFilter(snapshot.subcategoryFilter);
-    setActiveSubcategory(snapshot.activeSubcategory);
     setSettingsAccordion(snapshot.settingsAccordion);
-    setNewCategoryName(snapshot.newCategoryName);
-    setNewCategoryColor(snapshot.newCategoryColor);
-    setEditingCategoryId(snapshot.editingCategoryId);
-    setEditingCategoryName(snapshot.editingCategoryName);
-    setEditingCategoryColor(snapshot.editingCategoryColor);
-    setNewSubcategoryName(snapshot.newSubcategoryName);
-    setNewSubcategoryCategory(snapshot.newSubcategoryCategory);
-    setNewSubcategoryColor(snapshot.newSubcategoryColor);
-    setEditingSubcategoryId(snapshot.editingSubcategoryId);
-    setEditingSubcategoryName(snapshot.editingSubcategoryName);
-    setEditingSubcategoryCategory(snapshot.editingSubcategoryCategory);
-    setEditingSubcategoryColor(snapshot.editingSubcategoryColor);
     restoreDefaultsSnapshotRef.current = null;
     setRestoreDefaultsSnackbarOpen(false);
   };
@@ -496,78 +493,112 @@ export default function Notes() {
     }
   }, [location]);
 
+  const normalizeNote = (value: unknown): Note => {
+    const raw = (value ?? {}) as Partial<LegacyNote> & Record<string, unknown>;
+    return {
+      id:
+        typeof raw.id === "string" && raw.id
+          ? raw.id
+          : `note-${Date.now()}`,
+      title: typeof raw.title === "string" ? raw.title : "",
+      emoji: typeof raw.emoji === "string" && raw.emoji ? raw.emoji : getRandomEmoji(),
+      contentHtml: typeof raw.contentHtml === "string" ? raw.contentHtml : "",
+      links: Array.isArray(raw.links)
+        ? (raw.links
+            .map(link => {
+              const item = (link ?? {}) as Partial<NoteLink> &
+                Record<string, unknown>;
+              return {
+                id:
+                  typeof item.id === "string" && item.id
+                    ? item.id
+                    : `link-${Date.now()}`,
+                label: typeof item.label === "string" ? item.label : "",
+                url: typeof item.url === "string" ? item.url : "",
+              };
+            })
+            .filter(link => Boolean(link.label || link.url)) as NoteLink[])
+        : [],
+      attachments: Array.isArray(raw.attachments)
+        ? (raw.attachments
+            .map(attachment => {
+              const item = (attachment ?? {}) as Partial<NoteAttachment> &
+                Record<string, unknown>;
+              return {
+                id:
+                  typeof item.id === "string" && item.id
+                    ? item.id
+                    : `att-${Date.now()}`,
+                name: typeof item.name === "string" ? item.name : "",
+                mime: typeof item.mime === "string" ? item.mime : "",
+                size: typeof item.size === "number" ? item.size : 0,
+                dataUrl: typeof item.dataUrl === "string" ? item.dataUrl : "",
+                uploadedAt:
+                  typeof item.uploadedAt === "string" && item.uploadedAt
+                    ? item.uploadedAt
+                    : new Date().toISOString(),
+              };
+            })
+            .filter(att => Boolean(att.name && att.dataUrl)) as NoteAttachment[])
+        : [],
+      createdAt:
+        typeof raw.createdAt === "string" && raw.createdAt
+          ? raw.createdAt
+          : typeof raw.updatedAt === "string" && raw.updatedAt
+            ? raw.updatedAt
+            : new Date().toISOString(),
+      updatedAt:
+        typeof raw.updatedAt === "string" && raw.updatedAt
+          ? raw.updatedAt
+          : new Date().toISOString(),
+      archived: Boolean(raw.archived),
+      isDraft: Boolean(raw.isDraft),
+      parentId: typeof raw.parentId === "string" ? raw.parentId : undefined,
+      relatedNoteIds: Array.isArray(raw.relatedNoteIds)
+        ? (raw.relatedNoteIds.filter((id): id is string => typeof id === "string") as string[])
+        : [],
+    };
+  };
+
+  const isLoadedRef = useRef(false);
   useEffect(() => {
-    const storedNotes = window.localStorage.getItem(STORAGE_NOTES);
-    if (storedNotes) {
-      try {
-        const parsed = JSON.parse(storedNotes) as Array<
-          Note & { categoryId?: string; subcategoryId?: string }
-        >;
-        if (Array.isArray(parsed) && parsed.length) {
-          const normalized: Note[] = parsed.map(note => ({
-            ...note,
-            categoryIds: note.categoryIds?.length
-              ? note.categoryIds
-              : note.categoryId
-                ? [note.categoryId]
-                : [],
-            subcategoryIds: note.subcategoryIds?.length
-              ? note.subcategoryIds
-              : note.subcategoryId
-                ? [note.subcategoryId]
-                : [],
-            archived: Boolean(note.archived),
-            isDraft: Boolean(note.isDraft),
-            relatedNoteIds: Array.isArray(note.relatedNoteIds)
-              ? note.relatedNoteIds
-              : [],
-          }));
-          const existingIds = new Set(normalized.map(note => note.id));
-          const merged = [...normalized];
-          defaultNotes.forEach(note => {
-            if (!existingIds.has(note.id)) {
-              merged.push(note);
-            }
-          });
-          setNotes(merged);
-        } else {
-          setNotes(defaultNotes);
-        }
-      } catch {
-        window.localStorage.removeItem(STORAGE_NOTES);
+    const load = async () => {
+      const dbNotes = await loadUserStorage<unknown>(STORAGE_NOTES);
+      if (Array.isArray(dbNotes) && dbNotes.length) {
+        const normalized = dbNotes.map(normalizeNote);
+        setNotes(normalized);
+        window.localStorage.setItem(STORAGE_NOTES, JSON.stringify(normalized));
+        isLoadedRef.current = true;
+        return;
       }
-    } else {
-      setNotes(defaultNotes);
-    }
 
-    const storedCategories = window.localStorage.getItem(
-      STORAGE_NOTE_CATEGORIES
-    );
-    if (storedCategories) {
-      try {
-        const parsed = JSON.parse(storedCategories) as NoteCategory[];
-        if (Array.isArray(parsed) && parsed.length) {
-          setCategories(parsed);
-          setActiveCategory(parsed[0].id);
+      const storedNotes = window.localStorage.getItem(STORAGE_NOTES);
+      if (storedNotes) {
+        try {
+          const parsed = JSON.parse(storedNotes) as unknown;
+          if (Array.isArray(parsed) && parsed.length) {
+            const normalized = parsed.map(normalizeNote);
+            setNotes(normalized);
+            isLoadedRef.current = true;
+            void saveUserStorage(STORAGE_NOTES, normalized);
+            return;
+          }
+        } catch {
+          window.localStorage.removeItem(STORAGE_NOTES);
         }
-      } catch {
-        window.localStorage.removeItem(STORAGE_NOTE_CATEGORIES);
       }
-    }
 
-    const storedSubcategories = window.localStorage.getItem(
-      STORAGE_NOTE_SUBCATEGORIES
-    );
-    if (storedSubcategories) {
-      try {
-        const parsed = JSON.parse(storedSubcategories) as NoteSubcategory[];
-        if (Array.isArray(parsed)) {
-          setSubcategories(parsed);
-        }
-      } catch {
-        window.localStorage.removeItem(STORAGE_NOTE_SUBCATEGORIES);
-      }
-    }
+      const normalizedDefaults = defaultNotes.map(normalizeNote);
+      setNotes(normalizedDefaults);
+      window.localStorage.setItem(
+        STORAGE_NOTES,
+        JSON.stringify(normalizedDefaults)
+      );
+      isLoadedRef.current = true;
+      void saveUserStorage(STORAGE_NOTES, normalizedDefaults);
+    };
+
+    void load();
   }, []);
 
   useEffect(() => {
@@ -591,41 +622,12 @@ export default function Notes() {
   }, [fieldSettings]);
 
   useEffect(() => {
-    window.localStorage.setItem(
-      STORAGE_NOTE_CATEGORIES,
-      JSON.stringify(categories)
-    );
-  }, [categories]);
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      STORAGE_NOTE_SUBCATEGORIES,
-      JSON.stringify(subcategories)
-    );
-  }, [subcategories]);
-
-  useEffect(() => {
-    if (!categories.length) {
+    if (!isLoadedRef.current) {
       return;
     }
-    if (!categories.some(category => category.id === subcategoryFilter)) {
-      setSubcategoryFilter(categories[0].id);
-    }
-  }, [categories, subcategoryFilter]);
-
-  useEffect(() => {
-    if (!activeSubcategory) {
-      return;
-    }
-    const belongsToActive = subcategories.some(
-      subcategory =>
-        subcategory.id === activeSubcategory &&
-        subcategory.categoryId === activeCategory
-    );
-    if (!belongsToActive) {
-      setActiveSubcategory(null);
-    }
-  }, [activeCategory, activeSubcategory, subcategories]);
+    window.localStorage.setItem(STORAGE_NOTES, JSON.stringify(notes));
+    void saveUserStorage(STORAGE_NOTES, notes);
+  }, [notes]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -637,22 +639,7 @@ export default function Notes() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedNoteId, isArchiveView, setLocation]);
 
-  const activeSubcategories = useMemo(
-    () => subcategories.filter(item => item.categoryId === activeCategory),
-    [subcategories, activeCategory]
-  );
-
   const stripHtml = (value: string) => value.replace(/<[^>]+>/g, " ");
-
-  const categoryMap = useMemo(
-    () => new Map(categories.map(category => [category.id, category])),
-    [categories]
-  );
-  const subcategoryMap = useMemo(
-    () =>
-      new Map(subcategories.map(subcategory => [subcategory.id, subcategory])),
-    [subcategories]
-  );
 
   const filteredNotes = useMemo(() => {
     const term = noteQuery.trim().toLowerCase();
@@ -660,37 +647,14 @@ export default function Notes() {
       if (note.archived !== isArchiveView) {
         return false;
       }
-      if (!note.categoryIds.includes(activeCategory)) {
-        return false;
-      }
-      if (
-        activeSubcategory &&
-        !note.subcategoryIds.includes(activeSubcategory)
-      ) {
-        return false;
-      }
       if (!term) {
         return true;
       }
-      const categoryNames = note.categoryIds
-        .map(id => categoryMap.get(id)?.name || "")
-        .join(" ");
-      const subcategoryNames = note.subcategoryIds
-        .map(id => subcategoryMap.get(id)?.name || "")
-        .join(" ");
       const haystack =
-        `${note.title} ${stripHtml(note.contentHtml || "")} ${categoryNames} ${subcategoryNames}`.toLowerCase();
+        `${note.title} ${stripHtml(note.contentHtml || "")}`.toLowerCase();
       return haystack.includes(term);
     });
-  }, [
-    notes,
-    activeCategory,
-    activeSubcategory,
-    noteQuery,
-    isArchiveView,
-    categoryMap,
-    subcategoryMap,
-  ]);
+  }, [notes, noteQuery, isArchiveView]);
 
   const noteIdFromRoute = (() => {
     if (location.startsWith("/notas/arquivo/")) {
@@ -706,26 +670,31 @@ export default function Notes() {
   })();
   const selectedNote = notes.find(note => note.id === selectedNoteId) || null;
 
-  const isPristineDraft = (note: Note) =>
-    note.isDraft &&
-    note.title.trim() === "Nova nota" &&
-    !note.contentHtml.trim() &&
-    !note.links.length &&
-    !note.subcategoryIds.length;
+  const isPristineDraft = useCallback(
+    (note: Note) =>
+      note.isDraft &&
+      note.title.trim() === "Nova nota" &&
+      !note.contentHtml.trim() &&
+      !note.links.length &&
+      !note.attachments.length,
+    []
+  );
 
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_NOTES, JSON.stringify(notes));
-  }, [notes]);
-
-  const discardIfPristine = (noteId: string | null) => {
-    if (!noteId) {
-      return;
-    }
-    const note = notes.find(item => item.id === noteId);
-    if (note && isPristineDraft(note)) {
-      setNotes(prev => prev.filter(item => item.id !== noteId));
-    }
-  };
+  const discardIfPristine = useCallback(
+    (noteId: string | null) => {
+      if (!noteId) {
+        return;
+      }
+      setNotes(prev => {
+        const note = prev.find(item => item.id === noteId);
+        if (note && isPristineDraft(note)) {
+          return prev.filter(item => item.id !== noteId);
+        }
+        return prev;
+      });
+    },
+    [isPristineDraft]
+  );
 
   const prevSelectedNoteIdRef = useRef<string | null>(null);
 
@@ -759,10 +728,6 @@ export default function Notes() {
       );
       return;
     }
-
-    if (match.categoryIds?.length) {
-      setActiveCategory(match.categoryIds[0]);
-    }
     setSelectedNoteId(match.id);
     prevSelectedNoteIdRef.current = match.id;
   }, [noteIdFromRoute, notes, isArchiveView, selectedNoteId, setLocation]);
@@ -770,9 +735,6 @@ export default function Notes() {
   const selectNote = (note: Note) => {
     discardIfPristine(selectedNoteId);
     setSelectedNoteId(note.id);
-    if (note.categoryIds?.length) {
-      setActiveCategory(note.categoryIds[0]);
-    }
     setLocation(
       isArchiveView ? `/notas/arquivo/${note.id}` : `/notas/${note.id}`
     );
@@ -786,164 +748,14 @@ export default function Notes() {
     );
   };
 
-  const addNote = () => {
-    if (!activeCategory) {
-      return;
-    }
+  const addNote = useCallback(() => {
     discardIfPristine(selectedNoteId);
-    const next = emptyNote(activeCategory);
+    const next = emptyNote();
     setNotes(prev => [next, ...prev]);
     setSelectedNoteId(next.id);
     setNoteQuery("");
     setLocation(`/notas/${next.id}`);
-  };
-
-  const addCategory = () => {
-    const name = newCategoryName.trim();
-    if (!name) {
-      return;
-    }
-    const next = {
-      id: `note-cat-${Date.now()}`,
-      name,
-      color: newCategoryColor,
-    };
-    setCategories(prev => [...prev, next]);
-    setNewCategoryName("");
-    setNewCategoryColor(DEFAULT_COLORS[0]);
-    setActiveCategory(next.id);
-    setNewSubcategoryCategory(next.id);
-  };
-
-  const removeCategory = (categoryId: string) => {
-    const remaining = categories.filter(category => category.id !== categoryId);
-    if (!remaining.length) {
-      return;
-    }
-    const nextActive = remaining[0].id;
-    setCategories(remaining);
-    setSubcategories(prev =>
-      prev.filter(item => item.categoryId !== categoryId)
-    );
-    setNotes(prev =>
-      prev.map(note =>
-        note.categoryIds.includes(categoryId)
-          ? {
-              ...note,
-              categoryIds: note.categoryIds.filter(id => id !== categoryId)
-                .length
-                ? note.categoryIds.filter(id => id !== categoryId)
-                : [nextActive],
-              subcategoryIds: note.subcategoryIds.filter(
-                subId =>
-                  !subcategories.some(
-                    item => item.id === subId && item.categoryId === categoryId
-                  )
-              ),
-            }
-          : note
-      )
-    );
-    setActiveCategory(nextActive);
-  };
-
-  const addSubcategory = () => {
-    const name = newSubcategoryName.trim();
-    if (!name || !newSubcategoryCategory) {
-      return;
-    }
-    const next = {
-      id: `note-sub-${Date.now()}`,
-      name,
-      categoryId: newSubcategoryCategory,
-      color: newSubcategoryColor,
-    };
-    setSubcategories(prev => [...prev, next]);
-    setNewSubcategoryName("");
-    setNewSubcategoryColor(DEFAULT_COLORS[0]);
-  };
-
-  const removeSubcategory = (subcategoryId: string) => {
-    setSubcategories(prev => prev.filter(item => item.id !== subcategoryId));
-    setNotes(prev =>
-      prev.map(note =>
-        note.subcategoryIds.includes(subcategoryId)
-          ? {
-              ...note,
-              subcategoryIds: note.subcategoryIds.filter(
-                id => id !== subcategoryId
-              ),
-            }
-          : note
-      )
-    );
-  };
-
-  const startEditSubcategory = (subcategory: NoteSubcategory) => {
-    setEditingSubcategoryId(subcategory.id);
-    setEditingSubcategoryName(subcategory.name);
-    setEditingSubcategoryCategory(subcategory.categoryId);
-    setEditingSubcategoryColor(subcategory.color);
-  };
-
-  const cancelEditSubcategory = () => {
-    setEditingSubcategoryId(null);
-    setEditingSubcategoryName("");
-    setEditingSubcategoryCategory(defaultCategories[0]?.id || "");
-    setEditingSubcategoryColor(DEFAULT_COLORS[0]);
-  };
-
-  const saveSubcategory = () => {
-    if (!editingSubcategoryId) {
-      return;
-    }
-    const name = editingSubcategoryName.trim();
-    if (!name || !editingSubcategoryCategory) {
-      return;
-    }
-    setSubcategories(prev =>
-      prev.map(subcategory =>
-        subcategory.id === editingSubcategoryId
-          ? {
-              ...subcategory,
-              name,
-              categoryId: editingSubcategoryCategory,
-              color: editingSubcategoryColor,
-            }
-          : subcategory
-      )
-    );
-    cancelEditSubcategory();
-  };
-  const startEditCategory = (category: NoteCategory) => {
-    setEditingCategoryId(category.id);
-    setEditingCategoryName(category.name);
-    setEditingCategoryColor(category.color);
-  };
-
-  const cancelEditCategory = () => {
-    setEditingCategoryId(null);
-    setEditingCategoryName("");
-    setEditingCategoryColor(DEFAULT_COLORS[0]);
-  };
-
-  const saveCategory = () => {
-    if (!editingCategoryId) {
-      return;
-    }
-    const name = editingCategoryName.trim();
-    if (!name) {
-      return;
-    }
-    setCategories(prev =>
-      prev.map(category =>
-        category.id === editingCategoryId
-          ? { ...category, name, color: editingCategoryColor }
-          : category
-      )
-    );
-    cancelEditCategory();
-  };
+  }, [discardIfPristine, selectedNoteId, setLocation]);
 
   const removeLink = (note: Note, linkId: string) => {
     updateNote({
@@ -977,6 +789,56 @@ export default function Notes() {
       ),
       updatedAt: new Date().toISOString(),
     });
+  };
+
+  const removeAttachment = (note: Note, attachmentId: string) => {
+    updateNote({
+      ...note,
+      attachments: note.attachments.filter(att => att.id !== attachmentId),
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  const addAttachments = async (note: Note, files: FileList | null) => {
+    if (!files || !files.length) {
+      return;
+    }
+
+    const readAsDataUrl = (file: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.readAsDataURL(file);
+      });
+
+    const fileArray = Array.from(files);
+    const dataUrls = await Promise.all(fileArray.map(readAsDataUrl));
+    const uploadedAt = new Date().toISOString();
+    const nextAttachments: NoteAttachment[] = fileArray.map((file, index) => ({
+      id: `att-${Date.now()}-${index}`,
+      name: file.name,
+      mime: file.type || "application/octet-stream",
+      size: file.size,
+      dataUrl: dataUrls[index] || "",
+      uploadedAt,
+    }));
+
+    updateNote({
+      ...note,
+      attachments: [...note.attachments, ...nextAttachments].filter(att =>
+        Boolean(att.name && att.dataUrl)
+      ),
+      updatedAt: uploadedAt,
+    });
+  };
+
+  const createChildNote = (parent: Note): Note => {
+    const next = emptyNote();
+    next.title = "Nova página";
+    next.parentId = parent.id;
+    setNotes(prev => [next, ...prev]);
+    return next;
   };
 
   const requestNoteAction = (
@@ -1015,12 +877,214 @@ export default function Notes() {
     setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
   };
 
-  const showSidebar =
-    fieldSettings.showCategories || fieldSettings.showSubcategories;
+  const showSidebar = true;
   const showBackButton = Boolean(noteIdFromRoute);
   const archiveLink = isArchiveView
     ? { label: "Notas", href: "/notas" }
     : { label: "Arquivo", href: "/notas/arquivo" };
+
+  const [expandedSidebarIds, setExpandedSidebarIds] = useState<Set<string>>(
+    () => new Set()
+  );
+  const toggleSidebarExpanded = (noteId: string) => {
+    setExpandedSidebarIds(prev => {
+      const next = new Set(prev);
+      if (next.has(noteId)) {
+        next.delete(noteId);
+      } else {
+        next.add(noteId);
+      }
+      return next;
+    });
+  };
+
+  const sidebarTree = useMemo(() => {
+    const candidates = notes.filter(note => note.archived === isArchiveView);
+    const byId = new Map(candidates.map(note => [note.id, note] as const));
+    const childrenByParentId = new Map<string, Note[]>();
+    const roots: Note[] = [];
+
+    for (const note of candidates) {
+      const parentId = note.parentId;
+      if (parentId && byId.has(parentId)) {
+        const list = childrenByParentId.get(parentId) ?? [];
+        list.push(note);
+        childrenByParentId.set(parentId, list);
+      } else {
+        roots.push(note);
+      }
+    }
+
+    const sortNotes = (items: Note[]) =>
+      items.sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+
+    sortNotes(roots);
+    Array.from(childrenByParentId.values()).forEach(list => sortNotes(list));
+
+    return { roots, childrenByParentId, byId };
+  }, [notes, isArchiveView]);
+
+  useEffect(() => {
+    if (!selectedNoteId) {
+      return;
+    }
+    setExpandedSidebarIds(prev => {
+      const next = new Set(prev);
+      let current = sidebarTree.byId.get(selectedNoteId);
+      let guard = 0;
+      while (current?.parentId && guard < 20) {
+        next.add(current.parentId);
+        current = sidebarTree.byId.get(current.parentId);
+        guard += 1;
+      }
+      return next;
+    });
+  }, [selectedNoteId, sidebarTree.byId]);
+
+  const renderSidebarItems = (opts: {
+    onSelect: (note: Note) => void;
+    onAfterSelect?: () => void;
+  }) => {
+    const rows: JSX.Element[] = [];
+    const stack: Array<{ note: Note; depth: number }> = [];
+    for (let i = sidebarTree.roots.length - 1; i >= 0; i -= 1) {
+      stack.push({ note: sidebarTree.roots[i]!, depth: 0 });
+    }
+
+    while (stack.length) {
+      const item = stack.pop();
+      if (!item) {
+        continue;
+      }
+      const { note, depth } = item;
+      const children = sidebarTree.childrenByParentId.get(note.id) ?? [];
+      const hasChildren = children.length > 0;
+      const isExpanded = expandedSidebarIds.has(note.id);
+      const isActive = note.id === selectedNoteId;
+
+      rows.push(
+        <Box
+          key={note.id}
+          onClick={() => {
+            opts.onSelect(note);
+            opts.onAfterSelect?.();
+          }}
+          sx={theme => ({
+            ...interactiveItemSx(theme),
+            py: 1,
+            pr: 1,
+            pl: 1 + depth * 3,
+            border: 1,
+            borderColor: isActive ? "primary.main" : "transparent",
+            cursor: "pointer",
+          })}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Box
+              sx={{
+                width: 24,
+                height: 24,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: "0 0 auto",
+              }}
+            >
+              {hasChildren ? (
+                <IconButton
+                  size="small"
+                  onClick={event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleSidebarExpanded(note.id);
+                  }}
+                  sx={{
+                    color: "text.secondary",
+                    p: 0.25,
+                  }}
+                  aria-label={isExpanded ? "Recolher" : "Expandir"}
+                >
+                  {isExpanded ? (
+                    <ExpandMoreRoundedIcon fontSize="small" />
+                  ) : (
+                    <ChevronRightRoundedIcon fontSize="small" />
+                  )}
+                </IconButton>
+              ) : null}
+            </Box>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: depth > 0 ? 500 : 600,
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                ...(depth > 0
+                  ? {
+                      color: "text.secondary",
+                    }
+                  : null),
+              }}
+            >
+              {note.emoji} {note.title || "Sem título"}
+            </Typography>
+          </Stack>
+        </Box>
+      );
+
+      if (hasChildren && isExpanded && depth < 6) {
+        for (let i = children.length - 1; i >= 0; i -= 1) {
+          stack.push({ note: children[i]!, depth: depth + 1 });
+        }
+      }
+    }
+
+    return rows;
+  };
+
+  const pageActions = useMemo(
+    () => (
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Button
+          component={RouterLink}
+          href={archiveLink.href}
+          variant="outlined"
+          sx={{
+            textTransform: "none",
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+            minWidth: 0,
+            px: 1.75,
+          }}
+        >
+          {archiveLink.label}
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={
+            <Box sx={{ display: { xs: "none", sm: "inline-flex" } }}>
+              <AddRoundedIcon />
+            </Box>
+          }
+          onClick={addNote}
+          sx={{
+            textTransform: "none",
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+            minWidth: 0,
+            px: 1.75,
+          }}
+        >
+          Nova nota
+        </Button>
+        <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+      </Stack>
+    ),
+    [addNote, archiveLink.href, archiveLink.label]
+  );
+
+  usePageActions(pageActions);
 
   return (
     <PageContainer>
@@ -1030,12 +1094,9 @@ export default function Notes() {
             direction="row"
             spacing={2}
             alignItems="center"
-            justifyContent="space-between"
-            sx={{ width: "100%" }}
+            justifyContent="flex-end"
+            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
           >
-            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
-              {isArchiveView ? "Arquivo" : "Notas"}
-            </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               <Stack
                 direction="row"
@@ -1120,145 +1181,20 @@ export default function Notes() {
         {showSidebar ? (
           <Box sx={{ display: { xs: "block", md: "none" } }}>
             <AppAccordion
-              expanded={mobileCategoriesExpanded}
-              onChange={(_, expanded) => setMobileCategoriesExpanded(expanded)}
-              title="Categorias"
+              expanded={mobileNotesExpanded}
+              onChange={(_, expanded) => setMobileNotesExpanded(expanded)}
+              title="Notas"
             >
               <Stack spacing={1}>
-                {categories.map(category => {
-                  const isActiveCategory = activeCategory === category.id;
-                  return (
-                    <Box key={category.id}>
-                      <Box
-                        onClick={() => {
-                          setActiveCategory(category.id);
-                          setActiveSubcategory(null);
-                          setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
-                          setMobileCategoriesExpanded(false);
-                        }}
-                        sx={theme => ({
-                          ...interactiveItemSx(theme),
-                          p: 1,
-                          border: 1,
-                          borderColor: isActiveCategory
-                            ? "primary.main"
-                            : "divider",
-                          cursor: "pointer",
-                        })}
-                      >
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          alignItems="center"
-                        >
-                          <Box
-                            sx={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: "50%",
-                              backgroundColor: category.color,
-                            }}
-                          />
-                          <Typography variant="body2">
-                            {category.name}
-                          </Typography>
-                          {fieldSettings.showCategoryCounts ? (
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                color: "text.secondary",
-                                fontWeight: 600,
-                                ml: "auto",
-                              }}
-                            >
-                              {
-                                notes.filter(
-                                  note =>
-                                    note.archived === isArchiveView &&
-                                    note.categoryIds.includes(category.id)
-                                ).length
-                              }
-                            </Typography>
-                          ) : null}
-                        </Stack>
-                      </Box>
-
-                      {fieldSettings.showSubcategories &&
-                      isActiveCategory ? (
-                        <Box sx={{ mt: 1, pl: 2 }}>
-                          {activeSubcategories.length ? (
-                            <Stack spacing={0.75}>
-                              {activeSubcategories.map(subcategory => {
-                                const isActive =
-                                  activeSubcategory === subcategory.id;
-                                return (
-                                  <Box
-                                    key={subcategory.id}
-                                    onClick={() => {
-                                      setActiveSubcategory(prev =>
-                                        prev === subcategory.id
-                                          ? null
-                                          : subcategory.id
-                                      );
-                                      setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
-                                      setMobileCategoriesExpanded(false);
-                                    }}
-                                    sx={theme => ({
-                                      ...interactiveItemSx(theme),
-                                      px: 1,
-                                      py: 0.75,
-                                      border: 1,
-                                      borderColor: isActive
-                                        ? "primary.main"
-                                        : "divider",
-                                      cursor: "pointer",
-                                    })}
-                                  >
-                                    <Stack
-                                      direction="row"
-                                      spacing={1}
-                                      alignItems="center"
-                                    >
-                                      <Box
-                                        sx={{
-                                          width: 8,
-                                          height: 8,
-                                          borderRadius: "50%",
-                                          backgroundColor:
-                                            subcategory.color ||
-                                            darkenColor(
-                                              category.color,
-                                              0.7
-                                            ),
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="body2"
-                                        sx={{
-                                          color: "text.secondary",
-                                          fontWeight: 600,
-                                        }}
-                                      >
-                                        {subcategory.name}
-                                      </Typography>
-                                    </Stack>
-                                  </Box>
-                                );
-                              })}
-                            </Stack>
-                          ) : (
-                            <Typography
-                              variant="body2"
-                              sx={{ color: "text.secondary" }}
-                            >
-                              Sem subcategorias.
-                            </Typography>
-                          )}
-                        </Box>
-                      ) : null}
-                    </Box>
-                  );
+                {renderSidebarItems({
+                  onSelect: note => selectNote(note),
+                  onAfterSelect: () => setMobileNotesExpanded(false),
                 })}
+                {!sidebarTree.roots.length ? (
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    {isArchiveView ? "Sem notas arquivadas." : "Sem notas."}
+                  </Typography>
+                ) : null}
               </Stack>
             </AppAccordion>
           </Box>
@@ -1275,149 +1211,24 @@ export default function Notes() {
         >
           {showSidebar ? (
             <Stack spacing={2} sx={{ display: { xs: "none", md: "flex" } }}>
-              {fieldSettings.showCategories ? (
-                <CardSection size="xs">
-                  <Stack spacing={2}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      Categorias
-                    </Typography>
-                    <Stack spacing={1}>
-                      {categories.map(category => {
-                        const isActiveCategory = activeCategory === category.id;
-                        return (
-                          <Box key={category.id}>
-                            <Box
-                              onClick={() => {
-                                setActiveCategory(category.id);
-                                setActiveSubcategory(null);
-                                setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
-                              }}
-                              sx={theme => ({
-                                ...interactiveItemSx(theme),
-                                p: 1,
-                                border: 1,
-                                borderColor: isActiveCategory
-                                  ? "primary.main"
-                                  : "divider",
-                                cursor: "pointer",
-                              })}
-                            >
-                              <Stack
-                                direction="row"
-                                spacing={1}
-                                alignItems="center"
-                              >
-                                <Box
-                                  sx={{
-                                    width: 10,
-                                    height: 10,
-                                    borderRadius: "50%",
-                                    backgroundColor: category.color,
-                                  }}
-                                />
-                                <Typography variant="body2">
-                                  {category.name}
-                                </Typography>
-                                {fieldSettings.showCategoryCounts ? (
-                                  <Typography
-                                    variant="caption"
-                                    sx={{
-                                      color: "text.secondary",
-                                      fontWeight: 600,
-                                      ml: "auto",
-                                    }}
-                                  >
-                                    {
-                                      notes.filter(
-                                        note =>
-                                          note.archived === isArchiveView &&
-                                          note.categoryIds.includes(category.id)
-                                      ).length
-                                    }
-                                  </Typography>
-                                ) : null}
-                              </Stack>
-                            </Box>
-
-                            {fieldSettings.showSubcategories &&
-                            isActiveCategory ? (
-                              <Box sx={{ mt: 1, pl: 2 }}>
-                                {activeSubcategories.length ? (
-                                  <Stack spacing={0.75}>
-                                    {activeSubcategories.map(subcategory => {
-                                      const isActive =
-                                        activeSubcategory === subcategory.id;
-                                      return (
-                                        <Box
-                                          key={subcategory.id}
-                                          onClick={() => {
-                                            setActiveSubcategory(prev =>
-                                              prev === subcategory.id
-                                                ? null
-                                                : subcategory.id
-                                            );
-                                            setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
-                                          }}
-                                          sx={theme => ({
-                                            ...interactiveItemSx(theme),
-                                            px: 1,
-                                            py: 0.75,
-                                            border: 1,
-                                            borderColor: isActive
-                                              ? "primary.main"
-                                              : "divider",
-                                            cursor: "pointer",
-                                          })}
-                                        >
-                                          <Stack
-                                            direction="row"
-                                            spacing={1}
-                                            alignItems="center"
-                                          >
-                                            <Box
-                                              sx={{
-                                                width: 8,
-                                                height: 8,
-                                                borderRadius: "50%",
-                                                backgroundColor:
-                                                  subcategory.color ||
-                                                  darkenColor(
-                                                    category.color,
-                                                    0.7
-                                                  ),
-                                              }}
-                                            />
-                                            <Typography
-                                              variant="body2"
-                                              sx={{
-                                                color: "text.secondary",
-                                                fontWeight: 600,
-                                              }}
-                                            >
-                                              {subcategory.name}
-                                            </Typography>
-                                          </Stack>
-                                        </Box>
-                                      );
-                                    })}
-                                  </Stack>
-                                ) : (
-                                  <Typography
-                                    variant="body2"
-                                    sx={{ color: "text.secondary" }}
-                                  >
-                                    Sem subcategorias.
-                                  </Typography>
-                                )}
-                              </Box>
-                            ) : null}
-                          </Box>
-                        );
-                      })}
-                    </Stack>
+              <CardSection size="xs">
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Notas
+                  </Typography>
+                  <Stack spacing={1}>
+                    {renderSidebarItems({ onSelect: note => selectNote(note) })}
+                    {!sidebarTree.roots.length ? (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        {isArchiveView ? "Sem notas arquivadas." : "Sem notas."}
+                      </Typography>
+                    ) : null}
                   </Stack>
-                </CardSection>
-              ) : null}
+                </Stack>
+              </CardSection>
             </Stack>
           ) : null}
 
@@ -1452,15 +1263,12 @@ export default function Notes() {
                           )
                         : filteredNotes
                       ).map(note => {
-                        const noteCategories = categories.filter(cat =>
-                          note.categoryIds.includes(cat.id)
-                        );
                         const isExpanded = note.id === expandedNoteId;
                         const preview = stripHtml(
                           note.contentHtml || ""
                         ).trim();
                         return (
-                          <Paper
+                          <AppCard
                             key={note.id}
                             elevation={0}
                             onClick={() => {
@@ -1489,7 +1297,6 @@ export default function Notes() {
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "flex-start",
-                                  flexWrap: "wrap",
                                   gap: 1,
                                   width: "100%",
                                 }}
@@ -1500,38 +1307,8 @@ export default function Notes() {
                                   }
                                   sx={{ fontWeight: 600 }}
                                 >
-                                  {note.title}
+                                  {note.emoji} {note.title}
                                 </Typography>
-                                {fieldSettings.showCategories
-                                  ? noteCategories.slice(0, 1).map(category => (
-                                      <Chip
-                                        key={category.id}
-                                        label={category.name}
-                                        size="small"
-                                        sx={{
-                                          color: "#e6edf3",
-                                          backgroundColor: darkenColor(
-                                            category.color,
-                                            0.5
-                                          ),
-                                        }}
-                                      />
-                                    ))
-                                  : null}
-                                {fieldSettings.showUpdatedAt ? (
-                                  <Typography
-                                    variant="caption"
-                                    sx={{
-                                      color: "text.secondary",
-                                      ml: "auto",
-                                      whiteSpace: "nowrap",
-                                    }}
-                                  >
-                                    {new Date(
-                                      note.updatedAt
-                                    ).toLocaleDateString("pt-BR")}
-                                  </Typography>
-                                ) : null}
                               </Box>
                               {isExpanded && preview ? (
                                 <Typography
@@ -1544,7 +1321,7 @@ export default function Notes() {
                                 </Typography>
                               ) : null}
                             </Stack>
-                          </Paper>
+                          </AppCard>
                         );
                       })}
                     </Box>
@@ -1554,8 +1331,8 @@ export default function Notes() {
                       sx={{ color: "text.secondary" }}
                     >
                       {isArchiveView
-                        ? "Sem notas arquivadas nesta categoria."
-                        : "Sem notas nesta categoria."}
+                        ? "Sem notas arquivadas."
+                        : "Sem notas."}
                     </Typography>
                   )}
                 </Stack>
@@ -1567,6 +1344,99 @@ export default function Notes() {
                 <Stack spacing={2}>
                   <Stack spacing={2}>
                     <Stack direction="row" spacing={1} alignItems="flex-start">
+                      <Button
+                        variant="outlined"
+                        onClick={e => setEmojiPickerAnchor(e.currentTarget)}
+                        sx={{
+                          minWidth: 56,
+                          width: 56,
+                          height: 56,
+                          fontSize: "1.75rem",
+                          p: 0,
+                          borderColor: "divider",
+                          "&:hover": { borderColor: "primary.main" },
+                        }}
+                      >
+                        {selectedNote.emoji}
+                      </Button>
+                      <Popper
+                        open={Boolean(emojiPickerAnchor)}
+                        anchorEl={emojiPickerAnchor}
+                        placement="bottom-start"
+                        style={{ zIndex: 1300 }}
+                      >
+                        <ClickAwayListener onClickAway={() => {
+                          setEmojiPickerAnchor(null);
+                          setEmojiSearch("");
+                        }}>
+                          <Box
+                            sx={{
+                              bgcolor: "background.paper",
+                              border: 1,
+                              borderColor: "divider",
+                              borderRadius: 2,
+                              boxShadow: 3,
+                              p: 1.5,
+                              width: 280,
+                              maxHeight: 320,
+                              display: "flex",
+                              flexDirection: "column",
+                            }}
+                          >
+                            <TextField
+                              size="small"
+                              placeholder="Buscar emoji..."
+                              value={emojiSearch}
+                              onChange={e => setEmojiSearch(e.target.value)}
+                              autoFocus
+                              fullWidth
+                              sx={{ mb: 1.5 }}
+                            />
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 0.5,
+                                overflowY: "auto",
+                                overflowX: "hidden",
+                                flex: 1,
+                              }}
+                            >
+                              {NOTE_EMOJIS.filter(item =>
+                                emojiSearch
+                                  ? item.label.toLowerCase().includes(emojiSearch.toLowerCase()) ||
+                                    item.emoji === emojiSearch
+                                  : true
+                              ).map(item => (
+                                <Button
+                                  key={item.emoji}
+                                  variant="text"
+                                  color="inherit"
+                                  onClick={() => {
+                                    updateNote({
+                                      ...selectedNote,
+                                      emoji: item.emoji,
+                                      updatedAt: new Date().toISOString(),
+                                    });
+                                    setEmojiPickerAnchor(null);
+                                    setEmojiSearch("");
+                                  }}
+                                  sx={{
+                                    minWidth: 0,
+                                    width: 36,
+                                    height: 36,
+                                    fontSize: "1.25rem",
+                                    p: 0,
+                                    "&:hover": { bgcolor: "action.hover" },
+                                  }}
+                                >
+                                  {item.emoji}
+                                </Button>
+                              ))}
+                            </Box>
+                          </Box>
+                        </ClickAwayListener>
+                      </Popper>
                       <TextField
                         label="Titulo"
                         value={selectedNote.title}
@@ -1586,65 +1456,33 @@ export default function Notes() {
                           },
                         }}
                       />
-                      <Tooltip title="Fechar nota" placement="top">
-                        <IconButton
-                          onClick={e => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            setSelectedNoteId(null);
-                            setExpandedNoteId(null);
-                            setLocation(
-                              isArchiveView ? "/notas/arquivo" : "/notas"
-                            );
-                          }}
+                      <Stack spacing={0.75} alignItems="center">
+                        <Tooltip title="Fechar nota" placement="top">
+                          <IconButton
+                            onClick={e => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setSelectedNoteId(null);
+                              setExpandedNoteId(null);
+                              setLocation(
+                                isArchiveView ? "/notas/arquivo" : "/notas"
+                              );
+                            }}
+                          >
+                            <CloseRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip
+                          title={`Criada em ${new Date(selectedNote.createdAt).toLocaleString(
+                            "pt-BR"
+                          )}`}
+                          placement="top"
                         >
-                          <CloseRoundedIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                    <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                      {fieldSettings.showCategories ? (
-                        <CategoryFilter
-                          categories={categories}
-                          selectedIds={selectedNote.categoryIds}
-                          onChange={nextIds => {
-                            updateNote({
-                              ...selectedNote,
-                              categoryIds: nextIds,
-                              updatedAt: new Date().toISOString(),
-                            });
-                            if (nextIds.length) {
-                              setActiveCategory(nextIds[0]);
-                              setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
-                            }
-                          }}
-                          label="Categorias"
-                          fullWidth
-                          sx={{ minWidth: 240, flex: 1 }}
-                        />
-                      ) : null}
-                      {fieldSettings.showSubcategories ? (
-                        <CategoryFilter
-                          categories={subcategories.filter(item =>
-                            selectedNote.categoryIds.includes(item.categoryId)
-                          )}
-                          selectedIds={selectedNote.subcategoryIds}
-                          onChange={nextIds => {
-                            updateNote({
-                              ...selectedNote,
-                              subcategoryIds: nextIds,
-                              updatedAt: new Date().toISOString(),
-                            });
-                            if (nextIds.length) {
-                              setActiveSubcategory(nextIds[0]);
-                              setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
-                            }
-                          }}
-                          label="Subcategorias"
-                          fullWidth
-                          sx={{ minWidth: 240, flex: 1 }}
-                        />
-                      ) : null}
+                          <IconButton size="small" sx={{ color: "text.secondary" }}>
+                            <InfoOutlinedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
                     </Stack>
                   </Stack>
 
@@ -1723,6 +1561,68 @@ export default function Notes() {
                     </Stack>
                   ) : null}
 
+                  {fieldSettings.showFiles ? (
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        Arquivos
+                      </Typography>
+                      {selectedNote.attachments.map(att => (
+                        <Stack
+                          key={att.id}
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                        >
+                          <TextField
+                            label="Nome"
+                            size="small"
+                            value={att.name}
+                            fullWidth
+                            disabled
+                          />
+                          <Tooltip title="Remover arquivo" placement="top">
+                            <IconButton
+                              onClick={() => removeAttachment(selectedNote, att.id)}
+                            >
+                              <CloseRoundedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Baixar" placement="top">
+                            <IconButton
+                              component="a"
+                              href={att.dataUrl || undefined}
+                              download={att.name || undefined}
+                              disabled={!att.dataUrl}
+                            >
+                              <LinkRoundedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      ))}
+                      <Button
+                        variant="outlined"
+                        startIcon={<AddRoundedIcon />}
+                        component="label"
+                        sx={{
+                          alignSelf: "flex-start",
+                          textTransform: "none",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Adicionar arquivos
+                        <input
+                          hidden
+                          type="file"
+                          multiple
+                          onChange={event => {
+                            void addAttachments(selectedNote, event.target.files);
+                            event.target.value = "";
+                          }}
+                        />
+                      </Button>
+                    </Stack>
+                  ) : null}
+
                   <RichTextEditor
                     key={selectedNote.id}
                     value={selectedNote.contentHtml}
@@ -1733,6 +1633,8 @@ export default function Notes() {
                         updatedAt: new Date().toISOString(),
                       })
                     }
+                    onNavigate={href => setLocation(href)}
+                    onCreateChildPage={() => createChildNote(selectedNote)}
                   />
 
                   <Stack direction="row" spacing={1} justifyContent="flex-end">
@@ -1771,402 +1673,40 @@ export default function Notes() {
           </Stack>
         </Box>
       </Stack>
-      <Dialog
+      <SettingsDialog
         open={settingsOpen}
         onClose={() => {
           setSettingsOpen(false);
-          cancelEditCategory();
-          cancelEditSubcategory();
           setSettingsAccordion(false);
         }}
+        title="Configurações de notas"
         maxWidth="sm"
-        fullWidth
-      >
-        <DialogContent>
-          <Stack spacing={2.5}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography variant="h6">Configurações de notas</Typography>
-              <IconButton
-                onClick={() => {
-                  setSettingsOpen(false);
-                  cancelEditCategory();
-                  cancelEditSubcategory();
-                  setSettingsAccordion(false);
-                }}
-                aria-label="Fechar"
+        onRestoreDefaults={handleRestoreNoteDefaults}
+        sections={[
+          {
+            key: "display",
+            title: "Exibição",
+            content: (
+              <Box
                 sx={{
-                  color: "text.secondary",
-                  "&:hover": { backgroundColor: "action.hover" },
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 1.5,
                 }}
               >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            <AppAccordion
-              expanded={settingsAccordion === "categories"}
-              onChange={(_, isExpanded) =>
-                setSettingsAccordion(isExpanded ? "categories" : false)
-              }
-              title="Categorias"
-            >
-              <Stack spacing={1.5}>
-                {editingCategoryId ? (
-                  <CardSection size="xs">
-                    <Stack spacing={1.5}>
-                      <TextField
-                        label="Nome"
-                        fullWidth
-                        value={editingCategoryName}
-                        onChange={event =>
-                          setEditingCategoryName(event.target.value)
-                        }
-                      />
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        flexWrap="wrap"
-                        useFlexGap
-                      >
-                        {DEFAULT_COLORS.map(color => (
-                          <Box
-                            key={color}
-                            onClick={() => setEditingCategoryColor(color)}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: 1,
-                              backgroundColor: color,
-                              borderStyle: "solid",
-                              borderWidth:
-                                editingCategoryColor === color ? 2 : 1,
-                              borderColor: "divider",
-                              cursor: "pointer",
-                            }}
-                          />
-                        ))}
-                      </Stack>
-                      <Stack
-                        direction="row"
-                        spacing={2}
-                        justifyContent="flex-end"
-                      >
-                        <Button variant="outlined" onClick={cancelEditCategory}>
-                          {t("common.cancel")}
-                        </Button>
-                        <Button variant="contained" onClick={saveCategory}>
-                          {t("common.save")}
-                        </Button>
-                      </Stack>
-                    </Stack>
-                  </CardSection>
-                ) : null}
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {categories.map(category => (
-                    <Chip
-                      key={category.id}
-                      label={category.name}
-                      onClick={() => startEditCategory(category)}
-                      onDelete={() =>
-                        setConfirmRemove({
-                          type: "category",
-                          id: category.id,
-                        })
-                      }
-                      sx={{
-                        color: "#e6edf3",
-                        backgroundColor: darkenColor(category.color, 0.5),
-                      }}
-                    />
-                  ))}
-                </Stack>
-                {editingCategoryId ? null : (
-                  <Stack spacing={1.5}>
-                    <TextField
-                      label="Nova categoria"
-                      fullWidth
-                      value={newCategoryName}
-                      onChange={event => setNewCategoryName(event.target.value)}
-                    />
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      flexWrap="wrap"
-                      useFlexGap
-                    >
-                      {DEFAULT_COLORS.map(color => (
-                        <Box
-                          key={color}
-                          onClick={() => setNewCategoryColor(color)}
-                          sx={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 1,
-                            backgroundColor: color,
-                            borderStyle: "solid",
-                            borderWidth: newCategoryColor === color ? 2 : 1,
-                            borderColor: "divider",
-                            cursor: "pointer",
-                          }}
-                        />
-                      ))}
-                    </Stack>
-                    <Button
-                      variant="outlined"
-                      startIcon={<AddRoundedIcon />}
-                      onClick={addCategory}
-                      sx={{
-                        alignSelf: "flex-start",
-                        textTransform: "none",
-                        fontWeight: 600,
-                      }}
-                    >
-                      Criar categoria
-                    </Button>
-                  </Stack>
-                )}
-              </Stack>
-            </AppAccordion>
-
-            <AppAccordion
-              expanded={settingsAccordion === "subcategories"}
-              onChange={(_, isExpanded) =>
-                setSettingsAccordion(isExpanded ? "subcategories" : false)
-              }
-              title="Subcategorias"
-            >
-              <Stack spacing={1.5}>
-                {editingSubcategoryId ? (
-                  <CardSection size="xs">
-                    <Stack spacing={1.5}>
-                      <TextField
-                        label="Nome"
-                        fullWidth
-                        value={editingSubcategoryName}
-                        onChange={event =>
-                          setEditingSubcategoryName(event.target.value)
-                        }
-                      />
-                      <TextField
-                        select
-                        label="Categoria"
-                        value={editingSubcategoryCategory}
-                        onChange={event =>
-                          setEditingSubcategoryCategory(event.target.value)
-                        }
-                      >
-                        {categories.map(category => (
-                          <MenuItem key={category.id} value={category.id}>
-                            {category.name}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        flexWrap="wrap"
-                        useFlexGap
-                      >
-                        {DEFAULT_COLORS.map(color => (
-                          <Box
-                            key={color}
-                            onClick={() => setEditingSubcategoryColor(color)}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: 1,
-                              backgroundColor: color,
-                              borderStyle: "solid",
-                              borderWidth:
-                                editingSubcategoryColor === color ? 2 : 1,
-                              borderColor: "divider",
-                              cursor: "pointer",
-                            }}
-                          />
-                        ))}
-                      </Stack>
-                      <Stack
-                        direction="row"
-                        spacing={2}
-                        justifyContent="flex-end"
-                      >
-                        <Button
-                          variant="outlined"
-                          onClick={cancelEditSubcategory}
-                        >
-                          {t("common.cancel")}
-                        </Button>
-                        <Button variant="contained" onClick={saveSubcategory}>
-                          {t("common.save")}
-                        </Button>
-                      </Stack>
-                    </Stack>
-                  </CardSection>
-                ) : null}
-                {!editingSubcategoryId ? (
-                  <TextField
-                    select
-                    label={t("common.category")}
-                    value={subcategoryFilter}
-                    onChange={event => {
-                      setSubcategoryFilter(event.target.value);
-                      setNewSubcategoryCategory(event.target.value);
-                    }}
-                  >
-                    {categories.map(category => (
-                      <MenuItem key={category.id} value={category.id}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                ) : null}
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {subcategories
-                    .filter(
-                      subcategory =>
-                        subcategory.categoryId === subcategoryFilter
-                    )
-                    .map(subcategory => {
-                      const parentCategory = categories.find(
-                        category => category.id === subcategory.categoryId
-                      );
-                      return (
-                        <Chip
-                          key={subcategory.id}
-                          label={`${parentCategory?.name || "Categoria"} - ${subcategory.name}`}
-                          onClick={() => startEditSubcategory(subcategory)}
-                          onDelete={() =>
-                            setConfirmRemove({
-                              type: "subcategory",
-                              id: subcategory.id,
-                            })
-                          }
-                          sx={{
-                            maxWidth: 320,
-                            minHeight: 32,
-                            color: "#e6edf3",
-                            backgroundColor: darkenColor(
-                              subcategory.color,
-                              0.7
-                            ),
-                            "& .MuiChip-label": {
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            },
-                          }}
-                        />
-                      );
-                    })}
-                  {!subcategories.filter(
-                    subcategory => subcategory.categoryId === subcategoryFilter
-                  ).length ? (
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Nenhuma subcategoria criada.
-                    </Typography>
-                  ) : null}
-                </Stack>
-                {editingSubcategoryId ? null : (
-                  <Stack spacing={1.5}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <TextField
-                        select
-                        label="Categoria"
-                        value={newSubcategoryCategory}
-                        onChange={event =>
-                          setNewSubcategoryCategory(event.target.value)
-                        }
-                        sx={{ minWidth: 180 }}
-                      >
-                        {categories.map(category => (
-                          <MenuItem key={category.id} value={category.id}>
-                            {category.name}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                      <TextField
-                        label="Nova subcategoria"
-                        fullWidth
-                        value={newSubcategoryName}
-                        onChange={event =>
-                          setNewSubcategoryName(event.target.value)
-                        }
-                      />
-                      <IconButton
-                        onClick={addSubcategory}
-                        aria-label="Adicionar subcategoria"
-                      >
-                        <AddRoundedIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      flexWrap="wrap"
-                      useFlexGap
-                    >
-                      {DEFAULT_COLORS.map(color => (
-                        <Box
-                          key={color}
-                          onClick={() => setNewSubcategoryColor(color)}
-                          sx={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 1,
-                            backgroundColor: color,
-                            borderStyle: "solid",
-                            borderWidth: newSubcategoryColor === color ? 2 : 1,
-                            borderColor: "divider",
-                            cursor: "pointer",
-                          }}
-                        />
-                      ))}
-                    </Stack>
-                  </Stack>
-                )}
-              </Stack>
-            </AppAccordion>
-
-            <AppAccordion
-              expanded={settingsAccordion === "display"}
-              onChange={(_, isExpanded) =>
-                setSettingsAccordion(isExpanded ? "display" : false)
-              }
-              title="Exibição"
-            >
-              <Stack spacing={1.5}>
                 {[
-                  { key: "showCategories", label: "Mostrar categorias" },
-                  {
-                    key: "showSubcategories",
-                    label: "Mostrar subcategorias",
-                  },
-                  {
-                    key: "showCategoryCounts",
-                    label: "Mostrar contagem por categoria",
-                  },
                   { key: "showLinks", label: "Mostrar links" },
-                  {
-                    key: "showUpdatedAt",
-                    label: "Mostrar última atualização",
-                  },
+                  { key: "showFiles", label: "Mostrar arquivos" },
                 ].map(item => (
-                  <Box
+                  <CardSection
                     key={item.key}
+                    size="flush"
                     sx={theme => ({
-                      ...interactiveItemSx(theme),
+                      ...interactiveCardSx(theme),
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      p: 1.5,
+                      p: 2,
                       cursor: "pointer",
                     })}
                     onClick={() =>
@@ -2190,54 +1730,12 @@ export default function Notes() {
                       }
                       onClick={event => event.stopPropagation()}
                     />
-                  </Box>
+                  </CardSection>
                 ))}
-              </Stack>
-            </AppAccordion>
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              alignItems={{ xs: "stretch", sm: "center" }}
-              justifyContent="flex-end"
-            >
-              <Button
-                variant="outlined"
-                onClick={handleRestoreNoteDefaults}
-                sx={{ textTransform: "none", fontWeight: 600 }}
-              >
-                Restaurar padrão
-              </Button>
-              <Button variant="outlined" onClick={() => setSettingsOpen(false)}>
-                Fechar
-              </Button>
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-      <ConfirmDialog
-        open={Boolean(confirmRemove)}
-        title={
-          confirmRemove?.type === "category"
-            ? "Remover categoria"
-            : "Remover subcategoria"
-        }
-        description={
-          confirmRemove?.type === "category"
-            ? "Você confirma a remoção desta categoria? As notas serão movidas."
-            : "Você confirma a remoção desta subcategoria? Ela será removida das notas."
-        }
-        onCancel={() => setConfirmRemove(null)}
-        onConfirm={() => {
-          if (!confirmRemove) {
-            return;
-          }
-          if (confirmRemove.type === "category") {
-            removeCategory(confirmRemove.id);
-          } else {
-            removeSubcategory(confirmRemove.id);
-          }
-          setConfirmRemove(null);
-        }}
+              </Box>
+            ),
+          },
+        ]}
       />
       <ConfirmDialog
         open={Boolean(noteConfirm)}
@@ -2344,10 +1842,49 @@ function ConfirmDialog({
 function RichTextEditor({
   value,
   onChange,
+  onNavigate,
+  onCreateChildPage,
 }: {
   value: string;
   onChange: (nextValue: string) => void;
+  onNavigate: (href: string) => void;
+  onCreateChildPage: () => Note;
 }) {
+  type SlashItem = {
+    id: string;
+    label: string;
+    keywords: string;
+    run: (opts: { editor: any }) => void;
+  };
+
+  const [slashOpen, setSlashOpen] = useState(false);
+  const [slashItems, setSlashItems] = useState<SlashItem[]>([]);
+  const [slashIndex, setSlashIndex] = useState(0);
+  const [slashAnchorRect, setSlashAnchorRect] = useState<DOMRect | null>(null);
+  const slashCommandRef = useRef<((item: SlashItem) => void) | null>(null);
+  const slashIndexRef = useRef(0);
+  const slashItemsRef = useRef<SlashItem[]>([]);
+
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkHref, setLinkHref] = useState("");
+  const [linkText, setLinkText] = useState("");
+
+  const [linkMenuOpen, setLinkMenuOpen] = useState(false);
+  const [linkMenuAnchorRect, setLinkMenuAnchorRect] = useState<DOMRect | null>(
+    null
+  );
+  const [linkMenuHref, setLinkMenuHref] = useState("");
+  const linkMenuAnchorElRef = useRef<HTMLAnchorElement | null>(null);
+  const skipNextLinkClickRef = useRef(false);
+
+  useEffect(() => {
+    slashIndexRef.current = slashIndex;
+  }, [slashIndex]);
+
+  useEffect(() => {
+    slashItemsRef.current = slashItems;
+  }, [slashItems]);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -2358,10 +1895,196 @@ function RichTextEditor({
       }),
       Underline,
       Link.configure({
-        openOnClick: true,
+        openOnClick: false,
         HTMLAttributes: {
           target: "_blank",
           rel: "noopener noreferrer",
+        },
+      }),
+      Extension.create({
+        name: "slashCommand",
+        addProseMirrorPlugins() {
+          const getItems = (query: string): SlashItem[] => {
+            const q = query.trim().toLowerCase();
+            const all: SlashItem[] = [
+              {
+                id: "bold",
+                label: "Negrito",
+                keywords: "negrito bold",
+                run: ({ editor }) => editor.chain().focus().toggleBold().run(),
+              },
+              {
+                id: "italic",
+                label: "Itálico",
+                keywords: "italico italic",
+                run: ({ editor }) =>
+                  editor.chain().focus().toggleItalic().run(),
+              },
+              {
+                id: "underline",
+                label: "Sublinhado",
+                keywords: "sublinhado underline",
+                run: ({ editor }) =>
+                  editor.chain().focus().toggleUnderline().run(),
+              },
+              {
+                id: "h1",
+                label: "Título 1",
+                keywords: "titulo heading h1",
+                run: ({ editor }) =>
+                  editor.chain().focus().toggleHeading({ level: 1 }).run(),
+              },
+              {
+                id: "h2",
+                label: "Título 2",
+                keywords: "titulo heading h2",
+                run: ({ editor }) =>
+                  editor.chain().focus().toggleHeading({ level: 2 }).run(),
+              },
+              {
+                id: "h3",
+                label: "Título 3",
+                keywords: "titulo heading h3",
+                run: ({ editor }) =>
+                  editor.chain().focus().toggleHeading({ level: 3 }).run(),
+              },
+              {
+                id: "bullet",
+                label: "Lista",
+                keywords: "lista bullet",
+                run: ({ editor }) =>
+                  editor.chain().focus().toggleBulletList().run(),
+              },
+              {
+                id: "ordered",
+                label: "Lista numerada",
+                keywords: "lista numerada ordered",
+                run: ({ editor }) =>
+                  editor.chain().focus().toggleOrderedList().run(),
+              },
+              {
+                id: "quote",
+                label: "Citação",
+                keywords: "citacao quote",
+                run: ({ editor }) =>
+                  editor.chain().focus().toggleBlockquote().run(),
+              },
+              {
+                id: "clear",
+                label: "Limpar formatação",
+                keywords: "limpar clear",
+                run: ({ editor }) =>
+                  editor.chain().focus().unsetAllMarks().clearNodes().run(),
+              },
+              {
+                id: "new-page",
+                label: "Nova página",
+                keywords: "nova pagina page subpage",
+                run: ({ editor }) => {
+                  const child = onCreateChildPage();
+                  const href = `/notas/${child.id}`;
+                  const label = child.title || "Nova página";
+                  const safeLabel = label.replace(/[&<>]/g, char => {
+                    if (char === "&") return "&amp;";
+                    if (char === "<") return "&lt;";
+                    if (char === ">") return "&gt;";
+                    return char;
+                  });
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContent(`<a href="${href}">${safeLabel}</a>&nbsp;`)
+                    .run();
+                  onNavigate(href);
+                },
+              },
+            ];
+
+            if (!q) {
+              return all;
+            }
+            return all.filter(item =>
+              `${item.label} ${item.keywords}`.toLowerCase().includes(q)
+            );
+          };
+
+          return [
+            Suggestion({
+              editor: this.editor,
+              char: "/",
+              startOfLine: false,
+              allow: ({ state, range }) => {
+                const from = Math.max(0, range.from - 1);
+                if (from === range.from) {
+                  return true;
+                }
+                const charBefore = state.doc.textBetween(
+                  from,
+                  range.from,
+                  "\n",
+                  "\n"
+                );
+                return !charBefore || /\s/.test(charBefore);
+              },
+              items: ({ query }) => getItems(query),
+              command: ({ editor, range, props }) => {
+                editor.chain().focus().deleteRange(range).run();
+                (props as SlashItem).run({ editor });
+              },
+              render: () => {
+                return {
+                  onStart: props => {
+                    setSlashItems(props.items as SlashItem[]);
+                    setSlashIndex(0);
+                    setSlashOpen(true);
+                    setSlashAnchorRect(props.clientRect?.() || null);
+                    slashCommandRef.current = (item: SlashItem) =>
+                      props.command(item);
+                  },
+                  onUpdate: props => {
+                    setSlashItems(props.items as SlashItem[]);
+                    setSlashIndex(0);
+                    setSlashOpen(true);
+                    setSlashAnchorRect(props.clientRect?.() || null);
+                    slashCommandRef.current = (item: SlashItem) =>
+                      props.command(item);
+                  },
+                  onKeyDown: props => {
+                    if (props.event.key === "Escape") {
+                      setSlashOpen(false);
+                      return true;
+                    }
+                    if (props.event.key === "ArrowDown") {
+                      setSlashIndex(current =>
+                        Math.min(
+                          current + 1,
+                          Math.max(0, slashItemsRef.current.length - 1)
+                        )
+                      );
+                      return true;
+                    }
+                    if (props.event.key === "ArrowUp") {
+                      setSlashIndex(current => Math.max(current - 1, 0));
+                      return true;
+                    }
+                    if (props.event.key === "Enter") {
+                      const item = slashItemsRef.current?.[slashIndexRef.current];
+                      if (item) {
+                        slashCommandRef.current?.(item);
+                        return true;
+                      }
+                    }
+                    return false;
+                  },
+                  onExit: () => {
+                    setSlashOpen(false);
+                    setSlashAnchorRect(null);
+                    slashCommandRef.current = null;
+                  },
+                };
+              },
+            }),
+          ];
         },
       }),
     ],
@@ -2370,6 +2093,124 @@ function RichTextEditor({
       onChange(editor.getHTML());
     },
   });
+
+  const openLinkDialogFromSelection = () => {
+    if (!editor) {
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").run();
+    const href = String(editor.getAttributes("link")?.href || "");
+    const { from, to } = editor.state.selection;
+    const text = editor.state.doc.textBetween(from, to, " ", " ");
+    setLinkHref(href);
+    setLinkText(text);
+    setLinkDialogOpen(true);
+  };
+
+  const openLinkDialogFromAnchor = (anchor: HTMLAnchorElement) => {
+    if (!editor) {
+      return;
+    }
+    try {
+      const pos = editor.view.posAtDOM(anchor, 0);
+      editor.commands.setTextSelection(pos);
+      editor.commands.extendMarkRange("link");
+      const href = String(editor.getAttributes("link")?.href || anchor.href || "");
+      const { from, to } = editor.state.selection;
+      const text = editor.state.doc.textBetween(from, to, " ", " ");
+      setLinkHref(href);
+      setLinkText(text);
+      setLinkDialogOpen(true);
+    } catch {
+      openLinkDialogFromSelection();
+    }
+  };
+
+  const openLinkMenuFromAnchor = (anchor: HTMLAnchorElement) => {
+    const href = anchor.getAttribute("href") || "";
+    if (!href) {
+      return;
+    }
+
+    if (href.startsWith("/notas/")) {
+      onNavigate(href);
+      return;
+    }
+    setLinkMenuHref(href);
+    setLinkMenuAnchorRect(anchor.getBoundingClientRect());
+    linkMenuAnchorElRef.current = anchor;
+    setLinkMenuOpen(true);
+  };
+
+  const closeLinkMenu = () => {
+    setLinkMenuOpen(false);
+    setLinkMenuAnchorRect(null);
+    linkMenuAnchorElRef.current = null;
+  };
+
+  const closeLinkDialog = () => {
+    setLinkDialogOpen(false);
+  };
+
+  const applyLinkDialog = () => {
+    if (!editor) {
+      closeLinkDialog();
+      return;
+    }
+    const nextHref = linkHref.trim();
+    const nextText = linkText;
+
+    editor.chain().focus().extendMarkRange("link").run();
+    const { from, to } = editor.state.selection;
+    const hasSelection = from !== to;
+
+    if (!nextHref) {
+      if (hasSelection) {
+        editor.commands.unsetLink();
+      }
+      closeLinkDialog();
+      return;
+    }
+
+    if (!hasSelection) {
+      const basePos = editor.state.selection.from;
+      const textToInsert = (nextText || nextHref).trim();
+      if (!textToInsert) {
+        closeLinkDialog();
+        return;
+      }
+      editor.commands.insertContent(textToInsert);
+      editor.commands.setTextSelection({
+        from: basePos,
+        to: basePos + textToInsert.length,
+      });
+      editor.commands.setLink({ href: nextHref });
+      closeLinkDialog();
+      return;
+    }
+
+    const currentText = editor.state.doc.textBetween(from, to, " ", " ");
+    const desiredText = nextText;
+    if (desiredText && desiredText !== currentText) {
+      editor.commands.insertContentAt({ from, to }, desiredText);
+      editor.commands.setTextSelection({
+        from,
+        to: from + desiredText.length,
+      });
+    }
+
+    editor.commands.setLink({ href: nextHref });
+    closeLinkDialog();
+  };
+
+  const removeLinkInDialog = () => {
+    if (!editor) {
+      closeLinkDialog();
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    closeLinkDialog();
+  };
 
   useEffect(() => {
     if (!editor) {
@@ -2420,12 +2261,7 @@ function RichTextEditor({
         <IconButton
           {...iconButtonProps}
           onClick={() => {
-            const url = window.prompt("URL do link:");
-            if (url) {
-              editor?.chain().focus().setLink({ href: url }).run();
-            } else if (url === "") {
-              editor?.chain().focus().unsetLink().run();
-            }
+            openLinkDialogFromSelection();
           }}
           color={editor?.isActive("link") ? "primary" : "default"}
           aria-label="Link"
@@ -2542,9 +2378,206 @@ function RichTextEditor({
             pointerEvents: "none",
           },
         })}
+        onMouseDownCapture={event => {
+          if (event.button !== 0) {
+            return;
+          }
+          const target = event.target as HTMLElement | null;
+          const anchor = target?.closest?.("a") as HTMLAnchorElement | null;
+          if (!anchor) {
+            return;
+          }
+          const href = anchor.getAttribute("href") || "";
+          if (!href) {
+            return;
+          }
+
+          skipNextLinkClickRef.current = true;
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (href.startsWith("/notas/")) {
+            onNavigate(href);
+            return;
+          }
+
+          if (event.ctrlKey || event.metaKey) {
+            window.open(href, "_blank", "noopener,noreferrer");
+            return;
+          }
+
+          openLinkMenuFromAnchor(anchor);
+        }}
+        onClick={event => {
+          if (!skipNextLinkClickRef.current) {
+            return;
+          }
+          skipNextLinkClickRef.current = false;
+          const target = event.target as HTMLElement | null;
+          const anchor = target?.closest?.("a") as HTMLAnchorElement | null;
+          if (!anchor) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+        }}
       >
         <EditorContent editor={editor} />
       </Box>
+
+      <Popper
+        open={linkMenuOpen && Boolean(linkMenuAnchorRect)}
+        placement="bottom-start"
+        anchorEl={
+          linkMenuAnchorRect
+            ? {
+                getBoundingClientRect: () => linkMenuAnchorRect,
+              }
+            : null
+        }
+        sx={{ zIndex: theme => theme.zIndex.modal + 1 }}
+      >
+        <ClickAwayListener onClickAway={closeLinkMenu}>
+          <AppCard
+            sx={theme => ({
+              borderRadius: APP_RADIUS,
+              border: 1,
+              borderColor: "divider",
+              backgroundColor: "background.paper",
+              minWidth: 200,
+              overflow: "hidden",
+              boxShadow: theme.shadows[4],
+            })}
+            onKeyDown={event => {
+              if (event.key === "Escape") {
+                closeLinkMenu();
+              }
+            }}
+          >
+            <List dense disablePadding>
+              <ListItemButton
+                onClick={() => {
+                  closeLinkMenu();
+                  const anchor = linkMenuAnchorElRef.current;
+                  if (anchor) {
+                    openLinkDialogFromAnchor(anchor);
+                    return;
+                  }
+                  openLinkDialogFromSelection();
+                }}
+              >
+                <ListItemText primary="Editar" />
+              </ListItemButton>
+              <ListItemButton
+                onClick={() => {
+                  const href = linkMenuHref;
+                  closeLinkMenu();
+                  if (href.startsWith("/notas/")) {
+                    onNavigate(href);
+                    return;
+                  }
+                  window.open(href, "_blank", "noopener,noreferrer");
+                }}
+              >
+                <ListItemText primary="Abrir link" />
+              </ListItemButton>
+            </List>
+          </AppCard>
+        </ClickAwayListener>
+      </Popper>
+
+      <Dialog
+        open={linkDialogOpen}
+        onClose={closeLinkDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogContent>
+          <Stack spacing={2}>
+            <Typography variant="h6">Link</Typography>
+            <TextField
+              label="Texto"
+              value={linkText}
+              onChange={e => setLinkText(e.target.value)}
+              fullWidth
+            />
+            <TextField
+              label="URL"
+              value={linkHref}
+              onChange={e => setLinkHref(e.target.value)}
+              fullWidth
+              autoFocus
+            />
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="flex-end"
+            >
+              <Button variant="outlined" onClick={closeLinkDialog}>
+                Cancelar
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={removeLinkInDialog}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                Remover link
+              </Button>
+              <Button
+                variant="contained"
+                onClick={applyLinkDialog}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                Salvar
+              </Button>
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+
+      <Popper
+        open={slashOpen && Boolean(slashAnchorRect) && slashItems.length > 0}
+        placement="bottom-start"
+        anchorEl={
+          slashAnchorRect
+            ? {
+                getBoundingClientRect: () => slashAnchorRect,
+              }
+            : null
+        }
+        sx={{ zIndex: theme => theme.zIndex.modal + 1 }}
+      >
+        <AppCard
+          sx={theme => ({
+            borderRadius: APP_RADIUS,
+            border: 1,
+            borderColor: "divider",
+            backgroundColor: "background.paper",
+            minWidth: 220,
+            maxWidth: 320,
+            overflow: "hidden",
+            boxShadow: theme.shadows[4],
+          })}
+        >
+          <List dense disablePadding>
+            {slashItems.map((item, index) => (
+              <ListItemButton
+                key={item.id}
+                selected={index === slashIndex}
+                onMouseEnter={() => setSlashIndex(index)}
+                onMouseDown={event => {
+                  event.preventDefault();
+                  slashCommandRef.current?.(item);
+                }}
+              >
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            ))}
+          </List>
+        </AppCard>
+      </Popper>
     </Stack>
   );
 }

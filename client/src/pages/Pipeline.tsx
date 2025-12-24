@@ -11,7 +11,6 @@ import {
   Snackbar,
   IconButton,
   InputAdornment,
-  Paper,
   Alert,
   MenuItem,
   Stack,
@@ -50,10 +49,12 @@ import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import SettingsIconButton from "../components/SettingsIconButton";
 import api from "../api";
+import { usePageActions } from "../hooks/usePageActions";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import PageContainer from "../components/layout/PageContainer";
 import AppAccordion from "../components/layout/AppAccordion";
 import CardSection from "../components/layout/CardSection";
+import SettingsDialog from "../components/SettingsDialog";
 import { APP_RADIUS } from "../designTokens";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import { CategoryChip } from "../components/CategoryChip";
@@ -79,6 +80,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+import AppCard from "../components/layout/AppCard";
 type Deal = {
   id: string;
   name: string;
@@ -1978,6 +1980,45 @@ export default function Pipeline() {
     });
   };
 
+  const pageActions = useMemo(
+    () => (
+      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+        <TextField
+          label="Buscar tasks"
+          value={taskQuery}
+          onChange={event => setTaskQuery(event.target.value)}
+          sx={{ width: 240, minWidth: 0 }}
+          InputProps={{
+            endAdornment: taskQuery ? (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={() => setTaskQuery("")}
+                  aria-label="Limpar busca"
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
+          }}
+        />
+        <CategoryFilter
+          categories={categories}
+          selectedIds={categoryFilters}
+          onChange={setCategoryFilters}
+          width={280}
+        />
+        <SettingsIconButton
+          onClick={() => setTaskFieldSettingsOpen(true)}
+          disabled={!permissions.pipeline_edit_tasks}
+        />
+      </Stack>
+    ),
+    [taskQuery, categories, categoryFilters, permissions.pipeline_edit_tasks]
+  );
+
+  usePageActions(pageActions);
+
   return (
     <PageContainer>
       <Stack spacing={3} sx={{ flex: 1, minHeight: 0 }}>
@@ -1986,12 +2027,9 @@ export default function Pipeline() {
             direction="row"
             spacing={2}
             alignItems="center"
-            justifyContent="space-between"
-            sx={{ width: "100%" }}
+            justifyContent="flex-end"
+            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
           >
-            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
-              Pipeline
-            </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               <Stack
                 direction="row"
@@ -2082,7 +2120,7 @@ export default function Pipeline() {
           autoScroll
         >
           {normalizedQuery && visibleColumns.length === 0 ? (
-            <Paper
+            <AppCard
               elevation={0}
               sx={{
                 p: 3,
@@ -2095,7 +2133,7 @@ export default function Pipeline() {
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Nenhuma tarefa encontrada.
               </Typography>
-            </Paper>
+            </AppCard>
           ) : null}
           <SortableContext
             items={columnItems}
@@ -2167,6 +2205,10 @@ export default function Pipeline() {
                 onPointerUp={handleScrollPointerUp}
                 onPointerLeave={handleScrollPointerUp}
                 sx={theme => ({
+                  flex: 1,
+                  minHeight: 0,
+                  display: "flex",
+                  flexDirection: "column",
                   overflowX: "auto",
                   pb: 4,
                   cursor: "grab",
@@ -2191,7 +2233,8 @@ export default function Pipeline() {
                 <Stack
                   direction="row"
                   spacing={2}
-                  sx={{ width: "max-content", minWidth: "100%" }}
+                  alignItems="stretch"
+                  sx={{ width: "max-content", minWidth: "100%", minHeight: "100%" }}
                 >
                   {visibleColumns.map(column => (
                     <SortableColumn
@@ -2212,7 +2255,7 @@ export default function Pipeline() {
                     />
                   ))}
                   {permissions.pipeline_edit_columns ? (
-                    <Paper
+                    <AppCard
                       elevation={0}
                       onClick={handleAddColumn}
                       data-draggable
@@ -2243,7 +2286,7 @@ export default function Pipeline() {
                           Adicionar coluna
                         </Typography>
                       </Stack>
-                    </Paper>
+                    </AppCard>
                   ) : null}
                 </Stack>
               </Box>
@@ -2258,7 +2301,7 @@ export default function Pipeline() {
                       return null;
                     }
                     return (
-                      <Paper
+                      <AppCard
                         elevation={0}
                         sx={theme => ({
                           p: 2.5,
@@ -2328,7 +2371,7 @@ export default function Pipeline() {
                             ) : null}
                           </Stack>
                         </Stack>
-                      </Paper>
+                      </AppCard>
                     );
                   })()
                 : isCardId(activeDragId)
@@ -2377,7 +2420,7 @@ export default function Pipeline() {
         </DndContext>
         {sprintState.enabled ? (
           <Stack spacing={2}>
-            <Paper
+            <AppCard
               elevation={0}
               variant="outlined"
               sx={{
@@ -2439,9 +2482,9 @@ export default function Pipeline() {
                   )}
                 </Stack>
               </Stack>
-            </Paper>
+            </AppCard>
 
-            <Paper
+            <AppCard
               elevation={0}
               variant="outlined"
               sx={{
@@ -2466,7 +2509,7 @@ export default function Pipeline() {
                     }}
                   >
                     {filteredBacklog.map(deal => (
-                      <Paper
+                      <AppCard
                         key={deal.id}
                         elevation={0}
                         onClick={() => handleViewOpen(deal)}
@@ -2510,12 +2553,12 @@ export default function Pipeline() {
                             Adicionar a sprint
                           </Button>
                         </Stack>
-                      </Paper>
+                      </AppCard>
                     ))}
                   </Box>
                 )}
               </Stack>
-            </Paper>
+            </AppCard>
           </Stack>
         ) : null}
 
@@ -2734,53 +2777,21 @@ export default function Pipeline() {
             </Stack>
           </DialogContent>
         </Dialog>
-        <Dialog
+        <SettingsDialog
           open={taskFieldSettingsOpen}
           onClose={() => {
             setTaskFieldSettingsOpen(false);
             cancelEditCategory();
             setConfigAccordion(false);
           }}
+          title="Configurações"
           maxWidth="sm"
-          fullWidth
-        >
-          <DialogContent>
-            <Stack spacing={2.5}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Typography variant="h6">Configurações</Typography>
-                <IconButton
-                  onClick={() => {
-                    setTaskFieldSettingsOpen(false);
-                    cancelEditCategory();
-                    setConfigAccordion(false);
-                  }}
-                  aria-label="Fechar"
-                  sx={{
-                    color: "text.secondary",
-                    "&:hover": { backgroundColor: "action.hover" },
-                  }}
-                >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
-              </Box>
-              <AppAccordion
-                elevation={0}
-                expanded={configAccordion === "sprints"}
-                onChange={(_, isExpanded) =>
-                  setConfigAccordion(isExpanded ? "sprints" : false)
-                }
-                title="Sprints e backlog"
-                sx={theme => ({
-                  "&:before": { display: "none" },
-                  ...interactiveCardSx(theme),
-                })}
-              >
+          onRestoreDefaults={handleRestorePipelineDefaults}
+          sections={[
+            {
+              key: "sprints",
+              title: "Sprints e backlog",
+              content: (
                 <Stack spacing={2}>
                   <Box
                     sx={theme => ({
@@ -2911,19 +2922,12 @@ export default function Pipeline() {
                     )}
                   </Stack>
                 </Stack>
-              </AppAccordion>
-              <AppAccordion
-                elevation={0}
-                expanded={configAccordion === "fields"}
-                onChange={(_, isExpanded) =>
-                  setConfigAccordion(isExpanded ? "fields" : false)
-                }
-                title="Campos da tarefa"
-                sx={theme => ({
-                  "&:before": { display: "none" },
-                  ...interactiveCardSx(theme),
-                })}
-              >
+              ),
+            },
+            {
+              key: "fields",
+              title: "Campos da tarefa",
+              content: (
                 <Box
                   sx={{
                     display: "grid",
@@ -2931,370 +2935,63 @@ export default function Pipeline() {
                     gap: 1.5,
                   }}
                 >
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        value: !prev.value,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Mostrar valor</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.value}
-                      onChange={event =>
+                  {[
+                    { key: "value", label: "Mostrar valor" },
+                    { key: "link", label: "Mostrar link" },
+                    { key: "description", label: "Mostrar descricao" },
+                    { key: "priority", label: "Prioridade" },
+                    { key: "dueDate", label: "Data de entrega" },
+                    { key: "checklist", label: "Checklist" },
+                    { key: "labels", label: "Labels" },
+                    { key: "estimate", label: "Estimativa" },
+                    { key: "timeSpent", label: "Tempo gasto" },
+                    { key: "watchers", label: "Observadores" },
+                    { key: "attachments", label: "Anexos" },
+                    { key: "sprintInfo", label: "Sprint" },
+                  ].map(field => (
+                    <Box
+                      key={field.key}
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        borderColor: "divider",
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
                         setTaskFieldSettings(prev => ({
                           ...prev,
-                          value: event.target.checked,
+                          [field.key]:
+                            !prev[field.key as keyof typeof taskFieldSettings],
                         }))
                       }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        link: !prev.link,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Mostrar link</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.link}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          link: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        description: !prev.description,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">
-                      Mostrar descricao
-                    </Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.description}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          description: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        priority: !prev.priority,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Prioridade</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.priority}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          priority: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        dueDate: !prev.dueDate,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Data de entrega</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.dueDate}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          dueDate: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        checklist: !prev.checklist,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Checklist</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.checklist}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          checklist: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        labels: !prev.labels,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Labels</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.labels}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          labels: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        estimate: !prev.estimate,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Estimativa</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.estimate}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          estimate: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        timeSpent: !prev.timeSpent,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Tempo gasto</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.timeSpent}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          timeSpent: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        watchers: !prev.watchers,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Observadores</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.watchers}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          watchers: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        attachments: !prev.attachments,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Anexos</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.attachments}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          attachments: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
-                  <Box
-                    sx={theme => ({
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      p: 1.5,
-                      borderColor: "divider",
-                      cursor: "pointer",
-                      ...interactiveCardSx(theme),
-                    })}
-                    onClick={() =>
-                      setTaskFieldSettings(prev => ({
-                        ...prev,
-                        sprintInfo: !prev.sprintInfo,
-                      }))
-                    }
-                  >
-                    <Typography variant="subtitle2">Sprint</Typography>
-                    <ToggleCheckbox
-                      checked={taskFieldSettings.sprintInfo}
-                      onChange={event =>
-                        setTaskFieldSettings(prev => ({
-                          ...prev,
-                          sprintInfo: event.target.checked,
-                        }))
-                      }
-                      onClick={event => event.stopPropagation()}
-                    />
-                  </Box>
+                    >
+                      <Typography variant="subtitle2">{field.label}</Typography>
+                      <ToggleCheckbox
+                        checked={Boolean(
+                          taskFieldSettings[
+                            field.key as keyof typeof taskFieldSettings
+                          ]
+                        )}
+                        onChange={event =>
+                          setTaskFieldSettings(prev => ({
+                            ...prev,
+                            [field.key]: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </Box>
+                  ))}
                 </Box>
-              </AppAccordion>
-              <AppAccordion
-                elevation={0}
-                expanded={configAccordion === "categories"}
-                onChange={(_, isExpanded) =>
-                  setConfigAccordion(isExpanded ? "categories" : false)
-                }
-                title="Categorias"
-                sx={theme => ({
-                  "&:before": { display: "none" },
-                  ...interactiveCardSx(theme),
-                })}
-              >
+              ),
+            },
+            {
+              key: "categories",
+              title: "Categorias",
+              content: (
                 <Stack spacing={1.5}>
                   {editingCategoryId ? (
                     <CardSection size="xs">
@@ -3422,19 +3119,12 @@ export default function Pipeline() {
                     </Box>
                   )}
                 </Stack>
-              </AppAccordion>
-              <AppAccordion
-                elevation={0}
-                expanded={configAccordion === "columns"}
-                onChange={(_, isExpanded) =>
-                  setConfigAccordion(isExpanded ? "columns" : false)
-                }
-                title="Colunas"
-                sx={theme => ({
-                  "&:before": { display: "none" },
-                  ...interactiveCardSx(theme),
-                })}
-              >
+              ),
+            },
+            {
+              key: "columns",
+              title: "Colunas",
+              content: (
                 <Stack spacing={2}>
                   <Typography variant="body2" sx={{ color: "text.secondary" }}>
                     Renomeie, reorganize ou arquive colunas.
@@ -3543,34 +3233,10 @@ export default function Pipeline() {
                     )}
                   </AppAccordion>
                 </Stack>
-              </AppAccordion>
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                spacing={2}
-                alignItems={{ xs: "stretch", sm: "center" }}
-                justifyContent="flex-end"
-              >
-                <Button
-                  variant="outlined"
-                  onClick={handleRestorePipelineDefaults}
-                  sx={{ textTransform: "none", fontWeight: 600 }}
-                >
-                  Restaurar padrão
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    setTaskFieldSettingsOpen(false);
-                    cancelEditCategory();
-                    setConfigAccordion(false);
-                  }}
-                >
-                  Fechar
-                </Button>
-              </Stack>
-            </Stack>
-          </DialogContent>
-        </Dialog>
+              ),
+            },
+          ]}
+        />
         <Dialog
           open={removeDealOpen}
           onClose={() => setRemoveDealOpen(false)}
@@ -4043,7 +3709,7 @@ function SortableColumn({
   };
 
   return (
-    <Paper
+    <AppCard
       ref={setNodeRef}
       elevation={0}
       variant="outlined"
@@ -4051,10 +3717,13 @@ function SortableColumn({
         p: 2.5,
         flex: "0 0 280px",
         minWidth: 280,
+        minHeight: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
       style={style}
     >
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
         <Box
           sx={{
             display: "flex",
@@ -4114,7 +3783,7 @@ function SortableColumn({
           items={filteredDeals.map(deal => cardDragId(deal.id))}
           strategy={verticalListSortingStrategy}
         >
-          <Stack spacing={1.5}>
+          <Stack spacing={1.5} sx={{ flex: 1, minHeight: 0 }}>
             {filteredDeals.map(deal => (
               <SortableDeal
                 key={deal.id}
@@ -4128,7 +3797,7 @@ function SortableColumn({
           </Stack>
         </SortableContext>
       </Stack>
-    </Paper>
+    </AppCard>
   );
 }
 
@@ -4237,7 +3906,7 @@ function SortableColumnRow({
   };
 
   return (
-    <Paper
+    <AppCard
       ref={setNodeRef}
       elevation={0}
       sx={{
@@ -4292,7 +3961,7 @@ function SortableColumnRow({
           </IconButton>
         </Stack>
       </Stack>
-    </Paper>
+    </AppCard>
   );
 }
 

@@ -14,7 +14,6 @@ import {
   InputAdornment,
   MenuItem,
   Pagination,
-  Paper,
   Popover,
   Snackbar,
   Stack,
@@ -60,6 +59,7 @@ import FormatUnderlinedRoundedIcon from "@mui/icons-material/FormatUnderlinedRou
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import api from "../api";
 import { APP_RADIUS } from "../designTokens";
 import ToggleCheckbox from "../components/ToggleCheckbox";
@@ -70,12 +70,13 @@ import {
   staticCardSx,
 } from "../styles/interactiveCard";
 import SettingsIconButton from "../components/SettingsIconButton";
+import { usePageActions } from "../hooks/usePageActions";
 import PageContainer from "../components/layout/PageContainer";
 import AppCard from "../components/layout/AppCard";
 import CardSection from "../components/layout/CardSection";
-import AppAccordion from "../components/layout/AppAccordion";
 import { CategoryChip } from "../components/CategoryChip";
 import CategoryFilter from "../components/CategoryFilter";
+import SettingsDialog from "../components/SettingsDialog";
 import { loadUserStorage, saveUserStorage } from "../userStorage";
 
 type Category = {
@@ -413,8 +414,11 @@ export default function Calendar() {
   const [users, setUsers] = useState<PipelineUser[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [calendarSettingsOpen, setCalendarSettingsOpen] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
+    typeof Notification !== "undefined" ? Notification.permission : "default"
+  );
   const [configAccordion, setConfigAccordion] = useState<
-    "fields" | "categories" | false
+    "fields" | "categories" | "notifications" | false
   >(false);
   const [calendarSettings, setCalendarSettings] = useState({
     ...defaultCalendarSettings,
@@ -488,10 +492,44 @@ export default function Calendar() {
 
       const stored = window.localStorage.getItem(STORAGE_TASKS);
       if (!stored) {
-        const sample = getSampleTasks(new Date());
-        setTasks(sample);
-        window.localStorage.setItem(STORAGE_TASKS, JSON.stringify(sample));
-        void saveUserStorage(STORAGE_TASKS, sample);
+        // Popula tarefas fake
+        const now = new Date();
+        const fakeTasks: CalendarTask[] = [
+          {
+            id: "task-1",
+            name: "Revisar contrato do cliente",
+            date: now.toISOString().slice(0, 10),
+            allDay: false,
+            startTime: "09:00",
+            endTime: "10:00",
+            done: false,
+            calendarId: "1",
+            categoryIds: [],
+          },
+          {
+            id: "task-2",
+            name: "Preparar apresentação",
+            date: now.toISOString().slice(0, 10),
+            allDay: false,
+            startTime: "14:00",
+            endTime: "15:00",
+            done: false,
+            calendarId: "1",
+            categoryIds: [],
+          },
+          {
+            id: "task-3",
+            name: "Enviar e-mail para equipe",
+            date: new Date(now.getTime() + 86400000).toISOString().slice(0, 10),
+            allDay: true,
+            done: false,
+            calendarId: "2",
+            categoryIds: [],
+          },
+        ];
+        setTasks(fakeTasks);
+        window.localStorage.setItem(STORAGE_TASKS, JSON.stringify(fakeTasks));
+        void saveUserStorage(STORAGE_TASKS, fakeTasks);
         return;
       }
       try {
@@ -501,10 +539,44 @@ export default function Calendar() {
           void saveUserStorage(STORAGE_TASKS, parsed);
           return;
         }
-        const sample = getSampleTasks(new Date());
-        setTasks(sample);
-        window.localStorage.setItem(STORAGE_TASKS, JSON.stringify(sample));
-        void saveUserStorage(STORAGE_TASKS, sample);
+        // Popula tarefas fake se array vazio
+        const now = new Date();
+        const fakeTasks: CalendarTask[] = [
+          {
+            id: "task-1",
+            name: "Revisar contrato do cliente",
+            date: now.toISOString().slice(0, 10),
+            allDay: false,
+            startTime: "09:00",
+            endTime: "10:00",
+            done: false,
+            calendarId: "1",
+            categoryIds: [],
+          },
+          {
+            id: "task-2",
+            name: "Preparar apresentação",
+            date: now.toISOString().slice(0, 10),
+            allDay: false,
+            startTime: "14:00",
+            endTime: "15:00",
+            done: false,
+            calendarId: "1",
+            categoryIds: [],
+          },
+          {
+            id: "task-3",
+            name: "Enviar e-mail para equipe",
+            date: new Date(now.getTime() + 86400000).toISOString().slice(0, 10),
+            allDay: true,
+            done: false,
+            calendarId: "2",
+            categoryIds: [],
+          },
+        ];
+        setTasks(fakeTasks);
+        window.localStorage.setItem(STORAGE_TASKS, JSON.stringify(fakeTasks));
+        void saveUserStorage(STORAGE_TASKS, fakeTasks);
       } catch {
         window.localStorage.removeItem(STORAGE_TASKS);
       }
@@ -1023,7 +1095,7 @@ export default function Calendar() {
       : null;
 
     return (
-      <Paper
+      <AppCard
         ref={setNodeRef}
         elevation={0}
         onClick={onClick}
@@ -1044,7 +1116,7 @@ export default function Calendar() {
         })}
       >
         {children}
-      </Paper>
+      </AppCard>
     );
   };
 
@@ -1060,7 +1132,7 @@ export default function Calendar() {
       data: { dateKey },
     });
     return (
-      <Paper
+      <AppCard
         ref={setNodeRef}
         elevation={0}
         sx={theme => ({
@@ -1073,7 +1145,7 @@ export default function Calendar() {
         })}
       >
         {children}
-      </Paper>
+      </AppCard>
     );
   };
 
@@ -1131,6 +1203,70 @@ export default function Calendar() {
 
   const handleCloseView = () => {
     setViewingTask(null);
+  };
+
+  // Notificações
+  const COMPLETED_TASKS_KEY = "sc_completed_tasks_notifications";
+
+  const requestNotificationPermission = async () => {
+    if (typeof Notification === "undefined") {
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+  };
+
+  const sendBrowserNotification = (task: CalendarTask) => {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") {
+      return;
+    }
+    new Notification("Tarefa concluída!", {
+      body: task.name,
+      icon: "/favicon.ico",
+    });
+  };
+
+  const saveCompletedTaskNotification = (task: CalendarTask) => {
+    const stored = window.localStorage.getItem(COMPLETED_TASKS_KEY);
+    let notifications: Array<{
+      id: string;
+      taskId: string;
+      taskName: string;
+      completedAt: string;
+    }> = [];
+    if (stored) {
+      try {
+        notifications = JSON.parse(stored);
+      } catch {
+        notifications = [];
+      }
+    }
+    notifications.unshift({
+      id: `notif-${Date.now()}`,
+      taskId: task.id,
+      taskName: task.name,
+      completedAt: new Date().toISOString(),
+    });
+    // Manter apenas as últimas 50 notificações
+    notifications = notifications.slice(0, 50);
+    window.localStorage.setItem(COMPLETED_TASKS_KEY, JSON.stringify(notifications));
+    window.dispatchEvent(new Event("task-completed"));
+  };
+
+  const handleToggleTaskDone = (task: CalendarTask, nextDone: boolean) => {
+    setTasks(prev =>
+      prev.map(item =>
+        item.id === task.id ? { ...item, done: nextDone } : item
+      )
+    );
+    if (viewingTask?.id === task.id) {
+      setViewingTask(prev => (prev ? { ...prev, done: nextDone } : prev));
+    }
+    // Se marcou como feita, enviar notificações
+    if (nextDone) {
+      saveCompletedTaskNotification(task);
+      sendBrowserNotification(task);
+    }
   };
 
   const saveDraftTask = () => {
@@ -1266,7 +1402,7 @@ export default function Calendar() {
   };
 
   const renderCreateReminderCard = (date?: Date) => (
-    <Paper
+    <AppCard
       elevation={0}
       variant="outlined"
       onClick={() => handleCreateTask(date)}
@@ -1285,8 +1421,49 @@ export default function Calendar() {
         Criar lembrete
       </Typography>
       <AddRoundedIcon fontSize="small" />
-    </Paper>
+    </AppCard>
   );
+
+  const pageActions = useMemo(
+    () => (
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Button
+          variant="outlined"
+          component={RouterLink}
+          href="/calendario/concluidas"
+          sx={{
+            textTransform: "none",
+            fontWeight: 600,
+            minWidth: 0,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Tarefas feitas
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            const today = new Date();
+            setSelectedDate(today);
+            setSelectedMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+            setAgendaPage(1);
+          }}
+          sx={{
+            textTransform: "none",
+            fontWeight: 600,
+            minWidth: 0,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Hoje
+        </Button>
+        <SettingsIconButton onClick={() => setCalendarSettingsOpen(true)} />
+      </Stack>
+    ),
+    []
+  );
+
+  usePageActions(pageActions);
 
   return (
     <PageContainer>
@@ -1296,12 +1473,9 @@ export default function Calendar() {
             direction="row"
             spacing={2}
             alignItems="center"
-            justifyContent="space-between"
-            sx={{ width: "100%" }}
+            justifyContent="flex-end"
+            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
           >
-            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
-              Calendário
-            </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               {!isSmDown ? (
                 <Button
@@ -1665,20 +1839,26 @@ export default function Calendar() {
                                     onClick={() => handleViewTask(task)}
                                   >
                                     <Stack
-                                      direction={{ xs: "column", sm: "row" }}
+                                      direction={{ xs: "row", sm: "row" }}
                                       spacing={1.5}
-                                      alignItems={{
-                                        xs: "flex-start",
-                                        sm: "center",
-                                      }}
+                                      alignItems="center"
                                       justifyContent="space-between"
                                     >
-                                      <Stack spacing={0.5}>
-                                        <Stack
-                                          direction="row"
-                                          spacing={1}
-                                          alignItems="center"
-                                        >
+                                      <Checkbox
+                                        checked={Boolean(task.done)}
+                                        onClick={event => event.stopPropagation()}
+                                        onChange={event => handleToggleTaskDone(task, event.target.checked)}
+                                        size="small"
+                                        sx={{ ml: 0.5, mr: 1 }}
+                                      />
+                                      <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                                        <Stack direction="row" spacing={1} alignItems="center">
+                                          <Typography
+                                            variant="subtitle2"
+                                            sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                          >
+                                            {task.name}
+                                          </Typography>
                                           <Box
                                             sx={{
                                               width: 8,
@@ -1686,18 +1866,11 @@ export default function Calendar() {
                                               borderRadius: "50%",
                                               backgroundColor:
                                                 calendarSources.find(
-                                                  source =>
-                                                    source.id ===
-                                                    task.calendarId
+                                                  source => source.id === task.calendarId
                                                 )?.color || "primary.main",
+                                              ml: 1,
                                             }}
                                           />
-                                          <Typography
-                                            variant="subtitle2"
-                                            sx={{ fontWeight: 600 }}
-                                          >
-                                            {task.name}
-                                          </Typography>
                                         </Stack>
                                         {calendarSettings.showTime ? (
                                           <Typography
@@ -1712,8 +1885,7 @@ export default function Calendar() {
                                                 "Horário livre"}
                                           </Typography>
                                         ) : null}
-                                        {calendarSettings.showLocation &&
-                                        task.location ? (
+                                        {calendarSettings.showLocation && task.location ? (
                                           <Typography
                                             variant="caption"
                                             sx={{ color: "text.secondary" }}
@@ -1722,22 +1894,11 @@ export default function Calendar() {
                                           </Typography>
                                         ) : null}
                                       </Stack>
-                                      <Stack
-                                        direction="row"
-                                        spacing={1}
-                                        alignItems="center"
-                                      >
+                                      <Stack direction="row" spacing={1} alignItems="center">
                                         {calendarSettings.showCategories
                                           ? (task.categoryIds || [])
-                                              .map(id =>
-                                                categories.find(
-                                                  cat => cat.id === id
-                                                )
-                                              )
-                                              .filter(
-                                                (cat): cat is Category =>
-                                                  Boolean(cat)
-                                              )
+                                              .map(id => categories.find(cat => cat.id === id))
+                                              .filter((cat): cat is Category => Boolean(cat))
                                               .map(cat => (
                                                 <CategoryChip
                                                   key={cat.id}
@@ -1746,26 +1907,6 @@ export default function Calendar() {
                                                 />
                                               ))
                                           : null}
-                                        <Checkbox
-                                          checked={Boolean(task.done)}
-                                          onClick={event =>
-                                            event.stopPropagation()
-                                          }
-                                          onChange={event =>
-                                            setTasks(prev =>
-                                              prev.map(item =>
-                                                item.id === task.id
-                                                  ? {
-                                                      ...item,
-                                                      done: event.target
-                                                        .checked,
-                                                    }
-                                                  : item
-                                              )
-                                            )
-                                          }
-                                          size="small"
-                                        />
                                       </Stack>
                                     </Stack>
                                   </DraggableTaskCard>
@@ -1854,9 +1995,34 @@ export default function Calendar() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                mb: 1,
               }}
             >
-              <Typography variant="h6">Detalhes do lembrete</Typography>
+              <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+                <Checkbox
+                  checked={Boolean(viewingTask?.done)}
+                  onChange={event => viewingTask && handleToggleTaskDone(viewingTask, event.target.checked)}
+                  sx={{ ml: 0.5, mr: 1 }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                >
+                  {viewingTask?.name || ""}
+                </Typography>
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    backgroundColor:
+                      calendarSources.find(
+                        source => source.id === viewingTask?.calendarId
+                      )?.color || "primary.main",
+                    ml: 1,
+                  }}
+                />
+              </Stack>
               <IconButton
                 onClick={handleCloseView}
                 sx={{ color: "text.secondary" }}
@@ -1864,66 +2030,10 @@ export default function Calendar() {
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
-            <Stack spacing={0.5}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                {viewingTask?.name || ""}
-              </Typography>
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {calendarMap.get(viewingTask?.calendarId || "")?.name ||
-                  "Calendário"}
-              </Typography>
-            </Stack>
-            <Divider />
+            <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+              {calendarMap.get(viewingTask?.calendarId || "")?.name || "Calendário"}
+            </Typography>
             <Stack spacing={1.5}>
-              {viewingTask ? (
-                <CardSection
-                  size="compact"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 2,
-                  }}
-                >
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Checkbox
-                      checked={Boolean(viewingTask.done)}
-                      onChange={event => {
-                        const nextDone = event.target.checked;
-                        setTasks(prev =>
-                          prev.map(item =>
-                            item.id === viewingTask.id
-                              ? { ...item, done: nextDone }
-                              : item
-                          )
-                        );
-                        setViewingTask(prev =>
-                          prev ? { ...prev, done: nextDone } : prev
-                        );
-                      }}
-                    />
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary", fontWeight: 600 }}
-                    >
-                      Marcar como feita
-                    </Typography>
-                  </Stack>
-                  <Chip
-                    label={viewingTask.done ? "Feita" : "Pendente"}
-                    color={viewingTask.done ? "success" : "default"}
-                    variant={viewingTask.done ? "filled" : "outlined"}
-                    icon={
-                      viewingTask.done ? (
-                        <CheckCircleRoundedIcon fontSize="small" />
-                      ) : (
-                        <RadioButtonUncheckedRoundedIcon fontSize="small" />
-                      )
-                    }
-                    sx={{ fontWeight: 600 }}
-                  />
-                </CardSection>
-              ) : null}
               <Typography variant="body2">
                 {viewingTask?.date
                   ? parseDateKey(viewingTask.date).toLocaleDateString("pt-BR")
@@ -2721,40 +2831,17 @@ export default function Calendar() {
         </Box>
       </Popover>
 
-      <Dialog
+      <SettingsDialog
         open={calendarSettingsOpen}
         onClose={() => setCalendarSettingsOpen(false)}
+        title="Configurações do calendário"
         maxWidth="sm"
-        fullWidth
-      >
-        <DialogContent>
-          <Stack spacing={2.5}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography variant="h6">Configurações do calendário</Typography>
-              <IconButton
-                onClick={() => setCalendarSettingsOpen(false)}
-                aria-label="Fechar"
-                sx={{
-                  color: "text.secondary",
-                  "&:hover": { backgroundColor: "action.hover" },
-                }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            <AppAccordion
-              expanded={configAccordion === "fields"}
-              onChange={(_, isExpanded) =>
-                setConfigAccordion(isExpanded ? "fields" : false)
-              }
-              title="Campos do evento"
-            >
+        onRestoreDefaults={handleRestoreCalendarDefaults}
+        sections={[
+          {
+            key: "fields",
+            title: "Campos do evento",
+            content: (
               <Box
                 sx={{
                   display: "grid",
@@ -2812,14 +2899,52 @@ export default function Calendar() {
                   </Box>
                 ))}
               </Box>
-            </AppAccordion>
-            <AppAccordion
-              expanded={configAccordion === "categories"}
-              onChange={(_, isExpanded) =>
-                setConfigAccordion(isExpanded ? "categories" : false)
-              }
-              title="Categorias"
-            >
+            ),
+          },
+          {
+            key: "notifications",
+            title: "Notificações do navegador",
+            content: (
+              <Stack spacing={2}>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  Ative as notificações do navegador para receber alertas quando
+                  marcar uma tarefa como concluída.
+                </Typography>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Button
+                    variant={notificationPermission === "granted" ? "outlined" : "contained"}
+                    startIcon={<NotificationsActiveRoundedIcon />}
+                    onClick={requestNotificationPermission}
+                    disabled={notificationPermission === "granted"}
+                    sx={{ textTransform: "none", fontWeight: 600 }}
+                  >
+                    {notificationPermission === "granted"
+                      ? "Notificações ativadas"
+                      : notificationPermission === "denied"
+                      ? "Notificações bloqueadas"
+                      : "Ativar notificações"}
+                  </Button>
+                  {notificationPermission === "granted" && (
+                    <Chip
+                      label="Ativo"
+                      color="success"
+                      size="small"
+                      icon={<CheckCircleRoundedIcon fontSize="small" />}
+                    />
+                  )}
+                  {notificationPermission === "denied" && (
+                    <Typography variant="caption" sx={{ color: "error.main" }}>
+                      As notificações foram bloqueadas. Altere nas configurações do navegador.
+                    </Typography>
+                  )}
+                </Stack>
+              </Stack>
+            ),
+          },
+          {
+            key: "categories",
+            title: "Categorias",
+            content: (
               <Stack spacing={1.5}>
                 {editingCategoryId ? (
                   <CardSection size="xs">
@@ -2941,31 +3066,10 @@ export default function Calendar() {
                   </Box>
                 )}
               </Stack>
-            </AppAccordion>
-
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              alignItems={{ xs: "stretch", sm: "center" }}
-              justifyContent="flex-end"
-            >
-              <Button
-                variant="outlined"
-                onClick={handleRestoreCalendarDefaults}
-                sx={{ textTransform: "none", fontWeight: 600 }}
-              >
-                Restaurar padrão
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => setCalendarSettingsOpen(false)}
-              >
-                Fechar
-              </Button>
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+            ),
+          },
+        ]}
+      />
 
       <Snackbar
         open={restoreDefaultsSnackbarOpen}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Autocomplete,
   Alert,
@@ -29,12 +29,13 @@ import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import SettingsIconButton from "../components/SettingsIconButton";
+import { usePageActions } from "../hooks/usePageActions";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import PageContainer from "../components/layout/PageContainer";
 import CardSection from "../components/layout/CardSection";
-import AppAccordion from "../components/layout/AppAccordion";
 import CategoryFilter from "../components/CategoryFilter";
+import SettingsDialog from "../components/SettingsDialog";
 import { loadUserStorage, saveUserStorage } from "../userStorage";
 
 type Contact = {
@@ -53,6 +54,30 @@ type Category = {
   id: string;
   name: string;
   color: string;
+};
+
+const toStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map(item => (typeof item === "string" ? item : String(item ?? "")))
+    .filter(Boolean);
+};
+
+const normalizeContact = (value: unknown): Contact => {
+  const raw = (value ?? {}) as Partial<Contact> & Record<string, unknown>;
+  return {
+    id: typeof raw.id === "string" && raw.id ? raw.id : `contact-${Date.now()}`,
+    name: typeof raw.name === "string" ? raw.name : "",
+    birthday: typeof raw.birthday === "string" ? raw.birthday : "",
+    phones: toStringArray(raw.phones),
+    emails: toStringArray(raw.emails),
+    addresses: toStringArray(raw.addresses),
+    comments: toStringArray(raw.comments),
+    categoryIds: toStringArray(raw.categoryIds),
+    role: typeof raw.role === "string" ? raw.role : "",
+  };
 };
 
 const STORAGE_KEY = "contacts_v1";
@@ -321,23 +346,28 @@ export default function Contacts() {
       ]);
 
       if (Array.isArray(dbContacts) && dbContacts.length) {
-        setContacts(dbContacts);
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(dbContacts));
+        const normalized = dbContacts.map(normalizeContact);
+        setContacts(normalized);
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
         isLoadedRef.current = true;
       } else {
         const stored = window.localStorage.getItem(STORAGE_KEY);
         if (!stored) {
-          setContacts(sampleContacts);
+          setContacts(sampleContacts.map(normalizeContact));
           isLoadedRef.current = true;
         } else {
           try {
             const parsed = JSON.parse(stored) as Contact[];
             if (Array.isArray(parsed)) {
-              const existingIds = new Set(parsed.map(contact => contact.id));
-              const merged = [...parsed];
+              const normalizedParsed = parsed.map(normalizeContact);
+              const existingIds = new Set(
+                normalizedParsed.map(contact => contact.id)
+              );
+              const merged = [...normalizedParsed];
               sampleContacts.forEach(contact => {
-                if (!existingIds.has(contact.id)) {
-                  merged.push(contact);
+                const normalizedSample = normalizeContact(contact);
+                if (!existingIds.has(normalizedSample.id)) {
+                  merged.push(normalizedSample);
                 }
               });
               setContacts(merged);
@@ -518,12 +548,12 @@ export default function Contacts() {
     setRestoreDefaultsSnackbarOpen(false);
   };
 
-  const openNewContact = () => {
+  const openNewContact = useCallback(() => {
     const next = emptyContact();
     setSelectedContact(null);
     setEditingContact(next);
     setContactForm(next);
-  };
+  }, []);
 
   const openContact = (contact: Contact) => {
     setSelectedContact(contact);
@@ -898,6 +928,28 @@ export default function Contacts() {
     setRemoveContactOpen(false);
   };
 
+  const pageActions = useMemo(
+    () => (
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Button
+          variant="outlined"
+          onClick={openNewContact}
+          sx={{
+            textTransform: "none",
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Adicionar contato
+        </Button>
+        <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+      </Stack>
+    ),
+    [openNewContact]
+  );
+
+  usePageActions(pageActions);
+
   return (
     <PageContainer>
       <Stack spacing={3}>
@@ -906,12 +958,9 @@ export default function Contacts() {
             direction="row"
             spacing={2}
             alignItems="center"
-            justifyContent="space-between"
-            sx={{ width: "100%" }}
+            justifyContent="flex-end"
+            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
           >
-            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
-              Contatos
-            </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               <Button
                 variant="outlined"
@@ -1872,49 +1921,21 @@ export default function Contacts() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      <SettingsDialog
         open={settingsOpen}
         onClose={() => {
           setSettingsOpen(false);
           cancelEditCategory();
           setSettingsAccordion(false);
         }}
+        title="Configurações"
         maxWidth="sm"
-        fullWidth
-      >
-        <DialogContent>
-          <Stack spacing={2.5}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography variant="h6">Configurações</Typography>
-              <IconButton
-                onClick={() => {
-                  setSettingsOpen(false);
-                  cancelEditCategory();
-                  setSettingsAccordion(false);
-                }}
-                aria-label="Fechar"
-                sx={{
-                  color: "text.secondary",
-                  "&:hover": { backgroundColor: "action.hover" },
-                }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
-
-            <AppAccordion
-              expanded={settingsAccordion === "categories"}
-              onChange={(_, isExpanded) =>
-                setSettingsAccordion(isExpanded ? "categories" : false)
-              }
-              title="Categorias"
-            >
+        onRestoreDefaults={handleRestoreContactsDefaults}
+        sections={[
+          {
+            key: "categories",
+            title: "Categorias",
+            content: (
               <Stack spacing={1.5}>
                 {editingCategoryId ? (
                   <CardSection size="xs">
@@ -2039,15 +2060,12 @@ export default function Contacts() {
                   </Box>
                 )}
               </Stack>
-            </AppAccordion>
-
-            <AppAccordion
-              expanded={settingsAccordion === "cards"}
-              onChange={(_, isExpanded) =>
-                setSettingsAccordion(isExpanded ? "cards" : false)
-              }
-              title="Detalhes do card"
-            >
+            ),
+          },
+          {
+            key: "cards",
+            title: "Detalhes do card",
+            content: (
               <Box
                 sx={{
                   display: "grid",
@@ -2055,122 +2073,51 @@ export default function Contacts() {
                   gap: 1.5,
                 }}
               >
-                <Box
-                  sx={theme => ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                  onClick={() =>
-                    setCardFields(prev => ({ ...prev, phones: !prev.phones }))
-                  }
-                >
-                  <Typography variant="subtitle2">Telefones</Typography>
-                  <ToggleCheckbox
-                    checked={cardFields.phones}
-                    onChange={event =>
+                {[
+                  { key: "phones", label: "Telefones" },
+                  { key: "emails", label: "Emails" },
+                  { key: "addresses", label: "Endereços" },
+                  { key: "categories", label: "Categorias" },
+                ].map(item => (
+                  <Box
+                    key={item.key}
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      p: 1.5,
+                      cursor: "pointer",
+                      ...interactiveCardSx(theme),
+                    })}
+                    onClick={() =>
                       setCardFields(prev => ({
                         ...prev,
-                        phones: event.target.checked,
+                        [item.key]: !prev[item.key as keyof typeof cardFields],
                       }))
                     }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Box>
-                <Box
-                  sx={theme => ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                  onClick={() =>
-                    setCardFields(prev => ({ ...prev, emails: !prev.emails }))
-                  }
-                >
-                  <Typography variant="subtitle2">Emails</Typography>
-                  <ToggleCheckbox
-                    checked={cardFields.emails}
-                    onChange={event =>
-                      setCardFields(prev => ({
-                        ...prev,
-                        emails: event.target.checked,
-                      }))
-                    }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Box>
-                <Box
-                  sx={theme => ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                  onClick={() =>
-                    setCardFields(prev => ({
-                      ...prev,
-                      addresses: !prev.addresses,
-                    }))
-                  }
-                >
-                  <Typography variant="subtitle2">Endereços</Typography>
-                  <ToggleCheckbox
-                    checked={cardFields.addresses}
-                    onChange={event =>
-                      setCardFields(prev => ({
-                        ...prev,
-                        addresses: event.target.checked,
-                      }))
-                    }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Box>
-                <Box
-                  sx={theme => ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                  onClick={() =>
-                    setCardFields(prev => ({
-                      ...prev,
-                      categories: !prev.categories,
-                    }))
-                  }
-                >
-                  <Typography variant="subtitle2">Categorias</Typography>
-                  <ToggleCheckbox
-                    checked={cardFields.categories}
-                    onChange={event =>
-                      setCardFields(prev => ({
-                        ...prev,
-                        categories: event.target.checked,
-                      }))
-                    }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Box>
+                  >
+                    <Typography variant="subtitle2">{item.label}</Typography>
+                    <ToggleCheckbox
+                      checked={Boolean(
+                        cardFields[item.key as keyof typeof cardFields]
+                      )}
+                      onChange={event =>
+                        setCardFields(prev => ({
+                          ...prev,
+                          [item.key]: event.target.checked,
+                        }))
+                      }
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Box>
+                ))}
               </Box>
-            </AppAccordion>
-
-            <AppAccordion
-              expanded={settingsAccordion === "details"}
-              onChange={(_, isExpanded) =>
-                setSettingsAccordion(isExpanded ? "details" : false)
-              }
-              title="Detalhes do contato"
-            >
+            ),
+          },
+          {
+            key: "details",
+            title: "Detalhes do contato",
+            content: (
               <Box
                 sx={{
                   display: "grid",
@@ -2220,35 +2167,10 @@ export default function Contacts() {
                   </Box>
                 ))}
               </Box>
-            </AppAccordion>
-
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              alignItems={{ xs: "stretch", sm: "center" }}
-              justifyContent="flex-end"
-            >
-              <Button
-                variant="outlined"
-                onClick={handleRestoreContactsDefaults}
-                sx={{ textTransform: "none", fontWeight: 600 }}
-              >
-                Restaurar padrão
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setSettingsOpen(false);
-                  cancelEditCategory();
-                  setSettingsAccordion(false);
-                }}
-              >
-                Fechar
-              </Button>
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+            ),
+          },
+        ]}
+      />
 
       <Snackbar
         open={copySnackbarOpen}

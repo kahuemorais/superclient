@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Autocomplete,
@@ -11,7 +11,6 @@ import {
   IconButton,
   InputAdornment,
   MenuItem,
-  Paper,
   Snackbar,
   Stack,
   Table,
@@ -42,11 +41,12 @@ import {
 import { useLocation } from "wouter";
 import api from "../api";
 import SettingsIconButton from "../components/SettingsIconButton";
+import { usePageActions } from "../hooks/usePageActions";
 import ToggleCheckbox from "../components/ToggleCheckbox";
-import AppAccordion from "../components/layout/AppAccordion";
 import CategoryFilter from "../components/CategoryFilter";
 import CardSection from "../components/layout/CardSection";
 import PageContainer from "../components/layout/PageContainer";
+import SettingsDialog from "../components/SettingsDialog";
 import { interactiveCardSx } from "../styles/interactiveCard";
 type Category = {
   id: string;
@@ -349,6 +349,38 @@ export default function Financas() {
   } | null>(null);
   const [restoreDefaultsSnackbarOpen, setRestoreDefaultsSnackbarOpen] =
     useState(false);
+
+  const openNewExpense = useCallback(() => {
+    setEditingExpenseId(null);
+    setTitle("");
+    setAmount("");
+    setComment("");
+    setCategoryId(categories[0]?.id || "");
+    setContactIds([]);
+    setOpen(true);
+  }, [categories]);
+
+  const pageActions = useMemo(
+    () => (
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Button
+          variant="outlined"
+          onClick={openNewExpense}
+          sx={{
+            textTransform: "none",
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Adicionar gasto
+        </Button>
+        <SettingsIconButton onClick={() => setSettingsOpen(true)} />
+      </Stack>
+    ),
+    [openNewExpense]
+  );
+
+  usePageActions(pageActions);
 
   const handleRestoreFinanceDefaults = () => {
     restoreDefaultsSnapshotRef.current = {
@@ -1042,24 +1074,13 @@ export default function Financas() {
             direction="row"
             spacing={2}
             alignItems="center"
-            justifyContent="space-between"
-            sx={{ width: "100%" }}
+            justifyContent="flex-end"
+            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
           >
-            <Typography variant="h4" sx={{ fontWeight: 700, minWidth: 0 }}>
-              Finanças
-            </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
               <Button
                 variant="outlined"
-                onClick={() => {
-                  setEditingExpenseId(null);
-                  setTitle("");
-                  setAmount("");
-                  setComment("");
-                  setCategoryId(categories[0]?.id || "");
-                  setContactIds([]);
-                  setOpen(true);
-                }}
+                onClick={openNewExpense}
                 sx={{
                   display: { xs: "none", sm: "inline-flex" },
                   textTransform: "none",
@@ -1080,15 +1101,7 @@ export default function Financas() {
           >
             <Button
               variant="outlined"
-              onClick={() => {
-                setEditingExpenseId(null);
-                setTitle("");
-                setAmount("");
-                setComment("");
-                setCategoryId(categories[0]?.id || "");
-                setContactIds([]);
-                setOpen(true);
-              }}
+              onClick={openNewExpense}
               sx={{
                 textTransform: "none",
                 fontWeight: 600,
@@ -1230,49 +1243,21 @@ export default function Financas() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      <SettingsDialog
         open={settingsOpen}
         onClose={() => {
           setSettingsOpen(false);
           cancelEditCategory();
           setSettingsAccordion(false);
         }}
+        title="Configurações"
         maxWidth="sm"
-        fullWidth
-      >
-        <DialogContent>
-          <Stack spacing={2.5}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography variant="h6">Configurações</Typography>
-              <IconButton
-                onClick={() => {
-                  setSettingsOpen(false);
-                  cancelEditCategory();
-                  setSettingsAccordion(false);
-                }}
-                aria-label="Fechar"
-                sx={{
-                  color: "text.secondary",
-                  "&:hover": { backgroundColor: "action.hover" },
-                }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
-
-            <AppAccordion
-              expanded={settingsAccordion === "categories"}
-              onChange={(_, isExpanded) =>
-                setSettingsAccordion(isExpanded ? "categories" : false)
-              }
-              title="Categorias"
-            >
+        onRestoreDefaults={handleRestoreFinanceDefaults}
+        sections={[
+          {
+            key: "categories",
+            title: "Categorias",
+            content: (
               <Stack spacing={1.5}>
                 {editingCategoryId ? (
                   <CardSection size="xs">
@@ -1402,200 +1387,81 @@ export default function Financas() {
                   </Box>
                 )}
               </Stack>
-            </AppAccordion>
-
-            <AppAccordion
-              expanded={settingsAccordion === "table"}
-              onChange={(_, isExpanded) =>
-                setSettingsAccordion(isExpanded ? "table" : false)
-              }
-              title="Tabela de financas"
-            >
-              <TextField
-                select
-                label="Posição da tabela"
-                value={tablePosition}
-                onChange={event =>
-                  setTablePosition(event.target.value as "below" | "above")
-                }
-                fullWidth
-                sx={{ mb: 2 }}
-              >
-                <MenuItem value="below">Abaixo dos gráficos</MenuItem>
-                <MenuItem value="above">Acima dos gráficos</MenuItem>
-              </TextField>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                  gap: 1.5,
-                }}
-              >
-                <Paper
-                  variant="outlined"
-                  sx={theme => ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                  onClick={() =>
-                    setTableFields(prev => ({ ...prev, title: !prev.title }))
+            ),
+          },
+          {
+            key: "table",
+            title: "Tabela de financas",
+            content: (
+              <>
+                <TextField
+                  select
+                  label="Posição da tabela"
+                  value={tablePosition}
+                  onChange={event =>
+                    setTablePosition(event.target.value as "below" | "above")
                   }
+                  fullWidth
+                  sx={{ mb: 2 }}
                 >
-                  <Typography variant="subtitle2">Titulo</Typography>
-                  <ToggleCheckbox
-                    checked={tableFields.title}
-                    onChange={event =>
-                      setTableFields(prev => ({
-                        ...prev,
-                        title: event.target.checked,
-                      }))
-                    }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Paper>
-                <Paper
-                  variant="outlined"
-                  sx={theme => ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                  onClick={() =>
-                    setTableFields(prev => ({
-                      ...prev,
-                      category: !prev.category,
-                    }))
-                  }
+                  <MenuItem value="below">Abaixo dos gráficos</MenuItem>
+                  <MenuItem value="above">Acima dos gráficos</MenuItem>
+                </TextField>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                    gap: 1.5,
+                  }}
                 >
-                  <Typography variant="subtitle2">Categoria</Typography>
-                  <ToggleCheckbox
-                    checked={tableFields.category}
-                    onChange={event =>
-                      setTableFields(prev => ({
-                        ...prev,
-                        category: event.target.checked,
-                      }))
-                    }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Paper>
-                <Paper
-                  variant="outlined"
-                  sx={theme => ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                  onClick={() =>
-                    setTableFields(prev => ({
-                      ...prev,
-                      amount: !prev.amount,
-                    }))
-                  }
-                >
-                  <Typography variant="subtitle2">Valor</Typography>
-                  <ToggleCheckbox
-                    checked={tableFields.amount}
-                    onChange={event =>
-                      setTableFields(prev => ({
-                        ...prev,
-                        amount: event.target.checked,
-                      }))
-                    }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Paper>
-                <Paper
-                  variant="outlined"
-                  sx={theme => ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                  onClick={() =>
-                    setTableFields(prev => ({ ...prev, date: !prev.date }))
-                  }
-                >
-                  <Typography variant="subtitle2">Data</Typography>
-                  <ToggleCheckbox
-                    checked={tableFields.date}
-                    onChange={event =>
-                      setTableFields(prev => ({
-                        ...prev,
-                        date: event.target.checked,
-                      }))
-                    }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Paper>
-                <Paper
-                  variant="outlined"
-                  sx={theme => ({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 1.5,
-                    cursor: "pointer",
-                    ...interactiveCardSx(theme),
-                  })}
-                  onClick={() =>
-                    setTableFields(prev => ({
-                      ...prev,
-                      comment: !prev.comment,
-                    }))
-                  }
-                >
-                  <Typography variant="subtitle2">Comentario</Typography>
-                  <ToggleCheckbox
-                    checked={tableFields.comment}
-                    onChange={event =>
-                      setTableFields(prev => ({
-                        ...prev,
-                        comment: event.target.checked,
-                      }))
-                    }
-                    onClick={event => event.stopPropagation()}
-                  />
-                </Paper>
-              </Box>
-            </AppAccordion>
-
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              alignItems={{ xs: "stretch", sm: "center" }}
-              justifyContent="flex-end"
-            >
-              <Button variant="outlined" onClick={handleRestoreFinanceDefaults}>
-                Restaurar padrão
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setSettingsOpen(false);
-                  cancelEditCategory();
-                  setSettingsAccordion(false);
-                }}
-              >
-                Fechar
-              </Button>
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+                  {[
+                    { key: "title", label: "Titulo" },
+                    { key: "category", label: "Categoria" },
+                    { key: "amount", label: "Valor" },
+                    { key: "date", label: "Data" },
+                    { key: "comment", label: "Comentario" },
+                  ].map(field => (
+                    <CardSection
+                      key={field.key}
+                      size="flush"
+                      variant="outlined"
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() =>
+                        setTableFields(prev => ({
+                          ...prev,
+                          [field.key]:
+                            !prev[field.key as keyof typeof tableFields],
+                        }))
+                      }
+                    >
+                      <Typography variant="subtitle2">{field.label}</Typography>
+                      <ToggleCheckbox
+                        checked={Boolean(
+                          tableFields[field.key as keyof typeof tableFields]
+                        )}
+                        onChange={event =>
+                          setTableFields(prev => ({
+                            ...prev,
+                            [field.key]: event.target.checked,
+                          }))
+                        }
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </CardSection>
+                  ))}
+                </Box>
+              </>
+            ),
+          },
+        ]}
+      />
 
       <Snackbar
         open={restoreDefaultsSnackbarOpen}
