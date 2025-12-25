@@ -1669,7 +1669,7 @@ export default function Profile() {
                 gap: 2,
               }}
             >
-              <TextField 
+              <TextFieldVE 
                 label="Senha atual" 
                 type="password" 
                 fullWidth 
