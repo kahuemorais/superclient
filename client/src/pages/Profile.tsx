@@ -20,7 +20,7 @@ import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import PageContainer from "../components/layout/PageContainer";
+import { PageContainer } from "../ui/PageContainer/PageContainer";
 import AppAccordion from "../components/layout/AppAccordion";
 import CardSection from "../components/layout/CardSection";
 import AppCard from "../components/layout/AppCard";
@@ -28,7 +28,6 @@ import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import { changeLanguage } from "../i18n";
-import { usePageActions } from "../hooks/usePageActions";
 
 type StoredAccount = {
   name: string;
@@ -930,12 +929,9 @@ export default function Profile() {
     [handleGoToAccess, languageSelect, t]
   );
 
-  usePageActions(profileActions);
-
   return (
-    <PageContainer>
+    <PageContainer actionsSlot={profileActions}>
       <Stack spacing={3}>
-        <Box sx={{ display: { xs: "block", md: "none" } }}>{profileActions}</Box>
 
         <AppAccordion
           expanded={expanded === "main"}

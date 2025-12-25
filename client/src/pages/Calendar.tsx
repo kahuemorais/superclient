@@ -70,8 +70,7 @@ import {
   staticCardSx,
 } from "../styles/interactiveCard";
 import SettingsIconButton from "../components/SettingsIconButton";
-import { usePageActions } from "../hooks/usePageActions";
-import PageContainer from "../components/layout/PageContainer";
+import { PageContainer } from "../ui/PageContainer/PageContainer";
 import AppCard from "../components/layout/AppCard";
 import CardSection from "../components/layout/CardSection";
 import { CategoryChip } from "../components/CategoryChip";
@@ -1683,61 +1682,9 @@ export default function Calendar() {
     []
   );
 
-  usePageActions(pageActions);
-
   return (
-    <PageContainer>
+    <PageContainer actionsSlot={pageActions}>
       <Stack spacing={{ xs: 2.5, md: 3 }}>
-        <Stack spacing={2}>
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            justifyContent="flex-end"
-            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Button
-                variant="outlined"
-                size="small"
-                component={RouterLink}
-                href="/calendario/concluidas"
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 600,
-                  minWidth: 0,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Tarefas feitas
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  const today = new Date();
-                  setSelectedDate(today);
-                  setSelectedMonth(
-                    new Date(today.getFullYear(), today.getMonth(), 1)
-                  );
-                  setAgendaPage(1);
-                }}
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 600,
-                  minWidth: 0,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Hoje
-              </Button>
-              <SettingsIconButton
-                onClick={() => setCalendarSettingsOpen(true)}
-              />
-            </Stack>
-          </Stack>
-        </Stack>
-
         <Box
           sx={{
             display: "grid",

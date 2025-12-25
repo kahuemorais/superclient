@@ -126,6 +126,15 @@ export const DESIGN_TOKENS = {
     pyMobile: '16px',
     pyDesktop: '24px',
   },
+  pageHeader: {
+    titleSize: '24px',
+    titleWeight: '600',
+    titleColor: 'var(--md-sys-color-on-surface)',
+    subtitleSize: '14px',
+    subtitleColor: 'var(--md-sys-color-on-surface-variant)',
+    gap: '16px',
+    actionsGap: '8px',
+  },
 };
 
 export const applyDesignTokensToCssVars = () => {
@@ -243,6 +252,15 @@ export const applyDesignTokensToCssVars = () => {
   root.style.setProperty('--sc-page-px-desktop', DESIGN_TOKENS.page.pxDesktop);
   root.style.setProperty('--sc-page-py-mobile', DESIGN_TOKENS.page.pyMobile);
   root.style.setProperty('--sc-page-py-desktop', DESIGN_TOKENS.page.pyDesktop);
+  
+  // Apply pageHeader tokens
+  root.style.setProperty('--sc-page-title-size', DESIGN_TOKENS.pageHeader.titleSize);
+  root.style.setProperty('--sc-page-title-weight', DESIGN_TOKENS.pageHeader.titleWeight);
+  root.style.setProperty('--sc-page-title-color', DESIGN_TOKENS.pageHeader.titleColor);
+  root.style.setProperty('--sc-page-subtitle-size', DESIGN_TOKENS.pageHeader.subtitleSize);
+  root.style.setProperty('--sc-page-subtitle-color', DESIGN_TOKENS.pageHeader.subtitleColor);
+  root.style.setProperty('--sc-page-header-gap', DESIGN_TOKENS.pageHeader.gap);
+  root.style.setProperty('--sc-page-actions-gap', DESIGN_TOKENS.pageHeader.actionsGap);
   
   // Keep legacy radius variables in sync
   const radius = `${APP_RADIUS_PX}px`;

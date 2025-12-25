@@ -29,10 +29,9 @@ import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import SettingsIconButton from "../components/SettingsIconButton";
-import { usePageActions } from "../hooks/usePageActions";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import { interactiveCardSx } from "../styles/interactiveCard";
-import PageContainer from "../components/layout/PageContainer";
+import { PageContainer } from "../ui/PageContainer/PageContainer";
 import CardSection from "../components/layout/CardSection";
 import CategoryFilter from "../components/CategoryFilter";
 import SettingsDialog from "../components/SettingsDialog";
@@ -954,56 +953,9 @@ export default function Contacts() {
     [openNewContact]
   );
 
-  usePageActions(pageActions);
-
   return (
-    <PageContainer>
+    <PageContainer actionsSlot={pageActions}>
       <Stack spacing={3}>
-        <Stack spacing={2}>
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            justifyContent="flex-end"
-            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Button
-                variant="outlined"
-                onClick={openNewContact}
-                sx={{
-                  display: { xs: "none", sm: "inline-flex" },
-                  textTransform: "none",
-                  fontWeight: 600,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Adicionar contato
-              </Button>
-              <SettingsIconButton onClick={() => setSettingsOpen(true)} />
-            </Stack>
-          </Stack>
-
-          <Box
-            sx={{
-              display: { xs: "flex", sm: "none" },
-              justifyContent: "stretch",
-            }}
-          >
-            <Button
-              variant="outlined"
-              onClick={openNewContact}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                width: "100%",
-              }}
-            >
-              Adicionar contato
-            </Button>
-          </Box>
-        </Stack>
-
         {contacts.length === 0 ? (
           <CardSection>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>

@@ -54,12 +54,11 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { APP_RADIUS, APP_RADIUS_PX } from "../designTokens";
 import { interactiveItemSx, interactiveCardSx } from "../styles/interactiveCard";
 import SettingsIconButton from "../components/SettingsIconButton";
-import { usePageActions } from "../hooks/usePageActions";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import CardSection from "../components/layout/CardSection";
 import AppCard from "../components/layout/AppCard";
 import AppAccordion from "../components/layout/AppAccordion";
-import PageContainer from "../components/layout/PageContainer";
+import { PageContainer } from "../ui/PageContainer/PageContainer";
 import SettingsDialog from "../components/SettingsDialog";
 import RichTextEditor from "../components/RichTextEditor";
 import { Link as RouterLink, useLocation } from "wouter";
@@ -1382,100 +1381,9 @@ export default function Notes() {
     [addNote, archiveLink.href, archiveLink.label]
   );
 
-  usePageActions(pageActions);
-
   return (
-    <PageContainer>
+    <PageContainer actionsSlot={pageActions}>
       <Stack spacing={3} sx={{ flex: 1, minHeight: 0 }}>
-        <Stack spacing={1.5}>
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            justifyContent="flex-end"
-            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Stack
-                direction="row"
-                spacing={1}
-                alignItems="center"
-                sx={{ display: { xs: "none", sm: "flex" } }}
-              >
-                <Button
-                  component={RouterLink}
-                  href={archiveLink.href}
-                  variant="outlined"
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                    minWidth: 0,
-                    px: { xs: 1.25, sm: 1.75 },
-                  }}
-                >
-                  {archiveLink.label}
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={
-                    <Box sx={{ display: { xs: "none", sm: "inline-flex" } }}>
-                      <AddRoundedIcon />
-                    </Box>
-                  }
-                  onClick={addNote}
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                    minWidth: 0,
-                    px: { xs: 1.25, sm: 1.75 },
-                  }}
-                >
-                  Nova nota
-                </Button>
-              </Stack>
-              <Stack
-                direction="row"
-                spacing={1}
-                alignItems="center"
-                sx={{ display: { xs: "flex", sm: "none" } }}
-              >
-                <Button
-                  component={RouterLink}
-                  href={archiveLink.href}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                    minWidth: 0,
-                    px: 1.25,
-                  }}
-                >
-                  {archiveLink.label}
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={addNote}
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                    minWidth: 0,
-                    px: 1.25,
-                  }}
-                >
-                  Nova
-                </Button>
-              </Stack>
-              <SettingsIconButton onClick={() => setSettingsOpen(true)} />
-            </Stack>
-          </Stack>
-        </Stack>
-
         {showSidebar ? (
           <Box sx={{ display: { xs: "block", md: "none" } }}>
             <AppAccordion

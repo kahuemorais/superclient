@@ -35,9 +35,8 @@ import SettingsIconButton from "../components/SettingsIconButton";
 import RichTextEditor from "../components/RichTextEditor";
 import api from "../api";
 import { saveUserStorage } from "../userStorage";
-import { usePageActions } from "../hooks/usePageActions";
 import ToggleCheckbox from "../components/ToggleCheckbox";
-import PageContainer from "../components/layout/PageContainer";
+import { PageContainer } from "../ui/PageContainer/PageContainer";
 import AppAccordion from "../components/layout/AppAccordion";
 import CardSection from "../components/layout/CardSection";
 import SettingsDialog from "../components/SettingsDialog";
@@ -2244,99 +2243,9 @@ export default function Pipeline() {
     [taskQuery, categories, categoryFilters, permissions.pipeline_edit_tasks]
   );
 
-  usePageActions(pageActions);
-
   return (
-    <PageContainer>
+    <PageContainer actionsSlot={pageActions}>
       <Stack spacing={3} sx={{ flex: 1, minHeight: 0 }}>
-        <Stack spacing={2}>
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            justifyContent="flex-end"
-            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Stack
-                direction="row"
-                spacing={1.5}
-                alignItems="center"
-                sx={{ display: { xs: "none", md: "flex" }, minWidth: 0 }}
-              >
-                <TextField
-                  label="Buscar tasks"
-                  value={taskQuery}
-                  onChange={event => setTaskQuery(event.target.value)}
-                  sx={{ width: 240, minWidth: 0 }}
-                  InputProps={{
-                    endAdornment: taskQuery ? (
-                      <InputAdornment position="end">
-                        <IconButton
-                          size="small"
-                          onClick={() => setTaskQuery("")}
-                          aria-label="Limpar busca"
-                        >
-                          <CloseRoundedIcon fontSize="small" />
-                        </IconButton>
-                      </InputAdornment>
-                    ) : null,
-                  }}
-                />
-                <CategoryFilter
-                  categories={categories}
-                  selectedIds={categoryFilters}
-                  onChange={setCategoryFilters}
-                  width={280}
-                />
-              </Stack>
-              <SettingsIconButton
-                onClick={() => setTaskFieldSettingsOpen(true)}
-                disabled={!permissions.pipeline_edit_tasks}
-              />
-            </Stack>
-          </Stack>
-
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            alignItems={{ xs: "stretch", sm: "center" }}
-            sx={{
-              width: { xs: "100%", md: "auto" },
-              minWidth: 0,
-              display: { xs: "flex", md: "none" },
-            }}
-          >
-            <TextField
-              label="Buscar tasks"
-              value={taskQuery}
-              onChange={event => setTaskQuery(event.target.value)}
-              fullWidth
-              sx={{ width: { xs: "100%", sm: 280 }, minWidth: 0 }}
-              InputProps={{
-                endAdornment: taskQuery ? (
-                  <InputAdornment position="end">
-                    <IconButton
-                      size="small"
-                      onClick={() => setTaskQuery("")}
-                      aria-label="Limpar busca"
-                    >
-                      <CloseRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </InputAdornment>
-                ) : null,
-              }}
-            />
-            <CategoryFilter
-              categories={categories}
-              selectedIds={categoryFilters}
-              onChange={setCategoryFilters}
-              width={{ xs: "100%", sm: 280 }}
-              fullWidth
-            />
-          </Stack>
-        </Stack>
-
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}

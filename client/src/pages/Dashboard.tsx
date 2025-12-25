@@ -19,8 +19,7 @@ import ToggleCheckbox from "../components/ToggleCheckbox";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import SettingsIconButton from "../components/SettingsIconButton";
-import { usePageActions } from "../hooks/usePageActions";
-import PageContainer from "../components/layout/PageContainer";
+import { PageContainer } from "../ui/PageContainer/PageContainer";
 import AppCard from "../components/layout/AppCard";
 import CardSection from "../components/layout/CardSection";
 import SettingsDialog from "../components/SettingsDialog";
@@ -540,24 +539,9 @@ export default function Dashboard() {
     []
   );
 
-  usePageActions(pageActions);
-
   return (
-    <PageContainer>
+    <PageContainer actionsSlot={pageActions}>
       <Stack spacing={3}>
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="center"
-          justifyContent="flex-end"
-          sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
-        >
-          <SettingsIconButton
-            title="Configurações da home"
-            onClick={() => setSectionsDialogOpen(true)}
-          />
-        </Stack>
-
         {visibleQuickLinks.length ? (
           <AppCard sx={{ p: { xs: 2, md: 2.5 }, display: { xs: "block", md: "none" } }}>
             <Stack

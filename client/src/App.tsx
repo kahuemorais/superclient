@@ -42,7 +42,6 @@ import Notifications from "./pages/Notifications";
 import Calendar from "./pages/Calendar";
 import CalendarCompleted from "./pages/CalendarCompleted";
 import Notes from "./pages/Notes";
-import { PageActionsProvider } from "./contexts/PageActionsContext";
 import AppBreadcrumbRow from "./components/AppBreadcrumbRow";
 
 // Keys para tradução - os labels serão traduzidos no render
@@ -547,16 +546,15 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <PageActionsProvider>
-        <Box
-          sx={{
-            minHeight: "100vh",
-            position: "relative",
-            overflow: "hidden",
-            background:
-              "radial-gradient(circle at top, #13202c 0%, #0b0f14 45%, #07090d 100%)",
-          }}
-        >
+      <Box
+        sx={{
+          minHeight: "100vh",
+          position: "relative",
+          overflow: "hidden",
+          background:
+            "radial-gradient(circle at top, #13202c 0%, #0b0f14 45%, #07090d 100%)",
+        }}
+      >
           <Box
             sx={{
               position: "absolute",
@@ -831,7 +829,6 @@ function App() {
           {switchNotice}
         </Alert>
       </Snackbar>
-    </PageActionsProvider>
     </ThemeProvider>
   );
 }

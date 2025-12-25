@@ -5,7 +5,7 @@ import { PageContainer } from "../ui/PageContainer";
 
 export default function NotFound() {
   return (
-    <PageContainer>
+    <PageContainer title="Página não encontrada" subtitle="A página que você está procurando não existe.">
       <Box sx={{ maxWidth: 720, mx: "auto" }}>
         <CardSection size="lg">
           <Stack spacing={2.5} alignItems="flex-start">

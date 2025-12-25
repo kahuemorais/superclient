@@ -1,25 +1,26 @@
 import type { ReactNode } from 'react';
 import {
   pageContainer,
-  pageHeader,
-  pageTitle,
-  pageActions,
   pageContent,
 } from './pageContainer.css';
+import { pageHeaderContainer } from '../PageHeader/pageHeader.css';
+import { PageTitle } from '../PageHeader/PageTitle';
+import { PageActions } from '../PageHeader/PageActions';
 
 export interface PageContainerProps {
   children: ReactNode;
   title?: string;
+  subtitle?: string;
   actionsSlot?: ReactNode;
 }
 
-export function PageContainer({ children, title, actionsSlot }: PageContainerProps) {
+export function PageContainer({ children, title, subtitle, actionsSlot }: PageContainerProps) {
   return (
     <div className={pageContainer}>
       {(title || actionsSlot) && (
-        <div className={pageHeader}>
-          {title && <h1 className={pageTitle}>{title}</h1>}
-          {actionsSlot && <div className={pageActions}>{actionsSlot}</div>}
+        <div className={pageHeaderContainer}>
+          {title && <PageTitle subtitle={subtitle}>{title}</PageTitle>}
+          {actionsSlot && <PageActions>{actionsSlot}</PageActions>}
         </div>
       )}
       <div className={pageContent}>{children}</div>

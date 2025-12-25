@@ -40,12 +40,12 @@ import {
 } from "recharts";
 import { useLocation } from "wouter";
 import api from "../api";
+import { saveUserStorage } from "../userStorage";
 import SettingsIconButton from "../components/SettingsIconButton";
-import { usePageActions } from "../hooks/usePageActions";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import CategoryFilter from "../components/CategoryFilter";
 import CardSection from "../components/layout/CardSection";
-import PageContainer from "../components/layout/PageContainer";
+import { PageContainer } from "../ui/PageContainer/PageContainer";
 import SettingsDialog from "../components/SettingsDialog";
 import { interactiveCardSx } from "../styles/interactiveCard";
 type Category = {
@@ -379,8 +379,6 @@ export default function Financas() {
     ),
     [openNewExpense]
   );
-
-  usePageActions(pageActions);
 
   const handleRestoreFinanceDefaults = () => {
     restoreDefaultsSnapshotRef.current = {
@@ -1075,56 +1073,15 @@ export default function Financas() {
   );
 
   return (
-    <PageContainer sx={{ overflowX: "hidden" }}>
-      <Stack spacing={3}>
-        <Stack spacing={2}>
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            justifyContent="flex-end"
-            sx={{ width: "100%", display: { xs: "flex", md: "none" } }}
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Button
-                variant="outlined"
-                onClick={openNewExpense}
-                sx={{
-                  display: { xs: "none", sm: "inline-flex" },
-                  textTransform: "none",
-                  fontWeight: 600,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Adicionar gasto
-              </Button>
-              <SettingsIconButton onClick={() => setSettingsOpen(true)} />
-            </Stack>
-          </Stack>
-          <Box
-            sx={{
-              display: { xs: "flex", sm: "none" },
-              justifyContent: "stretch",
-            }}
-          >
-            <Button
-              variant="outlined"
-              onClick={openNewExpense}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                width: "100%",
-              }}
-            >
-              Adicionar gasto
-            </Button>
-          </Box>
-        </Stack>
+    <PageContainer actionsSlot={pageActions}>
+      <Box sx={{ overflowX: "hidden" }}>
+        <Stack spacing={3}>
 
-        {tablePosition === "above" ? tableSection : null}
-        {chartsSection}
-        {tablePosition === "below" ? tableSection : null}
-      </Stack>
+          {tablePosition === "above" ? tableSection : null}
+          {chartsSection}
+          {tablePosition === "below" ? tableSection : null}
+        </Stack>
+      </Box>
 
       <Dialog
         open={open}
