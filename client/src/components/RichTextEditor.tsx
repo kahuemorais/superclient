@@ -44,9 +44,16 @@ import LooksTwoRoundedIcon from "@mui/icons-material/LooksTwoRounded";
 import { APP_RADIUS } from "../designTokens";
 import AppCard from "./layout/AppCard";
 
-function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewProps) {
+function ResizableImageNodeView({
+  node,
+  selected,
+  updateAttributes,
+  editor,
+  getPos,
+}: NodeViewProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
   const dragRef = useRef<
     | {
         startX: number;
@@ -57,10 +64,87 @@ function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewPr
       }
     | null
   >(null);
+  const rafRef = useRef<number | null>(null);
+
+  const setWidth = (nextWidth: number) => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    rafRef.current = requestAnimationFrame(() => {
+      updateAttributes({ width: String(Math.round(nextWidth)) });
+    });
+  };
+
+  const endResizeByPointerId = (pointerId: number) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== pointerId) {
+      return;
+    }
+    dragRef.current = null;
+    setIsResizing(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) {
+      return;
+    }
+
+    const onMove = (event: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const delta = event.clientX - drag.startX;
+      const signedDelta = drag.dir === "e" ? delta : -delta;
+      const minWidth = 96;
+      const maxWidth = Math.max(minWidth, drag.containerWidth);
+      const nextWidth = Math.max(
+        minWidth,
+        Math.min(maxWidth, drag.startWidth + signedDelta)
+      );
+
+      setWidth(nextWidth);
+    };
+
+    const onUp = (event: PointerEvent) => {
+      endResizeByPointerId(event.pointerId);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [isResizing]);
 
   const startResize = (event: React.PointerEvent, dir: "e" | "w") => {
     event.preventDefault();
     event.stopPropagation();
+
+    editor?.commands.focus();
+    if (typeof getPos === "function") {
+      try {
+        const pos = getPos();
+        if (typeof pos === "number") {
+          editor?.commands.setNodeSelection(pos);
+        }
+      } catch {
+        // ignore
+      }
+    }
 
     const img = imgRef.current;
     const wrapper = wrapperRef.current;
@@ -79,6 +163,8 @@ function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewPr
       pointerId: event.pointerId,
     };
 
+    setIsResizing(true);
+
     try {
       (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     } catch {
@@ -86,30 +172,8 @@ function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewPr
     }
   };
 
-  const onResizeMove = (event: React.PointerEvent) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) {
-      return;
-    }
-
-    const delta = event.clientX - drag.startX;
-    const signedDelta = drag.dir === "e" ? delta : -delta;
-    const minWidth = 96;
-    const maxWidth = Math.max(minWidth, drag.containerWidth);
-    const nextWidth = Math.max(
-      minWidth,
-      Math.min(maxWidth, drag.startWidth + signedDelta)
-    );
-
-    updateAttributes({ width: String(Math.round(nextWidth)) });
-  };
-
   const endResize = (event: React.PointerEvent) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) {
-      return;
-    }
-    dragRef.current = null;
+    endResizeByPointerId(event.pointerId);
   };
 
   const handleSx = {
@@ -157,11 +221,10 @@ function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewPr
         draggable={false}
       />
 
-      {selected ? (
+      {selected || isResizing ? (
         <>
           <Box
             onPointerDown={event => startResize(event, "w")}
-            onPointerMove={onResizeMove}
             onPointerUp={endResize}
             onPointerCancel={endResize}
             sx={{
@@ -171,7 +234,6 @@ function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewPr
           />
           <Box
             onPointerDown={event => startResize(event, "e")}
-            onPointerMove={onResizeMove}
             onPointerUp={endResize}
             onPointerCancel={endResize}
             sx={{
@@ -183,6 +245,39 @@ function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewPr
       ) : null}
     </NodeViewWrapper>
   );
+}
+
+function extractDroppedImageSrc(dataTransfer: DataTransfer | null | undefined) {
+  if (!dataTransfer) {
+    return null;
+  }
+
+  const uri = dataTransfer.getData("text/uri-list") || dataTransfer.getData("text/plain");
+  const candidate = (uri || "").trim();
+  const looksLikeImageUrl = (value: string) =>
+    /^data:image\//i.test(value) || /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(value);
+
+  if (candidate && looksLikeImageUrl(candidate)) {
+    return candidate;
+  }
+
+  const html = dataTransfer.getData("text/html");
+  if (!html) {
+    return null;
+  }
+
+  try {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const img = doc.querySelector("img");
+    const src = img?.getAttribute("src")?.trim() || "";
+    if (src && looksLikeImageUrl(src)) {
+      return src;
+    }
+  } catch {
+    // ignore
+  }
+
+  return null;
 }
 
 const ResizableImage = Image.extend({
@@ -549,11 +644,6 @@ export default function RichTextEditor({
           return false;
         }
         const files = Array.from(event.dataTransfer?.files || []);
-        if (!files.length) {
-          return false;
-        }
-
-        event.preventDefault();
 
         const coords = {
           left: event.clientX,
@@ -564,31 +654,44 @@ export default function RichTextEditor({
           editor?.commands.setTextSelection(posAt);
         }
 
-        void (async () => {
-          for (const file of files) {
-            try {
-              const dataUrl = await fileToDataUrl(file);
-              if (file.type.startsWith("image/")) {
-                editor?.chain().focus().setImage({ src: dataUrl }).run();
-                continue;
-              }
-              const safeHref = escapeHtml(dataUrl);
-              const safeName = escapeHtml(file.name || "arquivo");
-              const safeDownload = escapeHtml(file.name || "arquivo");
-              editor
-                ?.chain()
-                .focus()
-                .insertContent(
-                  `<a href="${safeHref}" download="${safeDownload}">${safeName}</a>&nbsp;`
-                )
-                .run();
-            } catch {
-              // ignore
-            }
-          }
-        })();
+        if (files.length) {
+          event.preventDefault();
 
-        return true;
+          void (async () => {
+            for (const file of files) {
+              try {
+                const dataUrl = await fileToDataUrl(file);
+                if (file.type.startsWith("image/")) {
+                  editor?.chain().focus().setImage({ src: dataUrl }).run();
+                  continue;
+                }
+                const safeHref = escapeHtml(dataUrl);
+                const safeName = escapeHtml(file.name || "arquivo");
+                const safeDownload = escapeHtml(file.name || "arquivo");
+                editor
+                  ?.chain()
+                  .focus()
+                  .insertContent(
+                    `<a href="${safeHref}" download="${safeDownload}">${safeName}</a>&nbsp;`
+                  )
+                  .run();
+              } catch {
+                // ignore
+              }
+            }
+          })();
+
+          return true;
+        }
+
+        const droppedImageSrc = extractDroppedImageSrc(event.dataTransfer);
+        if (droppedImageSrc) {
+          event.preventDefault();
+          editor?.chain().focus().setImage({ src: droppedImageSrc }).run();
+          return true;
+        }
+
+        return false;
       },
       handlePaste: (_view, event) => {
         const items = Array.from(event.clipboardData?.items || []);

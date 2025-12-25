@@ -1070,22 +1070,16 @@ export default function Notes() {
       (note.title || "Sem título").trim() || "Sem título";
 
     const sortNotes = (items: Note[]) =>
-      items.sort((a, b) => {
-        const af = Boolean(a.favorite);
-        const bf = Boolean(b.favorite);
-        if (af !== bf) {
-          return af ? -1 : 1;
-        }
-        if (af && bf) {
-          return collator.compare(titleKey(a), titleKey(b));
-        }
-        return (b.updatedAt || "").localeCompare(a.updatedAt || "");
-      });
+      items.sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+
+    const favorites = candidates
+      .filter(note => Boolean(note.favorite))
+      .sort((a, b) => collator.compare(titleKey(a), titleKey(b)));
 
     sortNotes(roots);
     Array.from(childrenByParentId.values()).forEach(list => sortNotes(list));
 
-    return { roots, childrenByParentId, byId };
+    return { roots, childrenByParentId, byId, favorites };
   }, [notes, isArchiveView]);
 
   useEffect(() => {
@@ -1110,6 +1104,86 @@ export default function Notes() {
     onAfterSelect?: () => void;
   }) => {
     const rows: JSX.Element[] = [];
+
+    if (sidebarTree.favorites.length) {
+      rows.push(
+        <Box key="__favorites-header" sx={{ px: 0.5, pt: 0.5, pb: 1 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+            Favoritos
+          </Typography>
+        </Box>
+      );
+
+      for (const note of sidebarTree.favorites) {
+        const isActive = note.id === selectedNoteId;
+        rows.push(
+          <Box
+            key={`fav-${note.id}`}
+            onClick={() => {
+              opts.onSelect(note);
+              opts.onAfterSelect?.();
+            }}
+            sx={theme => ({
+              ...interactiveItemSx(theme),
+              py: 1,
+              pr: 1,
+              pl: 1,
+              border: 1,
+              borderColor: isActive ? "primary.main" : "transparent",
+              cursor: "pointer",
+            })}
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Box
+                sx={{
+                  width: 24,
+                  height: 24,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flex: "0 0 auto",
+                }}
+              />
+              <Stack
+                direction="row"
+                spacing={0.75}
+                alignItems="center"
+                sx={{ minWidth: 0, flex: 1 }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 600,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    color: "text.primary",
+                    flex: 1,
+                  }}
+                >
+                  {note.emoji} {note.title || "Sem título"}
+                </Typography>
+                <Box
+                  sx={{
+                    flex: "0 0 auto",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    color: "text.primary",
+                  }}
+                  aria-label="Nota favorita"
+                >
+                  <StarRoundedIcon fontSize="small" />
+                </Box>
+              </Stack>
+            </Stack>
+          </Box>
+        );
+      }
+
+      rows.push(<Box key="__favorites-divider" sx={{ height: 12 }} />);
+    }
+
     const stack: Array<{ note: Note; depth: number }> = [];
     for (let i = sidebarTree.roots.length - 1; i >= 0; i -= 1) {
       stack.push({ note: sidebarTree.roots[i]!, depth: 0 });
