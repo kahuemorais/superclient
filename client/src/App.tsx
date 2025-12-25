@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   CssBaseline,
-  Breadcrumbs,
   IconButton,
   Link,
   Menu,
@@ -39,7 +38,8 @@ import Notifications from "./pages/Notifications";
 import Calendar from "./pages/Calendar";
 import CalendarCompleted from "./pages/CalendarCompleted";
 import Notes from "./pages/Notes";
-import { PageActionsProvider, usePageActionsContext } from "./contexts/PageActionsContext";
+import { PageActionsProvider } from "./contexts/PageActionsContext";
+import AppBreadcrumbRow from "./components/AppBreadcrumbRow";
 
 // Keys para tradução - os labels serão traduzidos no render
 const navItems = [
@@ -70,6 +70,10 @@ function App() {
   const [hasNotifications, setHasNotifications] = useState(false);
   const [switchNotice, setSwitchNotice] = useState("");
   const [switchSnackbarOpen, setSwitchSnackbarOpen] = useState(false);
+
+  const homeBreadcrumbLabel = language.toLowerCase().startsWith("pt")
+    ? "Início"
+    : t("nav.home");
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -386,7 +390,7 @@ function App() {
     location === "/home"
       ? [
           <Typography key="home" color="text.primary">
-            Início
+            {homeBreadcrumbLabel}
           </Typography>,
         ]
       : location === "/access"
@@ -459,7 +463,7 @@ function App() {
                     underline="hover"
                     color="inherit"
                   >
-                    Home
+                    {homeBreadcrumbLabel}
                   </Link>,
                   <Typography key="current" color="text.primary">
                     {currentLabel}
@@ -917,71 +921,6 @@ function App() {
       </Snackbar>
     </PageActionsProvider>
     </ThemeProvider>
-  );
-}
-
-function AppBreadcrumbRow({ breadcrumbItems }: { breadcrumbItems: ReactNode }) {
-  const { actions } = usePageActionsContext();
-
-  return (
-    <Box
-      sx={{
-        maxWidth: 1200,
-        mx: "auto",
-        width: "100%",
-        display: { xs: "block", md: "flex" },
-        alignItems: { md: "center" },
-        justifyContent: { md: "space-between" },
-        gap: { md: 2 },
-        mb: 1,
-      }}
-    >
-      <Breadcrumbs
-        aria-label="breadcrumb"
-        separator="›"
-        sx={{
-          color: "text.secondary",
-          display: "flex",
-          width: { xs: "100%", md: "auto" },
-          flex: { md: "1 1 auto" },
-          minWidth: 0,
-          justifyContent: "flex-start",
-          alignItems: "center",
-          flexWrap: "nowrap",
-          whiteSpace: "nowrap",
-          "& .MuiBreadcrumbs-ol": {
-            flexWrap: "nowrap",
-            alignItems: "center",
-            minWidth: 0,
-          },
-          "& .MuiBreadcrumbs-li": {
-            display: "inline-flex",
-            minWidth: 0,
-          },
-          "& .MuiBreadcrumbs-separator": {
-            mx: 1,
-            color: "text.secondary",
-          },
-        }}
-      >
-        {breadcrumbItems}
-      </Breadcrumbs>
-
-      {actions ? (
-        <Box
-          sx={{
-            display: { xs: "none", md: "flex" },
-            alignItems: "center",
-            justifyContent: "flex-end",
-            flexWrap: "nowrap",
-            minWidth: 0,
-            flex: "0 0 auto",
-          }}
-        >
-          {actions}
-        </Box>
-      ) : null}
-    </Box>
   );
 }
 

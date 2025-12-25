@@ -1436,7 +1436,7 @@ export default function Notes() {
                         minWidth: 0,
                         gridTemplateColumns: {
                           xs: "1fr",
-                          sm: "repeat(auto-fit, minmax(260px, 1fr))",
+                          sm: "repeat(auto-fit, minmax(220px, 1fr))",
                         },
                       }}
                     >
@@ -1471,7 +1471,7 @@ export default function Notes() {
                                 : "divider",
                               backgroundColor: "background.paper",
                               cursor: "pointer",
-                              minHeight: isExpanded ? "auto" : 120,
+                              minHeight: isExpanded ? "auto" : 96,
                             })}
                           >
                             <Stack spacing={isExpanded ? 1.5 : 1}>
