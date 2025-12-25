@@ -14,7 +14,6 @@ export const filtersRow = style({
 });
 
 export const searchWrap = style({
-  flex: "0 1 520px",
   minWidth: 0,
   "@media": {
     "(max-width: 959px)": {
@@ -23,7 +22,9 @@ export const searchWrap = style({
       maxWidth: "100%",
     },
     "(min-width: 960px)": {
-      minWidth: "240px",
+      flex: "0 0 520px",
+      maxWidth: "520px",
+      minWidth: "320px",
     },
   },
 });
@@ -37,7 +38,6 @@ export const searchFieldStable = style({
 });
 
 export const filterWrap = style({
-  flex: "0 1 320px",
   minWidth: 0,
   overflow: "hidden",
   "@media": {
@@ -47,6 +47,8 @@ export const filterWrap = style({
       maxWidth: "100%",
     },
     "(min-width: 960px)": {
+      flex: "0 0 360px",
+      maxWidth: "360px",
       minWidth: "240px",
     },
   },
