@@ -28,6 +28,7 @@ import {
   Typography,
 } from "@mui/material";
 import { TextField } from "../ui/TextField";
+import { SearchField } from "../ui/SearchField";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArchiveRoundedIcon from "@mui/icons-material/ArchiveRounded";
@@ -1445,10 +1446,12 @@ export default function Notes() {
             {!selectedNote ? (
               <CardSection size="xs">
                 <Stack spacing={1.5}>
-                  <TextField
-                    label="Buscar nota"
+                  <SearchField
+                    placeholder="Buscar nota"
                     value={noteQuery}
                     onChange={event => setNoteQuery(event.target.value)}
+                    onClear={() => setNoteQuery("")}
+                    fullWidth
                   />
                   {filteredNotes.length ? (
                     <Box
