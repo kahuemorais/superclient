@@ -53,6 +53,7 @@ Prevenir regressões visuais e arquiteturais durante a migração gradual de MUI
 - [ ] Validar em 3 páginas: Home, Calendar, Notes
 - [ ] Validar em 2 breakpoints: desktop (≥960px) e mobile (<960px)
 - [ ] Zero mudança de grid/padding/containers da página original
+- [ ] **TextField:** Sempre usar Signup.tsx como referência visual e comportamental
 
 ## 🛠️ Pre-Commit Self-Check
 
@@ -86,10 +87,15 @@ Antes de marcar tarefa como "done":
 ### Phase 1: Base Components (Completed ✅)
 - [x] Card (Vanilla Extract)
 - [x] CardSection (Vanilla Extract)
-- [x] TextField (Vanilla Extract)
+- [x] TextField (Vanilla Extract) - **Referência: Signup.tsx**
 - [x] PageContainer (Vanilla Extract)
 - [x] TopRow/TitleRow architecture
 - [x] BreadcrumbContext
+
+**TextField Canonical Reference:**
+- `client/src/pages/Signup.tsx` é o exemplo canônico de uso do TextField
+- Toda nova migração de TextField DEVE se comportar exatamente igual ao Signup
+- Consulte `client/src/ui/TextField/TEXTFIELD_USAGE.md` para guia completo
 
 ### Phase 2: Form Components (Next)
 - [ ] Select
