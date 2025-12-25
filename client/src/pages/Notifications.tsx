@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Box, Button, Stack, Typography, useMediaQuery } from "@mui/material";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import AssignmentTurnedInRoundedIcon from "@mui/icons-material/AssignmentTurnedInRounded";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+
 import CakeRoundedIcon from "@mui/icons-material/CakeRounded";
 import PageContainer from "../components/layout/PageContainer";
 import CardSection from "../components/layout/CardSection";
@@ -134,23 +134,20 @@ export default function Notifications() {
 
   const upcoming = useMemo(() => getUpcomingBirthdays(contacts), [contacts]);
 
-  const markAsSeen = () => {
-    const timestamp = new Date().toISOString();
-    window.localStorage.setItem(SEEN_KEY, timestamp);
-    void saveUserStorage(SEEN_KEY, timestamp);
-    window.dispatchEvent(new Event("contacts-change"));
-  };
-
-  const markTasksAsSeen = () => {
-    const timestamp = new Date().toISOString();
-    window.localStorage.setItem(TASK_SEEN_KEY, timestamp);
-    void saveUserStorage(TASK_SEEN_KEY, timestamp);
-  };
-
-  const clearCompletedTasks = () => {
-    window.localStorage.removeItem(COMPLETED_TASKS_KEY);
-    void saveUserStorage(COMPLETED_TASKS_KEY, null);
-    setCompletedTasks([]);
+  const markNotificationAsViewed = (notificationId: string, type: 'task' | 'birthday') => {
+    if (type === 'task') {
+      // Remover tarefa da lista
+      const updatedTasks = completedTasks.filter(task => task.id !== notificationId);
+      setCompletedTasks(updatedTasks);
+      window.localStorage.setItem(COMPLETED_TASKS_KEY, JSON.stringify(updatedTasks));
+      void saveUserStorage(COMPLETED_TASKS_KEY, updatedTasks);
+    } else if (type === 'birthday') {
+      // Para aniversários, apenas marcar timestamp de visto
+      const timestamp = new Date().toISOString();
+      window.localStorage.setItem(SEEN_KEY, timestamp);
+      void saveUserStorage(SEEN_KEY, timestamp);
+      window.dispatchEvent(new Event("contacts-change"));
+    }
   };
 
   const formatTimeAgo = (dateStr: string) => {
@@ -224,35 +221,6 @@ export default function Notifications() {
       <Stack spacing={3}>
         <CardSection>
           <Stack spacing={2}>
-            {hasAnyNotification && (
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
-                <Button
-                  size="small"
-                  variant="text"
-                  onClick={() => {
-                    markTasksAsSeen();
-                    markAsSeen();
-                  }}
-                  startIcon={<CheckRoundedIcon fontSize="small" />}
-                  sx={{ textTransform: "none", fontWeight: 600 }}
-                >
-                  Marcar como visto
-                </Button>
-                {completedTasks.length > 0 && (
-                  <Button
-                    size="small"
-                    variant="text"
-                    color="error"
-                    onClick={clearCompletedTasks}
-                    startIcon={<DeleteRoundedIcon fontSize="small" />}
-                    sx={{ textTransform: "none", fontWeight: 600 }}
-                  >
-                    Limpar
-                  </Button>
-                )}
-              </Stack>
-            )}
-
             {!hasAnyNotification ? (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Nenhuma notificação recente.
@@ -276,39 +244,57 @@ export default function Notifications() {
                   <CardSection
                     size="xs"
                     key={notification.id}
-                    onClick={notification.onClick}
-                    sx={theme => ({
-                      cursor: notification.onClick ? "pointer" : "default",
+                    sx={{
                       minHeight: 64,
                       display: "flex",
-                      alignItems: "flex-start",
+                      flexDirection: "column",
                       gap: 1.5,
-                      ...(notification.onClick ? interactiveCardSx(theme) : {}),
-                    })}
+                    }}
                   >
                     <Box
                       sx={{
-                        mt: 0.5,
-                        color: notification.icon === 'task' ? 'text.secondary' : 'primary.main',
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 1.5,
                       }}
                     >
-                      {notification.icon === 'task' ? (
-                        <AssignmentTurnedInRoundedIcon fontSize="small" />
-                      ) : (
-                        <CakeRoundedIcon fontSize="small" />
-                      )}
-                    </Box>
-                    <Stack sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {notification.title}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "text.secondary" }}
+                      <Box
+                        sx={{
+                          mt: 0.5,
+                          color: notification.icon === 'task' ? 'text.secondary' : 'primary.main',
+                        }}
                       >
-                        {notification.subtitle}
-                      </Typography>
-                    </Stack>
+                        {notification.icon === 'task' ? (
+                          <AssignmentTurnedInRoundedIcon fontSize="small" />
+                        ) : (
+                          <CakeRoundedIcon fontSize="small" />
+                        )}
+                      </Box>
+                      <Stack sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {notification.title}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary" }}
+                        >
+                          {notification.subtitle}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => markNotificationAsViewed(notification.id, notification.type)}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        alignSelf: "flex-end",
+                        color: "var(--md-sys-color-primary)",
+                      }}
+                    >
+                      Marcar como vista
+                    </Button>
                   </CardSection>
                 ))}
               </Box>
