@@ -180,7 +180,7 @@ function ResizableImageNodeView({
     position: "absolute" as const,
     top: 0,
     bottom: 0,
-    width: 14,
+    width: 18,
     cursor: "ew-resize",
     zIndex: 2,
     borderRadius: APP_RADIUS,
@@ -188,10 +188,35 @@ function ResizableImageNodeView({
     touchAction: "none" as const,
   };
 
+  const widthAttrRaw = (node.attrs as any).width;
+  const widthPx =
+    typeof widthAttrRaw === "string" && widthAttrRaw.trim()
+      ? Number(widthAttrRaw)
+      : null;
+  const widthStyle = Number.isFinite(widthPx as number)
+    ? `${Math.max(1, Math.round(widthPx as number))}px`
+    : undefined;
+
   return (
     <NodeViewWrapper
       as="div"
       ref={wrapperRef}
+      onPointerDown={(event: React.PointerEvent) => {
+        if (event.button !== 0) {
+          return;
+        }
+        editor?.commands.focus();
+        if (typeof getPos === "function") {
+          try {
+            const pos = getPos();
+            if (typeof pos === "number") {
+              editor?.commands.setNodeSelection(pos);
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }}
       style={{
         display: "block",
         position: "relative",
@@ -206,14 +231,10 @@ function ResizableImageNodeView({
         alt={String((node.attrs as any).alt || "")}
         title={String((node.attrs as any).title || "")}
         className={selected ? "ProseMirror-selectednode" : undefined}
-        width={
-          typeof (node.attrs as any).width === "string" && (node.attrs as any).width
-            ? (node.attrs as any).width
-            : undefined
-        }
         style={{
           display: "block",
           maxWidth: "100%",
+          width: widthStyle,
           height: "auto",
           borderRadius: APP_RADIUS,
           touchAction: "none",
@@ -227,18 +248,50 @@ function ResizableImageNodeView({
             onPointerDown={event => startResize(event, "w")}
             onPointerUp={endResize}
             onPointerCancel={endResize}
-            sx={{
+            sx={theme => ({
               ...handleSx,
               left: 0,
-            }}
+              backgroundColor: "action.hover",
+              borderRight: `1px solid ${theme.palette.divider}`,
+            })}
           />
           <Box
             onPointerDown={event => startResize(event, "e")}
             onPointerUp={endResize}
             onPointerCancel={endResize}
-            sx={{
+            sx={theme => ({
               ...handleSx,
               right: 0,
+              backgroundColor: "action.hover",
+              borderLeft: `1px solid ${theme.palette.divider}`,
+            })}
+          />
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: 6,
+              transform: "translateY(-50%)",
+              width: 6,
+              height: 28,
+              borderRadius: 999,
+              bgcolor: "text.secondary",
+              opacity: 0.55,
+              pointerEvents: "none",
+            }}
+          />
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              right: 6,
+              transform: "translateY(-50%)",
+              width: 6,
+              height: 28,
+              borderRadius: 999,
+              bgcolor: "text.secondary",
+              opacity: 0.55,
+              pointerEvents: "none",
             }}
           />
         </>
