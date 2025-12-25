@@ -22,8 +22,19 @@ import SettingsIconButton from "../components/SettingsIconButton";
 import { PageContainer } from "../ui/PageContainer/PageContainer";
 import AppCard from "../components/layout/AppCard";
 import CardSection from "../components/layout/CardSection";
+import { Card } from "../ui/Card";
+import { CardSection as VeCardSection } from "../ui/CardSection";
 import SettingsDialog from "../components/SettingsDialog";
 import { interactiveCardSx } from "../styles/interactiveCard";
+import {
+  notificationsContainer,
+  notificationItem,
+  notificationIcon,
+  notificationContent,
+  notificationTitle,
+  notificationTime,
+  emptyState,
+} from "./dashboard.css";
 
 type Deal = {
   id: string;
@@ -591,133 +602,58 @@ export default function Dashboard() {
         ) : null}
 
         {sections.notifications ? (
-          <AppCard sx={{ p: { xs: 3, md: 4 } }}>
-            <Stack spacing={2.5}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Typography variant="h6">Notificações</Typography>
-                <Tooltip title="Ir para Notificações" placement="top">
-                  <IconButton
-                    component={RouterLink}
-                    href="/notifications"
-                    aria-label="Ir para Notificações"
-                    sx={{
-                      border: 1,
-                      borderColor: "divider",
-                    }}
-                  >
-                    <ArrowForwardRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              {completedTasks.length > 0 ? (
-                <Box
+          <Card
+            title="Notificações"
+            actionsSlot={
+              <Tooltip title="Ir para Notificações" placement="top">
+                <IconButton
+                  component={RouterLink}
+                  href="/notifications"
+                  aria-label="Ir para Notificações"
                   sx={{
-                    display: {
-                      xs: 'flex',
-                      md: 'grid',
-                    },
-                    gridTemplateColumns: {
-                      md: 'repeat(3, 1fr)',
-                    },
-                    gap: 2,
-                    overflowX: {
-                      xs: 'auto',
-                      md: 'visible',
-                    },
-                    scrollSnapType: {
-                      xs: 'x mandatory',
-                      md: 'none',
-                    },
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'thin',
-                    '&::-webkit-scrollbar': {
-                      height: '6px',
-                    },
-                    '&::-webkit-scrollbar-track': {
-                      backgroundColor: 'transparent',
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                      backgroundColor: 'color-mix(in srgb, var(--md-sys-color-on-surface) 20%, transparent)',
-                      borderRadius: '3px',
-                    },
+                    border: 1,
+                    borderColor: "divider",
                   }}
                 >
-                  {completedTasks.slice(0, notificationsCount).map(task => (
-                    <CardSection
-                      key={task.id}
-                      size="compact"
-                      role="link"
-                      tabIndex={0}
-                      onClick={() => navigate(`/calendario?task=${task.taskId}`)}
-                      onKeyDown={event => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          navigate(`/calendario?task=${task.taskId}`);
-                        }
-                      }}
-                      sx={theme => ({
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        cursor: "pointer",
-                        minHeight: 64,
-                        minWidth: {
-                          xs: '200px',
-                          md: 'auto',
-                        },
-                        flex: {
-                          xs: '0 0 auto',
-                          md: '1',
-                        },
-                        scrollSnapAlign: {
-                          xs: 'start',
-                          md: 'none',
-                        },
-                        ...interactiveCardSx(theme),
-                      })}
-                    >
-                      <CheckCircleRoundedIcon
-                        fontSize="small"
-                        sx={{ color: "text.primary", flexShrink: 0 }}
-                      />
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: 500,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {task.taskName}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: "text.secondary" }}
-                        >
-                          Concluída {formatTimeAgo(task.completedAt)}
-                        </Typography>
-                      </Box>
-                    </CardSection>
-                  ))}
-                </Box>
-              ) : (
-                <Typography
-                  variant="body2"
-                  sx={{ color: "text.secondary", textAlign: "center", py: 2 }}
-                >
-                  Nenhuma notificação recente
-                </Typography>
-              )}
-            </Stack>
-          </AppCard>
+                  <ArrowForwardRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            }
+          >
+            {completedTasks.length > 0 ? (
+              <div className={notificationsContainer}>
+                {completedTasks.slice(0, notificationsCount).map(task => (
+                  <VeCardSection
+                    key={task.id}
+                    size="compact"
+                    interactive
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => navigate(`/calendario?task=${task.taskId}`)}
+                    onKeyDown={event => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        navigate(`/calendario?task=${task.taskId}`);
+                      }
+                    }}
+                    className={notificationItem}
+                  >
+                    <CheckCircleRoundedIcon fontSize="small" className={notificationIcon} />
+                    <div className={notificationContent}>
+                      <p className={notificationTitle}>{task.taskName}</p>
+                      <p className={notificationTime}>
+                        Concluída {formatTimeAgo(task.completedAt)}
+                      </p>
+                    </div>
+                  </VeCardSection>
+                ))}
+              </div>
+            ) : (
+              <p className={emptyState}>
+                Nenhuma notificação recente
+              </p>
+            )}
+          </Card>
         ) : null}
 
         {sections.pipeline ? (
