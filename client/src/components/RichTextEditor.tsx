@@ -138,6 +138,8 @@ function ResizableImageNodeView({
   return (
     <NodeViewWrapper
       as="span"
+      draggable
+      data-drag-handle
       style={{
         display: "inline-block",
         position: "relative",
@@ -150,7 +152,6 @@ function ResizableImageNodeView({
         src={node.attrs.src || ""}
         alt={node.attrs.alt || ""}
         title={node.attrs.title || ""}
-        draggable={false}
         style={{
           display: "block",
           maxWidth: "100%",
@@ -164,11 +165,13 @@ function ResizableImageNodeView({
       {/* Left handle */}
       <span
         onPointerDown={e => startResize(e, "w")}
+        onDragStart={e => e.preventDefault()}
         style={{ ...handleStyle, left: 0 }}
       />
       {/* Right handle */}
       <span
         onPointerDown={e => startResize(e, "e")}
+        onDragStart={e => e.preventDefault()}
         style={{ ...handleStyle, right: 0 }}
       />
     </NodeViewWrapper>
