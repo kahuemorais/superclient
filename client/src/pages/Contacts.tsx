@@ -33,10 +33,12 @@ import ToggleCheckbox from "../components/ToggleCheckbox";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import { PageContainer } from "../ui/PageContainer/PageContainer";
 import { TextField as TextFieldVE } from "../ui/TextField";
+import { SearchField } from "../ui/SearchField";
 import CardSection from "../components/layout/CardSection";
 import CategoryFilter from "../components/CategoryFilter";
 import SettingsDialog from "../components/SettingsDialog";
 import { loadUserStorage, saveUserStorage } from "../userStorage";
+import * as contactStyles from "./contacts.css";
 
 type Contact = {
   id: string;
@@ -965,43 +967,25 @@ export default function Contacts() {
           </CardSection>
         ) : (
           <Stack spacing={2}>
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              alignItems={{ xs: "stretch", sm: "center" }}
-            >
-              <TextFieldVE
-                placeholder="Buscar contatos"
-                value={contactQuery}
-                onChange={event => setContactQuery(event.target.value)}
-                onKeyDown={event => {
-                  if (event.key === "Escape") {
-                    event.preventDefault();
-                    setContactQuery("");
-                  }
-                }}
-                endAdornment={
-                  contactQuery ? (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => setContactQuery("")}
-                        aria-label="Limpar busca"
-                      >
-                        <CloseRoundedIcon fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  ) : null
-                }
-                sx={{ flex: 1, minWidth: 200, maxWidth: { xs: "100%", sm: 360 } }}
-              />
-              <CategoryFilter
-                categories={categories}
-                selectedIds={categoryFilters}
-                onChange={setCategoryFilters}
-                width={{ xs: "100%", sm: 320 }}
-              />
-            </Stack>
+            <div className={contactStyles.filtersRow}>
+              <div className={contactStyles.searchWrap}>
+                <SearchField
+                  placeholder="Buscar contatos"
+                  value={contactQuery}
+                  onChange={event => setContactQuery(event.target.value)}
+                  onClear={() => setContactQuery("")}
+                  fullWidth
+                />
+              </div>
+              <div className={contactStyles.categoryWrap}>
+                <CategoryFilter
+                  categories={categories}
+                  selectedIds={categoryFilters}
+                  onChange={setCategoryFilters}
+                  width="100%"
+                />
+              </div>
+            </div>
             {filteredContacts.length === 0 ? (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Nenhum contato encontrado.
