@@ -54,6 +54,15 @@ Prevenir regressões visuais e arquiteturais durante a migração gradual de MUI
 - [ ] Validar em 2 breakpoints: desktop (≥960px) e mobile (<960px)
 - [ ] Zero mudança de grid/padding/containers da página original
 - [ ] **TextField:** Sempre usar Signup.tsx como referência visual e comportamental
+- [ ] **SearchField:** Sempre usar SearchField para campos de busca, NUNCA TextField VE direto
+
+### 8. **Search Fields Standards**
+- [ ] Todos os campos de busca usam `<SearchField />` (nunca TextField VE direto)
+- [ ] Props obrigatórias: `value`, `onChange`, `placeholder`, `onClear`
+- [ ] Largura controlada pelo container da página (Grid/Flex), não internamente
+- [ ] ESC limpa o campo automaticamente
+- [ ] Botão X condicional (aparece apenas com texto)
+- [ ] Altura 56px (consistente com Select MUI)
 
 ## 🛠️ Pre-Commit Self-Check
 
@@ -88,6 +97,7 @@ Antes de marcar tarefa como "done":
 - [x] Card (Vanilla Extract)
 - [x] CardSection (Vanilla Extract)
 - [x] TextField (Vanilla Extract) - **Referência: Signup.tsx**
+- [x] SearchField (Vanilla Extract) - **Componente único para todos os campos de busca**
 - [x] PageContainer (Vanilla Extract)
 - [x] TopRow/TitleRow architecture
 - [x] BreadcrumbContext
@@ -96,6 +106,22 @@ Antes de marcar tarefa como "done":
 - `client/src/pages/Signup.tsx` é o exemplo canônico de uso do TextField
 - Toda nova migração de TextField DEVE se comportar exatamente igual ao Signup
 - Consulte `client/src/ui/TextField/TEXTFIELD_USAGE.md` para guia completo
+
+**SearchField Canonical Reference:**
+- `client/src/ui/SearchField/SearchField.tsx` é o componente único para TODOS os campos de busca do app
+- **NUNCA** usar TextField VE diretamente para implementar busca
+- **SEMPRE** usar `<SearchField />` com props padronizadas:
+  - `value`: estado do texto de busca
+  - `onChange`: handler para mudança de texto
+  - `placeholder`: texto interno do campo (não usar label externa)
+  - `onClear`: handler para limpar campo (ESC também limpa automaticamente)
+  - `fullWidth`: true para ocupar 100% do container
+  - `ariaLabel`: acessibilidade
+- Altura padrão: 56px (consistente com Select MUI)
+- Botão X aparece condicionalmente quando há texto
+- ESC limpa o campo automaticamente
+- Layout: largura controlada pelo container da página via Grid/Flex, nunca internamente
+- Páginas usando SearchField: Contacts, Pipeline, Finanças, Support, Notes, AccessManagement
 
 ### Phase 2: Form Components (Next)
 - [ ] Select
