@@ -7,9 +7,11 @@ export const searchFieldRoot = style({
   width: "100%",
   height: "56px",
   minHeight: "56px",
-  borderRadius: "var(--sc-input-border-radius, 12px)",
+  borderRadius: "var(--sc-input-radius, 16px)",
   border: "1px solid var(--sc-input-border-color, rgba(230, 237, 243, 0.2))",
   backgroundColor: "var(--sc-input-bg, rgba(230, 237, 243, 0.05))",
+  boxSizing: "border-box",
+  overflow: "hidden",
   transition: "all 0.2s ease",
   ":hover": {
     borderColor: "var(--sc-input-border-color-hover, rgba(230, 237, 243, 0.35))",
@@ -21,7 +23,7 @@ export const searchFieldRoot = style({
 });
 
 export const searchFieldInput = style({
-  flex: 1,
+  flex: "1 1 auto",
   height: "100%",
   minWidth: 0,
   padding: "0 16px",
@@ -31,9 +33,26 @@ export const searchFieldInput = style({
   color: "var(--sc-input-text-color, #e6edf3)",
   fontSize: "16px",
   lineHeight: "1.5",
+  boxSizing: "border-box",
   "::placeholder": {
     color: "var(--sc-input-placeholder-color, rgba(230, 237, 243, 0.5))",
   },
+});
+
+export const searchFieldEndSlot = style({
+  flex: "0 0 48px",
+  width: "48px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  boxSizing: "border-box",
+});
+
+export const searchFieldEndSlotGhost = style({
+  width: "24px",
+  height: "24px",
+  opacity: 0,
+  pointerEvents: "none",
 });
 
 export const searchFieldEndAdornment = style({

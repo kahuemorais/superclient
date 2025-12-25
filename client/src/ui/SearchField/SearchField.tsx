@@ -52,9 +52,9 @@ export function SearchField({
         aria-label={ariaLabel || placeholder}
         className={styles.searchFieldInput}
       />
-      {showClearButton && (
-        <div className={styles.searchFieldEndAdornment}>
-          {endIcon || (
+      <div className={styles.searchFieldEndSlot}>
+        {showClearButton ? (
+          endIcon || (
             <InputAdornment position="end">
               <IconButton
                 size="small"
@@ -64,9 +64,11 @@ export function SearchField({
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </InputAdornment>
-          )}
-        </div>
-      )}
+          )
+        ) : (
+          <span className={styles.searchFieldEndSlotGhost} aria-hidden="true" />
+        )}
+      </div>
     </div>
   );
 }
