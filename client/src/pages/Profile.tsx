@@ -29,6 +29,7 @@ import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import { changeLanguage } from "../i18n";
+import * as profileStyles from "./profile.css";
 
 type StoredAccount = {
   name: string;
@@ -1024,14 +1025,10 @@ export default function Profile() {
                 Telefones
               </Typography>
               {phones.map((phone, index) => (
-                <Stack
-                  key={`phone-${index}`}
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                >
+                <div key={`phone-${index}`} className={profileStyles.arrayFieldRow}>
                   <TextFieldVE
-                    label={`Telefone ${index + 1}`}
+                    className={profileStyles.arrayFieldInput}
+                    placeholder="Telefone"
                     fullWidth
                     value={phone}
                     onChange={event =>
@@ -1043,11 +1040,14 @@ export default function Profile() {
                       )
                     }
                     inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+                    ariaLabel={`Telefone ${index + 1}`}
                   />
-                  <IconButton onClick={() => removeListItem(setPhones, index)}>
-                    <CloseRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
+                  <div className={profileStyles.iconButtonWrapper}>
+                    <IconButton onClick={() => removeListItem(setPhones, index)}>
+                      <CloseRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </div>
+                </div>
               ))}
               <Button
                 variant="outlined"
@@ -1071,24 +1071,23 @@ export default function Profile() {
                 Pelo menos 1 email e obrigatório.
               </Typography>
               {emails.map((item, index) => (
-                <Stack
-                  key={`email-${index}`}
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                >
+                <div key={`email-${index}`} className={profileStyles.arrayFieldRow}>
                   <TextField
-                    label={`Email ${index + 1}`}
+                    className={profileStyles.arrayFieldInput}
+                    placeholder="Email"
                     fullWidth
                     value={item}
                     onChange={event =>
                       updateListItem(setEmails, index, event.target.value)
                     }
+                    aria-label={`Email ${index + 1}`}
                   />
-                  <IconButton onClick={() => removeListItem(setEmails, index)}>
-                    <CloseRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
+                  <div className={profileStyles.iconButtonWrapper}>
+                    <IconButton onClick={() => removeListItem(setEmails, index)}>
+                      <CloseRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </div>
+                </div>
               ))}
               <Button
                 variant="outlined"
@@ -1109,41 +1108,42 @@ export default function Profile() {
                 Endereços
               </Typography>
               {addresses.map((address, index) => (
-                <Stack
-                  key={`address-${index}`}
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                >
+                <div key={`address-${index}`} className={profileStyles.arrayFieldRow}>
                   <TextField
-                    label={`Endereço ${index + 1}`}
+                    className={profileStyles.arrayFieldInput}
+                    placeholder="Endereço"
                     fullWidth
                     value={address}
                     onChange={event =>
                       updateListItem(setAddresses, index, event.target.value)
                     }
+                    aria-label={`Endereço ${index + 1}`}
                   />
-                  <IconButton
-                    component="a"
-                    href={
-                      address
-                        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                            address
-                          )}`
-                        : undefined
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    disabled={!address}
-                  >
-                    <LinkRoundedIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => removeListItem(setAddresses, index)}
-                  >
-                    <CloseRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
+                  <div className={profileStyles.iconButtonWrapper}>
+                    <IconButton
+                      component="a"
+                      href={
+                        address
+                          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                              address
+                            )}`
+                          : undefined
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      disabled={!address}
+                    >
+                      <LinkRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </div>
+                  <div className={profileStyles.iconButtonWrapper}>
+                    <IconButton
+                      onClick={() => removeListItem(setAddresses, index)}
+                    >
+                      <CloseRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </div>
+                </div>
               ))}
               <Button
                 variant="outlined"
