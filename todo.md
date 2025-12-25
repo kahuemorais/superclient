@@ -89,3 +89,50 @@
 - [x] Configure GitHub Pages settings
 - [x] Deploy to GitHub Pages
 - [ ] Verify site is live at https://trembosauro.github.io/superclient
+---
+
+## 🛡️ Before You Say "Done" (Migration Self-Check)
+
+**Obrigatório para toda mudança que migra MUI → Vanilla Extract:**
+
+### Build & TypeScript
+- [ ] `pnpm build` executa sem erros
+- [ ] Zero warnings TypeScript novos
+- [ ] Zero erros no console do browser
+
+### Visual Regression (3 páginas × 2 breakpoints = 6 testes)
+- [ ] **Home (Início)** - Desktop ≥960px
+  - [ ] Cards de notificações alinhados
+  - [ ] Actions na mesma linha do breadcrumb
+  - [ ] Hover sem elevação (transform/shadow)
+- [ ] **Home (Início)** - Mobile <960px
+  - [ ] Navbar colapsado (hamburger)
+  - [ ] Apenas 1 ícone de notificação
+  - [ ] TopRow pode wrap
+
+- [ ] **Calendar (Calendário)** - Desktop ≥960px
+  - [ ] Breadcrumb alinha com "Filtrar categorias" (diff = 0px)
+  - [ ] Sidebar e grid sem padding extra
+  - [ ] Actions sempre visíveis
+
+- [ ] **Calendar (Calendário)** - Mobile <960px
+  - [ ] Breadcrumb alinha com botões mobile
+  - [ ] Grid responsivo correto
+
+- [ ] **Notes (Anotações)** - Desktop ≥960px
+  - [ ] Campo de busca alinhado com breadcrumb
+  - [ ] Lista de notas sem offset horizontal
+  
+- [ ] **Notes (Anotações)** - Mobile <960px
+  - [ ] Input fullWidth correto
+  - [ ] Cards sem margin extra
+
+### Guardrails Específicos
+- [ ] Breadcrumb e conteúdo começam no mesmo X (usar snippet do MIGRATION_GUARDRAILS.md)
+- [ ] Nenhuma cor hardcoded (hex/rgba) em componentes novos
+- [ ] PageContainer é a única fonte de padding horizontal
+- [ ] Hover states usam apenas tokens: `--sc-card-hover-bg`, `--sc-card-hover-border`
+- [ ] Mobile navbar: notificação sem duplicata, avatar e hamburger sem borda/fundo extra
+
+### Checklist Completo
+📋 Ver detalhes em: [client/MIGRATION_GUARDRAILS.md](client/MIGRATION_GUARDRAILS.md)

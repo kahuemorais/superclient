@@ -23,10 +23,11 @@ import {
   Popper,
   Snackbar,
   Stack,
-  TextField,
+  TextField as MuiTextField,
   Tooltip,
   Typography,
 } from "@mui/material";
+import { TextField } from "../ui/TextField";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArchiveRoundedIcon from "@mui/icons-material/ArchiveRounded";
@@ -1446,11 +1447,8 @@ export default function Notes() {
                 <Stack spacing={1.5}>
                   <TextField
                     label="Buscar nota"
-                    size="small"
                     value={noteQuery}
                     onChange={event => setNoteQuery(event.target.value)}
-                    fullWidth
-                    sx={{ minWidth: 0 }}
                   />
                   {filteredNotes.length ? (
                     <Box
@@ -1622,7 +1620,7 @@ export default function Notes() {
                               alignItems="center"
                               sx={{ mb: 1.5 }}
                             >
-                              <TextField
+                              <MuiTextField
                                 size="small"
                                 placeholder="Buscar emoji..."
                                 value={emojiSearch}
@@ -1725,7 +1723,7 @@ export default function Notes() {
                           </Box>
                         </ClickAwayListener>
                       </Popper>
-                      <TextField
+                      <MuiTextField
                         label="Titulo"
                         value={selectedNote.title}
                         onChange={event =>
@@ -1804,7 +1802,7 @@ export default function Notes() {
                           spacing={1}
                           alignItems="center"
                         >
-                          <TextField
+                          <MuiTextField
                             label="Titulo"
                             size="small"
                             value={link.label}
@@ -1818,7 +1816,7 @@ export default function Notes() {
                             }
                             fullWidth
                           />
-                          <TextField
+                          <MuiTextField
                             label="URL"
                             size="small"
                             value={link.url}
@@ -1879,7 +1877,7 @@ export default function Notes() {
                           spacing={1}
                           alignItems="center"
                         >
-                          <TextField
+                          <MuiTextField
                             label="Nome"
                             size="small"
                             value={att.name}
