@@ -618,16 +618,33 @@ export default function Dashboard() {
               {completedTasks.length > 0 ? (
                 <Box
                   sx={{
-                    display: 'grid',
-                    gridTemplateColumns: {
-                      xs: '1fr',
-                      sm: '1fr 1fr',
-                      md: '1fr 1fr 1fr',
+                    display: {
+                      xs: 'flex',
+                      md: 'grid',
                     },
-                    gridAutoFlow: 'row',
+                    gridTemplateColumns: {
+                      md: 'repeat(3, 1fr)',
+                    },
                     gap: 2,
-                    '@media (max-width:1080px)': {
-                      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    overflowX: {
+                      xs: 'auto',
+                      md: 'visible',
+                    },
+                    scrollSnapType: {
+                      xs: 'x mandatory',
+                      md: 'none',
+                    },
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'thin',
+                    '&::-webkit-scrollbar': {
+                      height: '6px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      backgroundColor: 'transparent',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      backgroundColor: 'color-mix(in srgb, var(--md-sys-color-on-surface) 20%, transparent)',
+                      borderRadius: '3px',
                     },
                   }}
                 >
@@ -650,6 +667,18 @@ export default function Dashboard() {
                         gap: 1.5,
                         cursor: "pointer",
                         minHeight: 64,
+                        minWidth: {
+                          xs: '200px',
+                          md: 'auto',
+                        },
+                        flex: {
+                          xs: '0 0 auto',
+                          md: '1',
+                        },
+                        scrollSnapAlign: {
+                          xs: 'start',
+                          md: 'none',
+                        },
                         ...interactiveCardSx(theme),
                       })}
                     >
