@@ -386,7 +386,7 @@ function App() {
     location === "/home"
       ? [
           <Typography key="home" color="text.primary">
-            Home
+            Início
           </Typography>,
         ]
       : location === "/access"

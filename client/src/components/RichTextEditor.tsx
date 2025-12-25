@@ -45,7 +45,7 @@ import { APP_RADIUS } from "../designTokens";
 import AppCard from "./layout/AppCard";
 
 function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewProps) {
-  const wrapperRef = useRef<HTMLSpanElement | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<
     | {
@@ -79,7 +79,11 @@ function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewPr
       pointerId: event.pointerId,
     };
 
-    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    try {
+      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    } catch {
+      // ignore
+    }
   };
 
   const onResizeMove = (event: React.PointerEvent) => {
@@ -122,10 +126,10 @@ function ResizableImageNodeView({ node, selected, updateAttributes }: NodeViewPr
 
   return (
     <NodeViewWrapper
-      as="span"
+      as="div"
       ref={wrapperRef}
       style={{
-        display: "inline-block",
+        display: "block",
         position: "relative",
         maxWidth: "100%",
         borderRadius: APP_RADIUS,
@@ -540,7 +544,7 @@ export default function RichTextEditor({
       onChange(editor.getHTML());
     },
     editorProps: {
-      handleDrop: (_view, event, _slice, moved) => {
+      handleDrop: (view, event, _slice, moved) => {
         if (moved) {
           return false;
         }
@@ -549,12 +553,24 @@ export default function RichTextEditor({
           return false;
         }
 
-        files.forEach(file => {
-          void fileToDataUrl(file)
-            .then(dataUrl => {
+        event.preventDefault();
+
+        const coords = {
+          left: event.clientX,
+          top: event.clientY,
+        };
+        const posAt = view.posAtCoords(coords)?.pos;
+        if (typeof posAt === "number") {
+          editor?.commands.setTextSelection(posAt);
+        }
+
+        void (async () => {
+          for (const file of files) {
+            try {
+              const dataUrl = await fileToDataUrl(file);
               if (file.type.startsWith("image/")) {
                 editor?.chain().focus().setImage({ src: dataUrl }).run();
-                return;
+                continue;
               }
               const safeHref = escapeHtml(dataUrl);
               const safeName = escapeHtml(file.name || "arquivo");
@@ -566,11 +582,11 @@ export default function RichTextEditor({
                   `<a href="${safeHref}" download="${safeDownload}">${safeName}</a>&nbsp;`
                 )
                 .run();
-            })
-            .catch(() => {
+            } catch {
               // ignore
-            });
-        });
+            }
+          }
+        })();
 
         return true;
       },
