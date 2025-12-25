@@ -17,6 +17,9 @@ import {
 import {
   EditorContent,
   useEditor,
+  NodeViewWrapper,
+  ReactNodeViewRenderer,
+  type NodeViewProps,
 } from "@tiptap/react";
 import { Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
@@ -41,9 +44,138 @@ import LooksTwoRoundedIcon from "@mui/icons-material/LooksTwoRounded";
 import { APP_RADIUS } from "../designTokens";
 import AppCard from "./layout/AppCard";
 
-import { Plugin, PluginKey, NodeSelection } from "prosemirror-state";
-import type { EditorView } from "prosemirror-view";
-import type { Node as ProseMirrorNode } from "prosemirror-model";
+// ─────────────────────────────────────────────────────────────────────────────
+// Resizable Image NodeView
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ResizableImageNodeView({
+  node,
+  updateAttributes,
+  selected,
+}: NodeViewProps) {
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const dragRef = useRef<{
+    side: "w" | "e";
+    startX: number;
+    startWidth: number;
+    maxWidth: number;
+  } | null>(null);
+
+  const widthAttr = node.attrs.width;
+  const widthStyle =
+    typeof widthAttr === "string" && widthAttr.trim()
+      ? `${Math.max(1, Number(widthAttr))}px`
+      : undefined;
+
+  useEffect(() => {
+    if (!dragging) return;
+
+    const onMove = (e: PointerEvent) => {
+      const drag = dragRef.current;
+      const img = imgRef.current;
+      if (!drag || !img) return;
+
+      const delta = e.clientX - drag.startX;
+      const signedDelta = drag.side === "e" ? delta : -delta;
+      const minWidth = 64;
+      const nextWidth = Math.max(
+        minWidth,
+        Math.min(drag.maxWidth, drag.startWidth + signedDelta)
+      );
+      img.style.width = `${Math.round(nextWidth)}px`;
+    };
+
+    const onUp = () => {
+      const img = imgRef.current;
+      if (img) {
+        const finalWidth = Math.round(img.getBoundingClientRect().width);
+        updateAttributes({ width: String(finalWidth) });
+      }
+      dragRef.current = null;
+      setDragging(false);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [dragging, updateAttributes]);
+
+  const startResize = (e: React.PointerEvent, side: "w" | "e") => {
+    e.preventDefault();
+    e.stopPropagation();
+    const img = imgRef.current;
+    if (!img) return;
+
+    const rect = img.getBoundingClientRect();
+    const parentWidth = img.parentElement?.clientWidth || rect.width;
+
+    dragRef.current = {
+      side,
+      startX: e.clientX,
+      startWidth: rect.width,
+      maxWidth: Math.max(rect.width, parentWidth),
+    };
+    setDragging(true);
+  };
+
+  const handleStyle: React.CSSProperties = {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 16,
+    cursor: "ew-resize",
+    backgroundColor: "rgba(128,128,128,0.25)",
+    borderRadius: APP_RADIUS,
+    opacity: selected || dragging ? 1 : 0,
+    transition: "opacity 0.15s",
+    zIndex: 2,
+  };
+
+  return (
+    <NodeViewWrapper
+      as="span"
+      style={{
+        display: "inline-block",
+        position: "relative",
+        maxWidth: "100%",
+        lineHeight: 0,
+      }}
+    >
+      <img
+        ref={imgRef}
+        src={node.attrs.src || ""}
+        alt={node.attrs.alt || ""}
+        title={node.attrs.title || ""}
+        draggable={false}
+        style={{
+          display: "block",
+          maxWidth: "100%",
+          width: widthStyle,
+          height: "auto",
+          borderRadius: APP_RADIUS,
+          outline: selected ? "2px solid var(--mui-palette-primary-main, #1976d2)" : undefined,
+          boxShadow: selected ? "0 0 0 4px rgba(25,118,210,0.2)" : undefined,
+        }}
+      />
+      {/* Left handle */}
+      <span
+        onPointerDown={e => startResize(e, "w")}
+        style={{ ...handleStyle, left: 0 }}
+      />
+      {/* Right handle */}
+      <span
+        onPointerDown={e => startResize(e, "e")}
+        style={{ ...handleStyle, right: 0 }}
+      />
+    </NodeViewWrapper>
+  );
+}
 
 function extractDroppedImageSrc(dataTransfer: DataTransfer | null | undefined) {
   if (!dataTransfer) {
@@ -78,7 +210,11 @@ function extractDroppedImageSrc(dataTransfer: DataTransfer | null | undefined) {
   return null;
 }
 
-const ImageWithWidth = Image.extend({
+// ─────────────────────────────────────────────────────────────────────────────
+// Image Extension with width attribute + NodeView for resize handles
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ResizableImage = Image.extend({
   addAttributes() {
     return {
       ...(this.parent?.() || {}),
@@ -108,331 +244,8 @@ const ImageWithWidth = Image.extend({
       },
     };
   },
-});
-
-const imageResizePluginKey = new PluginKey("imageResizeOverlay");
-
-function clampNumber(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function createResizeHandle(side: "w" | "e") {
-  const el = document.createElement("div");
-  el.className = "pm-image-resize-handle";
-  el.dataset.side = side;
-  el.style.position = "absolute";
-  el.style.top = "0";
-  el.style.bottom = "0";
-  el.style.width = "18px";
-  el.style.cursor = "ew-resize";
-  el.style.pointerEvents = "auto";
-  el.style.borderRadius = `${APP_RADIUS}px`;
-  el.style.border = "1px solid currentColor";
-  el.style.background = "transparent";
-  el.style.opacity = "0.65";
-  el.style.touchAction = "none";
-  if (side === "w") {
-    el.style.left = "0";
-  } else {
-    el.style.right = "0";
-  }
-  return el;
-}
-
-const ImageResizeOverlay = Extension.create({
-  name: "imageResizeOverlay",
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        key: imageResizePluginKey,
-        props: {
-          handleClickOn: (
-            view: EditorView,
-            _pos: number,
-            node: ProseMirrorNode,
-            nodePos: number
-          ) => {
-            if (node.type.name !== "image") {
-              return false;
-            }
-            view.dispatch(
-              view.state.tr.setSelection(
-                NodeSelection.create(view.state.doc, nodePos)
-              )
-            );
-            return true;
-          },
-          handleDOMEvents: {
-            mousedown: (view: EditorView, event: Event) => {
-              const mouseEvent = event as MouseEvent;
-              if (mouseEvent.button !== 0) {
-                return false;
-              }
-              const target = mouseEvent.target as HTMLElement | null;
-              const img = target?.closest?.("img") as HTMLImageElement | null;
-              if (!img) {
-                return false;
-              }
-
-              // Only handle images that belong to this editor instance.
-              if (!view.dom.contains(img)) {
-                return false;
-              }
-
-              const { state } = view;
-              let imagePos: number | null = null;
-              try {
-                imagePos = view.posAtDOM(img, 0);
-              } catch {
-                imagePos = null;
-              }
-
-              if (imagePos == null) {
-                const coords = view.posAtCoords({
-                  left: mouseEvent.clientX,
-                  top: mouseEvent.clientY,
-                });
-                if (!coords) {
-                  return false;
-                }
-                imagePos = coords.pos;
-              }
-
-              // Normalize to the actual image node position.
-              // Depending on DOM mapping, posAtDOM/posAtCoords may land near the node.
-              const resolved = state.doc.resolve(imagePos);
-              if (resolved.nodeAfter?.type.name === "image") {
-                imagePos = resolved.pos;
-              } else if (resolved.nodeBefore?.type.name === "image") {
-                imagePos = resolved.pos - resolved.nodeBefore.nodeSize;
-              } else {
-                for (let delta = -2; delta <= 2; delta += 1) {
-                  const probe = imagePos + delta;
-                  if (probe < 0 || probe > state.doc.content.size) {
-                    continue;
-                  }
-                  if (state.doc.nodeAt(probe)?.type.name === "image") {
-                    imagePos = probe;
-                    break;
-                  }
-                }
-              }
-
-              if (state.doc.nodeAt(imagePos)?.type.name !== "image") {
-                return false;
-              }
-
-              view.focus();
-              view.dispatch(
-                state.tr.setSelection(NodeSelection.create(state.doc, imagePos))
-              );
-
-              mouseEvent.preventDefault();
-              mouseEvent.stopPropagation();
-              return true;
-            },
-            dragstart: (_view: EditorView, event: Event) => {
-              const dragEvent = event as DragEvent;
-              const target = dragEvent.target as HTMLElement | null;
-              const img = target?.closest?.("img") as HTMLImageElement | null;
-              if (!img) {
-                return false;
-              }
-              // Prevent native image dragging from breaking selection/resize UX.
-              dragEvent.preventDefault();
-              return true;
-            },
-          },
-        },
-        view: (view: EditorView) => {
-          const viewDom = view.dom as unknown as HTMLElement;
-          const container =
-            (viewDom.closest?.(".tiptap") as HTMLElement | null) || viewDom;
-          if (!container) {
-            return { update: () => {}, destroy: () => {} };
-          }
-
-          // Ensure our overlay is positioned relative to the same element
-          // that scrolls and defines the editor coordinate space.
-          if (getComputedStyle(container).position === "static") {
-            container.style.position = "relative";
-          }
-
-          const overlay = document.createElement("div");
-          overlay.className = "pm-image-resize-overlay";
-          overlay.style.position = "absolute";
-          overlay.style.pointerEvents = "none";
-          overlay.style.zIndex = "10";
-          overlay.style.display = "none";
-          overlay.style.color = "inherit";
-
-          const leftHandle = createResizeHandle("w");
-          const rightHandle = createResizeHandle("e");
-          overlay.appendChild(leftHandle);
-          overlay.appendChild(rightHandle);
-
-          container.appendChild(overlay);
-
-          let active:
-            | {
-                pointerId: number;
-                side: "w" | "e";
-                startX: number;
-                startWidth: number;
-                maxWidth: number;
-                minWidth: number;
-                pos: number;
-                img: HTMLImageElement;
-              }
-            | null = null;
-
-          const updateOverlay = () => {
-            const sel = view.state.selection;
-            if (!(sel instanceof NodeSelection) || sel.node.type.name !== "image") {
-              overlay.style.display = "none";
-              return;
-            }
-
-            const pos = sel.from;
-            const dom = view.nodeDOM(pos);
-            const img =
-              dom instanceof HTMLImageElement
-                ? dom
-                : (dom && (dom as HTMLElement).querySelector?.("img")) || null;
-            if (!(img instanceof HTMLImageElement)) {
-              overlay.style.display = "none";
-              return;
-            }
-
-            const imgRect = img.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-            const left = imgRect.left - containerRect.left + container.scrollLeft;
-            const top = imgRect.top - containerRect.top + container.scrollTop;
-
-            overlay.style.display = "block";
-            overlay.style.left = `${Math.round(left)}px`;
-            overlay.style.top = `${Math.round(top)}px`;
-            overlay.style.width = `${Math.round(imgRect.width)}px`;
-            overlay.style.height = `${Math.round(imgRect.height)}px`;
-          };
-
-          const stop = () => {
-            active = null;
-            window.removeEventListener("pointermove", onMove);
-            window.removeEventListener("pointerup", onUp);
-            window.removeEventListener("pointercancel", onUp);
-          };
-
-          const onMove = (event: PointerEvent) => {
-            if (!active || event.pointerId !== active.pointerId) {
-              return;
-            }
-            const delta = event.clientX - active.startX;
-            const signedDelta = active.side === "e" ? delta : -delta;
-            const nextWidth = clampNumber(
-              active.startWidth + signedDelta,
-              active.minWidth,
-              active.maxWidth
-            );
-            active.img.style.width = `${Math.round(nextWidth)}px`;
-            updateOverlay();
-          };
-
-          const onUp = (event: PointerEvent) => {
-            if (!active || event.pointerId !== active.pointerId) {
-              return;
-            }
-            const widthPx = Number.parseInt(active.img.style.width || "", 10);
-            const finalWidth =
-              Number.isFinite(widthPx) && widthPx > 0
-                ? widthPx
-                : Math.round(active.startWidth);
-
-            const { state, dispatch } = view;
-            const nodeAt = state.doc.nodeAt(active.pos);
-            if (nodeAt && nodeAt.type.name === "image") {
-              dispatch(
-                state.tr.setNodeMarkup(active.pos, undefined, {
-                  ...nodeAt.attrs,
-                  width: String(finalWidth),
-                })
-              );
-            }
-            stop();
-            updateOverlay();
-          };
-
-          const start = (event: PointerEvent, side: "w" | "e") => {
-            const sel = view.state.selection;
-            if (!(sel instanceof NodeSelection) || sel.node.type.name !== "image") {
-              return;
-            }
-
-            const pos = sel.from;
-            const dom = view.nodeDOM(pos);
-            const img =
-              dom instanceof HTMLImageElement
-                ? dom
-                : (dom && (dom as HTMLElement).querySelector?.("img")) || null;
-            if (!(img instanceof HTMLImageElement)) {
-              return;
-            }
-
-            event.preventDefault();
-            event.stopPropagation();
-            view.focus();
-
-            const rect = img.getBoundingClientRect();
-            const minWidth = 96;
-            const maxWidth = Math.max(minWidth, container.clientWidth);
-            img.style.width = `${Math.round(rect.width)}px`;
-
-            active = {
-              pointerId: event.pointerId,
-              side,
-              startX: event.clientX,
-              startWidth: rect.width,
-              maxWidth,
-              minWidth,
-              pos,
-              img,
-            };
-
-            try {
-              (event.target as HTMLElement | null)?.setPointerCapture?.(
-                event.pointerId
-              );
-            } catch {
-              // ignore
-            }
-
-            window.addEventListener("pointermove", onMove);
-            window.addEventListener("pointerup", onUp);
-            window.addEventListener("pointercancel", onUp);
-          };
-
-          leftHandle.addEventListener("pointerdown", event => start(event, "w"));
-          rightHandle.addEventListener("pointerdown", event => start(event, "e"));
-
-          const onScroll = () => updateOverlay();
-          const onResize = () => updateOverlay();
-          container.addEventListener("scroll", onScroll);
-          window.addEventListener("resize", onResize);
-
-          updateOverlay();
-
-          return {
-            update: () => updateOverlay(),
-            destroy: () => {
-              stop();
-              container.removeEventListener("scroll", onScroll);
-              window.removeEventListener("resize", onResize);
-              overlay.remove();
-            },
-          };
-        },
-      }),
-    ];
+  addNodeView() {
+    return ReactNodeViewRenderer(ResizableImageNodeView);
   },
 });
 
@@ -538,8 +351,7 @@ export default function RichTextEditor({
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
       }),
-      ImageWithWidth,
-      ImageResizeOverlay,
+      ResizableImage,
       Placeholder.configure({
         placeholder: placeholder || "Escreva...",
       }),
