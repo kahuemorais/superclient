@@ -49,6 +49,7 @@ import { PageContainer } from "../ui/PageContainer/PageContainer";
 import { SearchField } from "../ui/SearchField";
 import SettingsDialog from "../components/SettingsDialog";
 import { interactiveCardSx } from "../styles/interactiveCard";
+import * as financasStyles from "./financas.css";
 type Category = {
   id: string;
   name: string;
@@ -945,20 +946,25 @@ export default function Financas() {
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           Detalhe dos gastos
         </Typography>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <SearchField
-            placeholder="Buscar gastos"
-            value={expenseQuery}
-            onChange={event => setExpenseQuery(event.target.value)}
-            onClear={() => setExpenseQuery("")}
-          />
-          <CategoryFilter
-            categories={categories}
-            selectedIds={categoryFilters}
-            onChange={setCategoryFilters}
-            width={{ xs: "100%", sm: 280 }}
-          />
-        </Stack>
+        <div className={financasStyles.filtersRow}>
+          <div className={financasStyles.searchWrap}>
+            <SearchField
+              placeholder="Buscar gastos"
+              value={expenseQuery}
+              onChange={event => setExpenseQuery(event.target.value)}
+              onClear={() => setExpenseQuery("")}
+              fullWidth
+            />
+          </div>
+          <div className={financasStyles.filterWrap}>
+            <CategoryFilter
+              categories={categories}
+              selectedIds={categoryFilters}
+              onChange={setCategoryFilters}
+              width="100%"
+            />
+          </div>
+        </div>
       </Stack>
 
       <TableContainer>

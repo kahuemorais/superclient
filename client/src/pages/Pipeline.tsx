@@ -44,6 +44,8 @@ import { APP_RADIUS } from "../designTokens";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import { CategoryChip } from "../components/CategoryChip";
 import CategoryFilter from "../components/CategoryFilter";
+import { SearchField } from "../ui/SearchField/SearchField";
+import * as pipelineStyles from "./pipeline.css";
 import {
   DndContext,
   PointerSensor,
@@ -2208,37 +2210,30 @@ export default function Pipeline() {
 
   const pageActions = useMemo(
     () => (
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
-        <TextField
-          label="Buscar tasks"
-          value={taskQuery}
-          onChange={event => setTaskQuery(event.target.value)}
-          sx={{ width: 240, minWidth: 0 }}
-          InputProps={{
-            endAdornment: taskQuery ? (
-              <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  onClick={() => setTaskQuery("")}
-                  aria-label="Limpar busca"
-                >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
-              </InputAdornment>
-            ) : null,
-          }}
-        />
-        <CategoryFilter
-          categories={categories}
-          selectedIds={categoryFilters}
-          onChange={setCategoryFilters}
-          width={280}
-        />
+      <div className={pipelineStyles.filtersRow}>
+        <div className={pipelineStyles.searchWrap}>
+          <SearchField
+            placeholder="Buscar tasks"
+            value={taskQuery}
+            onChange={e => setTaskQuery(e.target.value)}
+            onClear={() => setTaskQuery("")}
+            fullWidth
+            ariaLabel="Buscar tasks"
+          />
+        </div>
+        <div className={pipelineStyles.filterWrap}>
+          <CategoryFilter
+            categories={categories}
+            selectedIds={categoryFilters}
+            onChange={setCategoryFilters}
+            width="100%"
+          />
+        </div>
         <SettingsIconButton
           onClick={() => setTaskFieldSettingsOpen(true)}
           disabled={!permissions.pipeline_edit_tasks}
         />
-      </Stack>
+      </div>
     ),
     [taskQuery, categories, categoryFilters, permissions.pipeline_edit_tasks]
   );
