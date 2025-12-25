@@ -971,10 +971,15 @@ export default function Contacts() {
               alignItems={{ xs: "stretch", sm: "center" }}
             >
               <TextFieldVE
-                label="Buscar contatos"
+                placeholder="Buscar contatos"
                 value={contactQuery}
                 onChange={event => setContactQuery(event.target.value)}
-                sx={{ width: { xs: "100%", sm: 360 }, maxWidth: { sm: 360 } }}
+                onKeyDown={event => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    setContactQuery("");
+                  }
+                }}
                 endAdornment={
                   contactQuery ? (
                     <InputAdornment position="end">
@@ -988,6 +993,7 @@ export default function Contacts() {
                     </InputAdornment>
                   ) : null
                 }
+                sx={{ flex: 1, minWidth: 200, maxWidth: { xs: "100%", sm: 360 } }}
               />
               <CategoryFilter
                 categories={categories}
