@@ -64,64 +64,6 @@ export default function Notifications() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [completedTasks, setCompletedTasks] = useState<CompletedTaskNotification[]>([]);
 
-  const populateTestData = () => {
-    const now = new Date();
-    const testNotifications: CompletedTaskNotification[] = [
-      {
-        id: `test-${Date.now()}-1`,
-        taskId: "task-1",
-        taskName: "Revisar proposta comercial cliente ABC",
-        completedAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(), // 5 min atrás
-      },
-      {
-        id: `test-${Date.now()}-2`,
-        taskId: "task-2",
-        taskName: "Enviar relatório mensal de vendas",
-        completedAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), // 30 min atrás
-      },
-      {
-        id: `test-${Date.now()}-3`,
-        taskId: "task-3",
-        taskName: "Reunião de planejamento Q1 2026",
-        completedAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2h atrás
-      },
-      {
-        id: `test-${Date.now()}-4`,
-        taskId: "task-4",
-        taskName: "Atualizar documentação do projeto",
-        completedAt: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(), // 5h atrás
-      },
-      {
-        id: `test-${Date.now()}-5`,
-        taskId: "task-5",
-        taskName: "Fazer code review do PR #234",
-        completedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1 dia atrás
-      },
-      {
-        id: `test-${Date.now()}-6`,
-        taskId: "task-6",
-        taskName: "Preparar apresentação para cliente",
-        completedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 dias atrás
-      },
-      {
-        id: `test-${Date.now()}-7`,
-        taskId: "task-7",
-        taskName: "Agendar entrevistas técnicas",
-        completedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 dias atrás
-      },
-      {
-        id: `test-${Date.now()}-8`,
-        taskId: "task-8",
-        taskName: "Configurar ambiente de produção",
-        completedAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 dias atrás
-      },
-    ];
-    
-    setCompletedTasks(testNotifications);
-    window.localStorage.setItem(COMPLETED_TASKS_KEY, JSON.stringify(testNotifications));
-    void saveUserStorage(COMPLETED_TASKS_KEY, testNotifications);
-  };
-
   const loadCompletedTasks = useCallback(async () => {
     // Tentar carregar do banco de dados primeiro
     const dbTasks = await loadUserStorage<CompletedTaskNotification[]>(COMPLETED_TASKS_KEY);
@@ -191,22 +133,6 @@ export default function Notifications() {
   }, [loadCompletedTasks]);
 
   const upcoming = useMemo(() => getUpcomingBirthdays(contacts), [contacts]);
-
-  const markNotificationAsViewed = (notificationId: string, type: 'task' | 'birthday') => {
-    if (type === 'task') {
-      // Remover tarefa da lista
-      const updatedTasks = completedTasks.filter(task => task.id !== notificationId);
-      setCompletedTasks(updatedTasks);
-      window.localStorage.setItem(COMPLETED_TASKS_KEY, JSON.stringify(updatedTasks));
-      void saveUserStorage(COMPLETED_TASKS_KEY, updatedTasks);
-    } else if (type === 'birthday') {
-      // Para aniversários, apenas marcar timestamp de visto
-      const timestamp = new Date().toISOString();
-      window.localStorage.setItem(SEEN_KEY, timestamp);
-      void saveUserStorage(SEEN_KEY, timestamp);
-      window.dispatchEvent(new Event("contacts-change"));
-    }
-  };
 
   const formatTimeAgo = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -279,18 +205,6 @@ export default function Notifications() {
       <Stack spacing={3}>
         <CardSection>
           <Stack spacing={2}>
-            {/* Botão de debug para popular dados de teste */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={populateTestData}
-                sx={{ textTransform: "none", fontWeight: 600 }}
-              >
-                Popular 8 notificações de teste
-              </Button>
-            </Box>
-
             {!hasAnyNotification ? (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Nenhuma notificação recente.
@@ -317,54 +231,33 @@ export default function Notifications() {
                     sx={{
                       minHeight: 64,
                       display: "flex",
-                      flexDirection: "column",
+                      alignItems: "flex-start",
                       gap: 1.5,
                     }}
                   >
                     <Box
                       sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 1.5,
+                        mt: 0.5,
+                        color: notification.icon === 'task' ? 'text.secondary' : 'primary.main',
                       }}
                     >
-                      <Box
-                        sx={{
-                          mt: 0.5,
-                          color: notification.icon === 'task' ? 'text.secondary' : 'primary.main',
-                        }}
-                      >
-                        {notification.icon === 'task' ? (
-                          <AssignmentTurnedInRoundedIcon fontSize="small" />
-                        ) : (
-                          <CakeRoundedIcon fontSize="small" />
-                        )}
-                      </Box>
-                      <Stack sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          {notification.title}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: "text.secondary" }}
-                        >
-                          {notification.subtitle}
-                        </Typography>
-                      </Stack>
+                      {notification.icon === 'task' ? (
+                        <AssignmentTurnedInRoundedIcon fontSize="small" />
+                      ) : (
+                        <CakeRoundedIcon fontSize="small" />
+                      )}
                     </Box>
-                    <Button
-                      size="small"
-                      variant="text"
-                      onClick={() => markNotificationAsViewed(notification.id, notification.type)}
-                      sx={{
-                        textTransform: "none",
-                        fontWeight: 600,
-                        alignSelf: "flex-end",
-                        color: "var(--md-sys-color-primary)",
-                      }}
-                    >
-                      Marcar como vista
-                    </Button>
+                    <Stack sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {notification.title}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        {notification.subtitle}
+                      </Typography>
+                    </Stack>
                   </CardSection>
                 ))}
               </Box>

@@ -33,9 +33,8 @@ export const notificationsContainer = style({
 
 export const notificationItem = style({
   display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: '12px',
+  flexDirection: 'column',
+  gap: '8px',
   minWidth: '200px',
   flex: '0 0 auto',
   scrollSnapAlign: 'start',
@@ -47,13 +46,6 @@ export const notificationItem = style({
       scrollSnapAlign: 'none',
     },
   },
-});
-
-export const notificationIcon = style({
-  color: 'var(--md-sys-color-on-surface)',
-  flex: '0 0 auto',
-  width: '20px',
-  height: '20px',
 });
 
 export const notificationContent = style({

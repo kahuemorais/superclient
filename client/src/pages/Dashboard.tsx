@@ -17,7 +17,6 @@ import api from "../api";
 import { saveUserStorage } from "../userStorage";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import SettingsIconButton from "../components/SettingsIconButton";
 import { PageContainer } from "../ui/PageContainer/PageContainer";
 import AppCard from "../components/layout/AppCard";
@@ -29,7 +28,6 @@ import { interactiveCardSx } from "../styles/interactiveCard";
 import {
   notificationsContainer,
   notificationItem,
-  notificationIcon,
   notificationContent,
   notificationTitle,
   notificationTime,
@@ -638,7 +636,6 @@ export default function Dashboard() {
                     }}
                     className={notificationItem}
                   >
-                    <CheckCircleRoundedIcon fontSize="small" className={notificationIcon} />
                     <div className={notificationContent}>
                       <p className={notificationTitle}>{task.taskName}</p>
                       <p className={notificationTime}>
