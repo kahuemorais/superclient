@@ -1000,19 +1000,19 @@ export default function Profile() {
               value={name}
               onChange={event => setName(event.target.value)}
             />
-            <TextField
+            <TextFieldVE
               label="Time"
               fullWidth
               value={team}
               onChange={event => setTeam(event.target.value)}
             />
-            <TextField
+            <TextFieldVE
               label="Cargo"
               fullWidth
               value={role}
               onChange={event => setRole(event.target.value)}
             />
-            <TextField
+            <TextFieldVE
               label="Fuso horario"
               fullWidth
               value={timezone}
@@ -1030,7 +1030,7 @@ export default function Profile() {
                   spacing={1}
                   alignItems="center"
                 >
-                  <TextField
+                  <TextFieldVE
                     label={`Telefone ${index + 1}`}
                     fullWidth
                     value={phone}
