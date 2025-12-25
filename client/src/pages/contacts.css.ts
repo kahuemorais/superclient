@@ -1,27 +1,26 @@
 import { style } from "@vanilla-extract/css";
 
 export const filtersRow = style({
-  display: "flex",
-  gap: "16px",
+  display: "grid",
+  gap: "var(--md-sys-spacing-16, 16px)",
   alignItems: "stretch",
-  minWidth: 0,
+  width: "100%",
   "@media": {
     "(max-width: 959px)": {
-      flexWrap: "wrap",
+      gridTemplateColumns: "1fr",
     },
     "(min-width: 960px)": {
-      flexWrap: "nowrap",
+      gridTemplateColumns: "minmax(320px, 520px) minmax(240px, 420px)",
     },
   },
 });
 
 export const searchWrap = style({
-  flex: "0 1 520px",
-  minWidth: "240px",
-  "@media": {
-    "(max-width: 959px)": {
-      flex: "1 1 100%",
-      maxWidth: "100%",
+  minWidth: 0,
+  selectors: {
+    "& > *": {
+      width: "100%",
+      minWidth: 0,
     },
   },
 });
@@ -35,13 +34,11 @@ export const searchFieldStable = style({
 });
 
 export const categoryWrap = style({
-  flex: "0 1 360px",
-  minWidth: "240px",
-  overflow: "hidden",
-  "@media": {
-    "(max-width: 959px)": {
-      flex: "1 1 100%",
-      maxWidth: "100%",
+  minWidth: 0,
+  selectors: {
+    "& > *": {
+      width: "100%",
+      minWidth: 0,
     },
   },
 });
