@@ -950,6 +950,7 @@ export default function Financas() {
         <div className={financasStyles.filtersRow}>
           <div className={financasStyles.searchWrap}>
             <SearchField
+              className={financasStyles.searchFill}
               placeholder="Buscar gastos"
               value={expenseQuery}
               onChange={event => setExpenseQuery(event.target.value)}
@@ -959,6 +960,7 @@ export default function Financas() {
           </div>
           <div className={financasStyles.filterWrap}>
             <CategoryFilter
+              className={financasStyles.filterFill}
               categories={categories}
               selectedIds={categoryFilters}
               onChange={setCategoryFilters}

@@ -2213,6 +2213,7 @@ export default function Pipeline() {
       <div className={pipelineStyles.filtersRow}>
         <div className={pipelineStyles.searchWrap}>
           <SearchField
+            className={pipelineStyles.searchFill}
             placeholder="Buscar tasks"
             value={taskQuery}
             onChange={e => setTaskQuery(e.target.value)}
@@ -2223,6 +2224,7 @@ export default function Pipeline() {
         </div>
         <div className={pipelineStyles.filterWrap}>
           <CategoryFilter
+            className={pipelineStyles.filterFill}
             categories={categories}
             selectedIds={categoryFilters}
             onChange={setCategoryFilters}

@@ -970,6 +970,7 @@ export default function Contacts() {
             <div className={contactStyles.filtersRow}>
               <div className={contactStyles.searchWrap}>
                 <SearchField
+                  className={contactStyles.searchFill}
                   placeholder="Buscar contatos"
                   value={contactQuery}
                   onChange={event => setContactQuery(event.target.value)}
@@ -979,6 +980,7 @@ export default function Contacts() {
               </div>
               <div className={contactStyles.categoryWrap}>
                 <CategoryFilter
+                  className={contactStyles.filterFill}
                   categories={categories}
                   selectedIds={categoryFilters}
                   onChange={setCategoryFilters}
