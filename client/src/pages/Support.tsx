@@ -5,7 +5,7 @@ import {
   InputAdornment,
   MenuItem,
   Stack,
-  TextField,
+  TextField as MuiTextField,
   Typography,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -16,6 +16,7 @@ import PageStack from "../components/layout/PageStack";
 import AppAccordion from "../components/layout/AppAccordion";
 import CardSection from "../components/layout/CardSection";
 import api from "../api";
+import { TextField } from "../ui/TextField";
 
 const faqItems = [
   // Autenticação e Acesso
@@ -283,7 +284,7 @@ export default function Support() {
           ) : null}
         </Stack>
 
-        <TextField
+        <MuiTextField
           fullWidth
           label="Buscar dúvida"
           placeholder="Digite uma palavra-chave"
@@ -343,11 +344,11 @@ export default function Support() {
             <Stack spacing={1.5}>
               <TextField
                 label="Email para contato"
-                fullWidth
+                type="email"
                 value={supportEmail}
                 onChange={event => setSupportEmail(event.target.value)}
               />
-              <TextField
+              <MuiTextField
                 select
                 label="Categoria"
                 fullWidth
@@ -359,8 +360,8 @@ export default function Support() {
                     {category.label}
                   </MenuItem>
                 ))}
-              </TextField>
-              <TextField
+              </MuiTextField>
+              <MuiTextField
                 label="Mensagem"
                 fullWidth
                 multiline

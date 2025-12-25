@@ -151,6 +151,24 @@ export const DESIGN_TOKENS = {
     paddingCompact: '12px',
     paddingDefault: '16px',
   },
+  input: {
+    bg: '#0f1720', // background.paper do MUI theme (same as card)
+    borderDefault: 'rgba(255, 255, 255, 0.12)', // outline-variant
+    borderHover: 'rgba(255, 255, 255, 0.24)', // outline
+    borderFocus: 'var(--md-sys-color-primary)', // primary color
+    borderError: 'var(--md-sys-color-error)', // error color
+    borderDisabled: 'rgba(255, 255, 255, 0.06)', // more transparent
+    radius: '16px', // APP_RADIUS
+    paddingX: '16px',
+    paddingY: '12px',
+    labelColor: 'var(--md-sys-color-on-surface-variant)',
+    textColor: 'var(--md-sys-color-on-surface)',
+    placeholderColor: 'rgba(255, 255, 255, 0.4)',
+    helperColor: 'var(--md-sys-color-on-surface-variant)',
+    errorColor: 'var(--md-sys-color-error)',
+    focusRing: 'color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent)',
+    disabledAlpha: 'var(--md-sys-alpha-disabled, 0.38)',
+  },
 };
 
 export const applyDesignTokensToCssVars = () => {
@@ -293,6 +311,24 @@ export const applyDesignTokensToCssVars = () => {
   // Apply cardSection tokens
   root.style.setProperty('--sc-card-section-padding-compact', DESIGN_TOKENS.cardSection.paddingCompact);
   root.style.setProperty('--sc-card-section-padding-default', DESIGN_TOKENS.cardSection.paddingDefault);
+  
+  // Apply input tokens
+  root.style.setProperty('--sc-input-bg', DESIGN_TOKENS.input.bg);
+  root.style.setProperty('--sc-input-border-default', DESIGN_TOKENS.input.borderDefault);
+  root.style.setProperty('--sc-input-border-hover', DESIGN_TOKENS.input.borderHover);
+  root.style.setProperty('--sc-input-border-focus', DESIGN_TOKENS.input.borderFocus);
+  root.style.setProperty('--sc-input-border-error', DESIGN_TOKENS.input.borderError);
+  root.style.setProperty('--sc-input-border-disabled', DESIGN_TOKENS.input.borderDisabled);
+  root.style.setProperty('--sc-input-radius', DESIGN_TOKENS.input.radius);
+  root.style.setProperty('--sc-input-padding-x', DESIGN_TOKENS.input.paddingX);
+  root.style.setProperty('--sc-input-padding-y', DESIGN_TOKENS.input.paddingY);
+  root.style.setProperty('--sc-input-label-color', DESIGN_TOKENS.input.labelColor);
+  root.style.setProperty('--sc-input-text-color', DESIGN_TOKENS.input.textColor);
+  root.style.setProperty('--sc-input-placeholder-color', DESIGN_TOKENS.input.placeholderColor);
+  root.style.setProperty('--sc-input-helper-color', DESIGN_TOKENS.input.helperColor);
+  root.style.setProperty('--sc-input-error-color', DESIGN_TOKENS.input.errorColor);
+  root.style.setProperty('--sc-input-focus-ring', DESIGN_TOKENS.input.focusRing);
+  root.style.setProperty('--sc-input-disabled-alpha', DESIGN_TOKENS.input.disabledAlpha);
   
   // Keep legacy radius variables in sync
   const radius = `${APP_RADIUS_PX}px`;
