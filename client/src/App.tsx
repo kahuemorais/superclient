@@ -668,17 +668,20 @@ function App() {
                     component={RouterLink}
                     href="/notifications"
                     sx={{
-                      color: "text.primary",
+                      color: "rgba(34, 201, 166, 0.7)",
                       border: isActive("/notifications")
                         ? "1px solid rgba(34, 201, 166, 0.6)"
-                        : "1px solid rgba(255,255,255,0.12)",
+                        : "1px solid transparent",
                       backgroundColor: isActive("/notifications")
                         ? "rgba(34, 201, 166, 0.12)"
-                        : "rgba(7, 9, 13, 0.45)",
+                        : "transparent",
+                      p: 0.5,
                       "&:hover": {
-                        backgroundColor: isActive("/notifications")
-                          ? "rgba(34, 201, 166, 0.18)"
-                          : "rgba(7, 9, 13, 0.6)",
+                        backgroundColor: "rgba(34, 201, 166, 0.12)",
+                      },
+                      "&:active": {
+                        backgroundColor: "rgba(34, 201, 166, 0.28)",
+                        color: "rgba(34, 201, 166, 0.9)",
                       },
                     }}
                   >
@@ -687,7 +690,7 @@ function App() {
                       color="error"
                       invisible={!hasNotifications}
                     >
-                      <NotificationsNoneRoundedIcon fontSize="small" />
+                      <NotificationsNoneRoundedIcon />
                     </Badge>
                   </IconButton>
                 )}
