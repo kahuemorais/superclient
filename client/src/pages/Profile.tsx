@@ -1676,7 +1676,7 @@ export default function Profile() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
               />
-              <TextField 
+              <TextFieldVE 
                 label="Nova senha" 
                 type="password" 
                 fullWidth 
