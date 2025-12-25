@@ -3,11 +3,12 @@ import {
   Button,
   Divider,
   Stack,
-  TextField,
+  TextField as MuiTextField,
   Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "wouter";
 import CardSection from "../components/layout/CardSection";
+import { TextField } from "../ui/TextField/TextField";
 
 const plans = [
   {
@@ -44,9 +45,9 @@ export default function Signup() {
 
           <Stack spacing={2}>
             <TextField label="Nome completo" fullWidth />
-            <TextField label="Email" type="email" fullWidth />
-            <TextField label="Senha" type="password" fullWidth />
-            <TextField label="Confirmar senha" type="password" fullWidth />
+            <MuiTextField label="Email" type="email" fullWidth />
+            <MuiTextField label="Senha" type="password" fullWidth />
+            <MuiTextField label="Confirmar senha" type="password" fullWidth />
           </Stack>
 
           <Button variant="contained" size="large" fullWidth>
