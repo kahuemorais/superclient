@@ -27,6 +27,7 @@ import api from "./api";
 import { brandRoot } from "./ui/Brand/brand.css";
 import { AppBar } from "./ui/AppBar";
 import { NavItem } from "./ui/NavItem";
+import { Footer } from "./ui/Footer";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import AccessManagement from "./pages/AccessManagement";
@@ -801,54 +802,18 @@ function App() {
             </Box>
           </Box>
 
-          <Box
-            component="footer"
-            sx={{
-              px: { xs: 2, md: 6 },
-              py: 4,
-              borderTop: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(7, 9, 13, 0.75)",
-              backdropFilter: "blur(16px)",
-            }}
-          >
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              spacing={2}
-              alignItems={{ xs: "flex-start", md: "center" }}
-              justifyContent="space-between"
-            >
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Superclient © {new Date().getFullYear()}
-              </Typography>
-              <Stack
-                direction="row"
-                spacing={2}
-                alignItems="center"
-                flexWrap="wrap"
-                useFlexGap
-              >
-                {visibleNavItems.map(item => (
-                  <Link
-                    key={item.href}
-                    component={RouterLink}
-                    href={item.href}
-                    underline="hover"
-                    color="text.secondary"
-                  >
-                    {t(item.labelKey)}
-                  </Link>
-                ))}
-                <Link
-                  component={RouterLink}
-                  href="/support"
-                  underline="hover"
-                  color="text.secondary"
-                >
-                  {t("nav.support")}
-                </Link>
-              </Stack>
-            </Stack>
-          </Box>
+          <Footer
+            links={[
+              ...visibleNavItems.map(item => ({
+                href: item.href,
+                label: t(item.labelKey),
+              })),
+              {
+                href: '/support',
+                label: t('nav.support'),
+              },
+            ]}
+          />
         </Box>
       </Box>
 

@@ -7,7 +7,7 @@ export const navItemRoot = style({
   padding: 'var(--sc-header-nav-py, 10px) var(--sc-header-nav-px, 14px)',
   borderRadius: 'var(--sc-header-nav-radius, 999px)',
   color: 'var(--sc-header-nav-fg)',
-  fontWeight: 600,
+  fontWeight: 'var(--sc-header-nav-font-weight, 500)',
   lineHeight: 1,
   textDecoration: 'none',
   transition: 'background-color 120ms ease',

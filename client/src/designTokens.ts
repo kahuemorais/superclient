@@ -37,6 +37,13 @@ export const DESIGN_TOKENS = {
     md: '16px',
     lg: '24px',
   },
+  spacing: {
+    '4': '4px',
+    '8': '8px',
+    '12': '12px',
+    '16': '16px',
+    '24': '24px',
+  },
   navigation: {
     itemPaddingX: '8px',
     itemPaddingY: '6px',
@@ -49,7 +56,7 @@ export const DESIGN_TOKENS = {
     pressedBg: 'rgba(34, 201, 166, 0.16)',
   },
   brand: {
-    fontWeight: '700',
+    fontWeight: '600',
     fontSize: '0.875rem',
     lineHeight: '1.75',
     letterSpacing: '0.02857em',
@@ -87,6 +94,7 @@ export const DESIGN_TOKENS = {
       px: '14px',
       py: '10px',
       radius: '999px',
+      fontWeight: '500',
       fg: 'var(--md-sys-color-on-surface-variant)',
       fgActive: 'var(--md-sys-color-primary)',
       bgHover: 'color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent)',
@@ -102,6 +110,21 @@ export const DESIGN_TOKENS = {
       bgPressed: 'color-mix(in srgb, var(--md-sys-color-primary) 28%, transparent)',
       borderActive: 'color-mix(in srgb, var(--md-sys-color-primary) 60%, transparent)',
     },
+  },
+  footer: {
+    pyMobile: '32px',
+    pyDesktop: '32px',
+    pxMobile: '16px',
+    pxDesktop: '48px',
+    gap: '16px',
+    linksGap: '16px',
+  },
+  page: {
+    maxWidth: '1200px',
+    pxMobile: '16px',
+    pxDesktop: '24px',
+    pyMobile: '16px',
+    pyDesktop: '24px',
   },
 };
 
@@ -131,6 +154,13 @@ export const applyDesignTokensToCssVars = () => {
   root.style.setProperty('--md-sys-radius-sm', DESIGN_TOKENS.radius.sm);
   root.style.setProperty('--md-sys-radius-md', DESIGN_TOKENS.radius.md);
   root.style.setProperty('--md-sys-radius-lg', DESIGN_TOKENS.radius.lg);
+  
+  // Apply spacing tokens
+  root.style.setProperty('--md-sys-spacing-4', DESIGN_TOKENS.spacing['4']);
+  root.style.setProperty('--md-sys-spacing-8', DESIGN_TOKENS.spacing['8']);
+  root.style.setProperty('--md-sys-spacing-12', DESIGN_TOKENS.spacing['12']);
+  root.style.setProperty('--md-sys-spacing-16', DESIGN_TOKENS.spacing['16']);
+  root.style.setProperty('--md-sys-spacing-24', DESIGN_TOKENS.spacing['24']);
   
   // Apply navigation tokens
   root.style.setProperty('--sc-nav-item-px', DESIGN_TOKENS.navigation.itemPaddingX);
@@ -183,6 +213,7 @@ export const applyDesignTokensToCssVars = () => {
   root.style.setProperty('--sc-header-nav-px', DESIGN_TOKENS.header.nav.px);
   root.style.setProperty('--sc-header-nav-py', DESIGN_TOKENS.header.nav.py);
   root.style.setProperty('--sc-header-nav-radius', DESIGN_TOKENS.header.nav.radius);
+  root.style.setProperty('--sc-header-nav-font-weight', DESIGN_TOKENS.header.nav.fontWeight);
   root.style.setProperty('--sc-header-nav-fg', DESIGN_TOKENS.header.nav.fg);
   root.style.setProperty('--sc-header-nav-fg-active', DESIGN_TOKENS.header.nav.fgActive);
   root.style.setProperty('--sc-header-nav-bg-hover', DESIGN_TOKENS.header.nav.bgHover);
@@ -197,6 +228,21 @@ export const applyDesignTokensToCssVars = () => {
   root.style.setProperty('--sc-header-icon-bg-active', DESIGN_TOKENS.header.icon.bgActive);
   root.style.setProperty('--sc-header-icon-bg-pressed', DESIGN_TOKENS.header.icon.bgPressed);
   root.style.setProperty('--sc-header-icon-border-active', DESIGN_TOKENS.header.icon.borderActive);
+  
+  // Apply footer tokens
+  root.style.setProperty('--sc-footer-py-mobile', DESIGN_TOKENS.footer.pyMobile);
+  root.style.setProperty('--sc-footer-py-desktop', DESIGN_TOKENS.footer.pyDesktop);
+  root.style.setProperty('--sc-footer-px-mobile', DESIGN_TOKENS.footer.pxMobile);
+  root.style.setProperty('--sc-footer-px-desktop', DESIGN_TOKENS.footer.pxDesktop);
+  root.style.setProperty('--sc-footer-gap', DESIGN_TOKENS.footer.gap);
+  root.style.setProperty('--sc-footer-links-gap', DESIGN_TOKENS.footer.linksGap);
+  
+  // Apply page tokens
+  root.style.setProperty('--sc-page-max-width', DESIGN_TOKENS.page.maxWidth);
+  root.style.setProperty('--sc-page-px-mobile', DESIGN_TOKENS.page.pxMobile);
+  root.style.setProperty('--sc-page-px-desktop', DESIGN_TOKENS.page.pxDesktop);
+  root.style.setProperty('--sc-page-py-mobile', DESIGN_TOKENS.page.pyMobile);
+  root.style.setProperty('--sc-page-py-desktop', DESIGN_TOKENS.page.pyDesktop);
   
   // Keep legacy radius variables in sync
   const radius = `${APP_RADIUS_PX}px`;

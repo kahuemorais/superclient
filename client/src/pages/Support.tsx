@@ -267,9 +267,6 @@ export default function Support() {
     <PageContainer>
       <PageStack maxWidth={1200}>
         <Stack spacing={2}>
-          <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Encontre respostas para suas dúvidas sobre o Superclient.
-          </Typography>
           {!isLoggedIn ? (
             <Stack
               direction={{ xs: "column", sm: "row" }}
