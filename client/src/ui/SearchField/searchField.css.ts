@@ -8,8 +8,8 @@ export const clearButton = style({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '40px',
-  height: '40px',
+  width: '48px',
+  height: '48px',
   padding: 0,
   margin: 0,
   border: 'none',
@@ -41,13 +41,13 @@ export const clearButton = style({
 });
 
 /**
- * Ghost span to maintain 40px slot when clear button is hidden
+ * Ghost span to maintain 48px slot when clear button is hidden
  * Prevents width shift when typing
  */
 export const clearButtonGhost = style({
   display: 'inline-block',
-  width: '40px',
-  height: '40px',
+  width: '48px',
+  height: '48px',
   flexShrink: 0,
   backgroundColor: 'transparent',
   border: 'none',

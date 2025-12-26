@@ -69,7 +69,8 @@ export const labelRequired = style({
 
 export const inputWrapper = style({
   position: 'relative',
-  display: 'flex',
+  display: 'grid',
+  gridTemplateColumns: 'auto 1fr auto',
   alignItems: 'stretch',
   gap: '8px',
   backgroundColor: 'var(--sc-input-bg)',
