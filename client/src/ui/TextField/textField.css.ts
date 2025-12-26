@@ -69,7 +69,9 @@ export const labelRequired = style({
 
 export const inputWrapper = style({
   position: 'relative',
-  display: 'block',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
   backgroundColor: 'var(--sc-input-bg)',
   border: '1px solid var(--sc-input-border-default)',
   borderRadius: 'var(--sc-input-radius)',
@@ -111,7 +113,8 @@ export const inputWrapperDisabled = style({
 });
 
 export const input = style({
-  width: '100%',
+  flex: '1 1 auto',
+  minWidth: 0,
   backgroundColor: 'transparent',
   border: '0',
   outline: '0',
@@ -119,7 +122,7 @@ export const input = style({
   color: 'var(--sc-input-text-color)',
   fontSize: '16px',
   lineHeight: '1.4375em',
-  padding: '16.5px 0',
+  padding: 0,
   height: 'auto',
   boxSizing: 'border-box',
   
@@ -144,8 +147,7 @@ export const icon = style({
   alignItems: 'center',
   justifyContent: 'center',
   color: 'var(--sc-input-label-color)',
-  verticalAlign: 'middle',
-  marginTop: '-2px',
+  flexShrink: 0,
 });
 
 export const helperText = style({

@@ -1,6 +1,6 @@
-import { IconButton, InputAdornment } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { TextField } from "../TextField";
+import * as styles from "./searchField.css";
 
 export type SearchFieldProps = {
   value: string;
@@ -38,20 +38,21 @@ export function SearchField({
 
   const showClearButton = value.length > 0;
 
-  const clearButtonAdornment = showClearButton ? (
+  // Clear button with fixed 48px slot to maintain stable width
+  const clearButtonSlot = showClearButton ? (
     endIcon || (
-      <InputAdornment position="end">
-        <IconButton
-          size="small"
-          onClick={handleClear}
-          aria-label="Limpar busca"
-        >
-          <CloseRoundedIcon fontSize="small" />
-        </IconButton>
-      </InputAdornment>
+      <button
+        type="button"
+        onClick={handleClear}
+        className={styles.clearButton}
+        aria-label="Limpar busca"
+      >
+        <CloseRoundedIcon fontSize="small" />
+      </button>
     )
   ) : (
-    <span style={{ width: 48, height: 24 }} aria-hidden="true" />
+    // Ghost span maintains 48px slot when no clear button
+    <span className={styles.clearButtonGhost} aria-hidden="true" />
   );
 
   return (
@@ -61,7 +62,7 @@ export function SearchField({
       onChange={onChange}
       onKeyDown={handleKeyDown}
       fullWidth={fullWidth}
-      endIcon={clearButtonAdornment}
+      endIcon={clearButtonSlot}
       aria-label={ariaLabel || placeholder}
       className={className}
     />
