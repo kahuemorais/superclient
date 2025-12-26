@@ -43,10 +43,19 @@ export function TextField({
   const hasError = Boolean(errorText);
   const [isFocused, setIsFocused] = useState(false);
   
-  const hasValue = Boolean(
-    value !== undefined ? String(value) : defaultValue !== undefined ? String(defaultValue) : ''
-  );
-  const isRaised = isFocused || hasValue;
+  const hasValue = (() => {
+    if (value !== undefined) {
+      const strValue = String(value);
+      return strValue.length > 0;
+    }
+    if (defaultValue !== undefined) {
+      const strDefault = String(defaultValue);
+      return strDefault.length > 0;
+    }
+    return false;
+  })();
+  
+  const isShrink = isFocused || hasValue;
   
   const wrapperClasses = [
     inputWrapper,
@@ -62,7 +71,7 @@ export function TextField({
   const labelClasses = [
     labelClass,
     label && labelFloating,
-    isRaised && labelRaised,
+    isShrink && labelRaised,
     required && labelRequired,
   ].filter(Boolean).join(' ');
   

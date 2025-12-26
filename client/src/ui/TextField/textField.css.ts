@@ -1,5 +1,11 @@
 import { style } from '@vanilla-extract/css';
 
+// Label transform constants (MUI-aligned)
+const LABEL_DEFAULT_FONT_SIZE = '16px';
+const LABEL_SCALE = 0.75;
+const LABEL_ANCHOR_LEFT = '16px';
+const LABEL_SHRINK_TRANSLATE_Y = '-9px';
+
 export const textFieldContainer = style({
   display: 'flex',
   flexDirection: 'column',
@@ -21,15 +27,15 @@ export const label = style({
 
 export const labelFloating = style({
   position: 'absolute',
-  left: '16px',
-  top: '50%',
-  transform: 'translateY(-50%)',
+  left: LABEL_ANCHOR_LEFT,
+  top: '16px',
+  transform: 'translate(0, 0) scale(1)',
   transformOrigin: 'top left',
-  fontSize: '16px',
+  fontSize: LABEL_DEFAULT_FONT_SIZE,
   lineHeight: 1,
   color: 'var(--sc-input-placeholder-color)',
   pointerEvents: 'none',
-  transition: 'transform 200ms cubic-bezier(0.0, 0, 0.2, 1), color 200ms cubic-bezier(0.0, 0, 0.2, 1)',
+  transition: 'transform 200ms cubic-bezier(0.0, 0, 0.2, 1), color 200ms cubic-bezier(0.0, 0, 0.2, 1), font-size 200ms cubic-bezier(0.0, 0, 0.2, 1)',
   backgroundColor: 'transparent',
   paddingInline: '6px',
   marginLeft: '-6px',
@@ -41,7 +47,8 @@ export const labelFloating = style({
 });
 
 export const labelRaised = style({
-  transform: 'translateY(-28px) scale(0.75)',
+  transform: `translate(0, ${LABEL_SHRINK_TRANSLATE_Y}) scale(${LABEL_SCALE})`,
+  fontSize: LABEL_DEFAULT_FONT_SIZE,
   color: 'var(--sc-input-label-color)',
   backgroundColor: 'var(--sc-input-bg)',
   paddingInline: '8px',
