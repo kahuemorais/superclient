@@ -44,7 +44,6 @@ import { APP_RADIUS } from "../designTokens";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import { CategoryChip } from "../components/CategoryChip";
 import CategoryFilter from "../components/CategoryFilter";
-import { SearchField } from "../ui/SearchField/SearchField";
 import * as pipelineStyles from "./pipeline.css";
 import {
   DndContext,
@@ -2212,14 +2211,39 @@ export default function Pipeline() {
     () => (
       <div className={pipelineStyles.filtersRow}>
         <div className={pipelineStyles.searchWrap}>
-          <SearchField
+          <TextField
             className={pipelineStyles.searchFill}
             placeholder="Buscar tasks"
+            label="Buscar tasks"
+            variant="outlined"
+            size="medium"
+            fullWidth
             value={taskQuery}
             onChange={e => setTaskQuery(e.target.value)}
-            onClear={() => setTaskQuery("")}
-            fullWidth
-            ariaLabel="Buscar tasks"
+            onKeyDown={event => {
+              if (event.key === "Escape") {
+                setTaskQuery("");
+              }
+            }}
+            aria-label="Buscar tasks"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  {taskQuery ? (
+                    <IconButton
+                      size="small"
+                      onClick={() => setTaskQuery("")}
+                      aria-label="Limpar busca"
+                      sx={{ width: 48, height: 48 }}
+                    >
+                      <CloseRoundedIcon fontSize="small" />
+                    </IconButton>
+                  ) : (
+                    <Box sx={{ width: 48, height: 48 }} />
+                  )}
+                </InputAdornment>
+              ),
+            }}
           />
         </div>
         <div className={pipelineStyles.filterWrap}>
