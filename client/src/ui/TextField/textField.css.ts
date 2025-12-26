@@ -64,7 +64,7 @@ export const inputWrapper = style({
   border: '1px solid var(--sc-input-border-default)',
   borderRadius: 'var(--sc-input-radius)',
   padding: '0 16px',
-  minHeight: '56px',
+  height: '56px',
   boxSizing: 'border-box',
   transition: 'border-color 200ms cubic-bezier(0.0, 0, 0.2, 1)',
   
@@ -109,8 +109,8 @@ export const input = style({
   boxShadow: 'none',
   color: 'var(--sc-input-text-color)',
   fontSize: '16px',
-  lineHeight: '24px',
-  padding: '16px 0',
+  lineHeight: '1.4375em',
+  padding: '0',
   height: 'auto',
   boxSizing: 'border-box',
   
