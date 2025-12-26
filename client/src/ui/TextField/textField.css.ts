@@ -69,7 +69,9 @@ export const labelRequired = style({
 
 export const inputWrapper = style({
   position: 'relative',
-  display: 'block',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
   backgroundColor: 'var(--sc-input-bg)',
   border: '1px solid var(--sc-input-border-default)',
   borderRadius: 'var(--sc-input-radius)',
@@ -111,6 +113,8 @@ export const inputWrapperDisabled = style({
 });
 
 export const input = style({
+  flex: '1 1 auto',
+  minWidth: 0,
   width: '100%',
   backgroundColor: 'transparent',
   border: '0',
@@ -121,7 +125,26 @@ export const input = style({
   lineHeight: '1.4375em',
   padding: '16.5px 0',
   height: 'auto',
+  margin: 0,
   boxSizing: 'border-box',
+  fontFamily: 'inherit',
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  MozAppearance: 'none',
+  
+  selectors: {
+    '&[type="search"]': {
+      appearance: 'none',
+      WebkitAppearance: 'none',
+      MozAppearance: 'none',
+    },
+    '&::-webkit-search-decoration': {
+      display: 'none',
+    },
+    '&::-webkit-search-cancel-button': {
+      display: 'none',
+    },
+  },
   
   '::placeholder': {
     color: 'transparent',
@@ -132,10 +155,16 @@ export const input = style({
     border: '0',
     outline: '0',
     boxShadow: 'none',
+    backgroundColor: 'transparent',
+  },
+  
+  ':hover': {
+    backgroundColor: 'transparent',
   },
   
   ':disabled': {
     cursor: 'not-allowed',
+    backgroundColor: 'transparent',
   },
 });
 
@@ -144,8 +173,13 @@ export const icon = style({
   alignItems: 'center',
   justifyContent: 'center',
   color: 'var(--sc-input-label-color)',
-  verticalAlign: 'middle',
-  marginTop: '-2px',
+  flexShrink: 0,
+  backgroundColor: 'transparent',
+  border: 'none',
+  outline: 'none',
+  boxShadow: 'none',
+  padding: 0,
+  margin: 0,
 });
 
 export const helperText = style({
