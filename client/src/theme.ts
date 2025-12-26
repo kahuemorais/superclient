@@ -24,6 +24,13 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          borderRadius: 0,
+        },
+      },
+    },
     MuiDialog: {
       styleOverrides: {
         paper: ({ theme }) => ({
