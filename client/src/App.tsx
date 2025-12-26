@@ -563,7 +563,7 @@ function App() {
               <Stack
                 component="nav"
                 direction="row"
-                spacing={1}
+                spacing={0}
                 sx={{ display: { xs: "none", md: "flex" } }}
               >
                 {visibleNavItems.map(item => (
@@ -592,6 +592,7 @@ function App() {
                     component={RouterLink}
                     href="/notifications"
                     color={isActive("/notifications") ? "primary" : "default"}
+                    sx={{ width: 40, height: 40 }}
                   >
                     <Badge variant="dot" color="error" invisible={!hasNotifications}>
                       <NotificationsNoneRoundedIcon />
@@ -602,7 +603,7 @@ function App() {
                   <IconButton
                     component={RouterLink}
                     href="/profile"
-                    sx={{ display: { xs: "none", md: "flex" } }}
+                    sx={{ display: { xs: "none", md: "flex" }, width: 40, height: 40 }}
                   >
                     <Avatar src={profilePhoto} sx={{ width: 32, height: 32 }}>
                       {avatarInitial}
@@ -613,7 +614,7 @@ function App() {
                   <IconButton
                     component={RouterLink}
                     href="/profile"
-                    sx={{ display: { xs: "flex", md: "none" } }}
+                    sx={{ display: { xs: "flex", md: "none" }, width: 40, height: 40 }}
                   >
                     <Avatar src={profilePhoto} sx={{ width: 32, height: 32 }}>
                       {avatarInitial}

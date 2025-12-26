@@ -2290,7 +2290,7 @@ export default function Pipeline() {
             >
               <IconButton
                 onClick={() => scrollColumnsBy("left")}
-                sx={{
+                sx={theme => ({
                   position: "absolute",
                   top: "50%",
                   left: 0,
@@ -2298,7 +2298,7 @@ export default function Pipeline() {
                   zIndex: 2,
                   width: 48,
                   height: 48,
-                  borderRadius: 0,
+                  borderRadius: theme.shape.borderRadius,
                   backgroundColor: "transparent",
                   border: "none",
                   color: "text.primary",
@@ -2307,7 +2307,7 @@ export default function Pipeline() {
                     color: "primary.main",
                   },
                   "&:active": { backgroundColor: "transparent" },
-                }}
+                })}
                 aria-label="Voltar colunas"
               >
                 <ChevronLeftRoundedIcon fontSize="large" />
@@ -2315,7 +2315,7 @@ export default function Pipeline() {
 
               <IconButton
                 onClick={() => scrollColumnsBy("right")}
-                sx={{
+                sx={theme => ({
                   position: "absolute",
                   top: "50%",
                   right: 0,
@@ -2323,7 +2323,7 @@ export default function Pipeline() {
                   zIndex: 2,
                   width: 48,
                   height: 48,
-                  borderRadius: 0,
+                  borderRadius: theme.shape.borderRadius,
                   backgroundColor: "transparent",
                   border: "none",
                   color: "text.primary",
@@ -2332,7 +2332,7 @@ export default function Pipeline() {
                     color: "primary.main",
                   },
                   "&:active": { backgroundColor: "transparent" },
-                }}
+                })}
                 aria-label="Avancar colunas"
               >
                 <ChevronRightRoundedIcon fontSize="large" />

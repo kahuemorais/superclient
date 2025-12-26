@@ -1,4 +1,5 @@
-import { TextField } from "@mui/material";
+import { IconButton, InputAdornment, TextField } from "@mui/material";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 export type SearchFieldProps = {
   value: string;
@@ -34,6 +35,23 @@ export function SearchField({
       type="text"
       size="medium"
       aria-label={ariaLabel || placeholder}
+      InputProps={{
+        endAdornment:
+          onClear && value ? (
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="Limpar busca"
+                size="small"
+                onClick={event => {
+                  (event.currentTarget as HTMLElement).blur();
+                  onClear();
+                }}
+              >
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : null,
+      }}
     />
   );
 }

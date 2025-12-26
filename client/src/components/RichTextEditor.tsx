@@ -857,16 +857,16 @@ export default function RichTextEditor({
 
   const iconButtonProps = {
     size: "small" as const,
-    sx: {
+    sx: (theme: { shape: { borderRadius: string | number } }) => ({
       border: 1,
       borderColor: "divider",
       backgroundColor: "background.paper",
       width: 40,
       height: 40,
-      borderRadius: 9999,
+      borderRadius: theme.shape.borderRadius,
       p: 0,
       "&:hover": { backgroundColor: "action.hover" },
-    },
+    }),
   };
 
   const shouldInterceptLinks = Boolean(onNavigate);
