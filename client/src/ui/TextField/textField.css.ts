@@ -19,6 +19,34 @@ export const label = style({
   marginBottom: '2px',
 });
 
+export const labelFloating = style({
+  position: 'absolute',
+  left: '12px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  transformOrigin: 'top left',
+  fontSize: '16px',
+  lineHeight: 1,
+  color: 'var(--sc-input-placeholder-color)',
+  pointerEvents: 'none',
+  transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1), font-size 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+  backgroundColor: 'transparent',
+  paddingInline: '4px',
+  marginLeft: '-4px',
+  zIndex: 1,
+  maxWidth: 'calc(100% - 24px)',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
+
+export const labelRaised = style({
+  transform: 'translateY(-28px) scale(0.75)',
+  fontSize: '16px',
+  color: 'var(--sc-input-label-color)',
+  backgroundColor: 'var(--sc-input-bg)',
+});
+
 export const labelRequired = style({
   ':after': {
     content: '" *"',
@@ -35,6 +63,7 @@ export const inputWrapper = style({
   border: '1px solid var(--sc-input-border-default)',
   borderRadius: 'var(--sc-input-radius)',
   padding: '0 var(--sc-input-padding-x)',
+  minHeight: '56px',
   transition: 'border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1)',
   
   ':hover': {
@@ -77,12 +106,12 @@ export const input = style({
   border: 'none',
   outline: 'none',
   color: 'var(--sc-input-text-color)',
-  fontSize: '14px',
+  fontSize: '16px',
   lineHeight: 1.5,
-  padding: 'var(--sc-input-padding-y) 0',
+  padding: '16px 0',
   
   '::placeholder': {
-    color: 'var(--sc-input-placeholder-color)',
+    color: 'transparent',
   },
   
   ':disabled': {

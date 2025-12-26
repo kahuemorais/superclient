@@ -1,6 +1,6 @@
 import { IconButton, InputAdornment } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import * as styles from "./searchField.css";
+import { TextField } from "../TextField";
 
 export type SearchFieldProps = {
   value: string;
@@ -16,7 +16,7 @@ export type SearchFieldProps = {
 export function SearchField({
   value,
   onChange,
-  placeholder = "",
+  placeholder,
   fullWidth = false,
   onClear,
   endIcon,
@@ -38,37 +38,32 @@ export function SearchField({
 
   const showClearButton = value.length > 0;
 
+  const clearButtonAdornment = showClearButton ? (
+    endIcon || (
+      <InputAdornment position="end">
+        <IconButton
+          size="small"
+          onClick={handleClear}
+          aria-label="Limpar busca"
+        >
+          <CloseRoundedIcon fontSize="small" />
+        </IconButton>
+      </InputAdornment>
+    )
+  ) : (
+    <span style={{ width: 48, height: 24 }} aria-hidden="true" />
+  );
+
   return (
-    <div
-      className={`${styles.searchFieldRoot} ${className || ""}`}
-      style={fullWidth ? { width: "100%" } : undefined}
-    >
-      <input
-        type="text"
-        value={value}
-        onChange={onChange}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        aria-label={ariaLabel || placeholder}
-        className={styles.searchFieldInput}
-      />
-      <div className={styles.searchFieldEndSlot}>
-        {showClearButton ? (
-          endIcon || (
-            <InputAdornment position="end">
-              <IconButton
-                size="small"
-                onClick={handleClear}
-                aria-label="Limpar busca"
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </InputAdornment>
-          )
-        ) : (
-          <span className={styles.searchFieldEndSlotGhost} aria-hidden="true" />
-        )}
-      </div>
-    </div>
+    <TextField
+      label={placeholder || "Buscar"}
+      value={value}
+      onChange={onChange}
+      onKeyDown={handleKeyDown}
+      fullWidth={fullWidth}
+      endIcon={clearButtonAdornment}
+      aria-label={ariaLabel || placeholder}
+      className={className}
+    />
   );
 }

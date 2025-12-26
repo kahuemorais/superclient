@@ -1,9 +1,11 @@
-import { type InputHTMLAttributes, type ReactNode, useId } from 'react';
+import { type InputHTMLAttributes, type ReactNode, useId, useState } from 'react';
 import {
   textFieldContainer,
   textFieldContainerInline,
   label as labelClass,
   labelRequired,
+  labelFloating,
+  labelRaised,
   inputWrapper,
   inputWrapperError,
   inputWrapperDisabled,
@@ -32,11 +34,19 @@ export function TextField({
   disabled,
   required,
   id: providedId,
+  value,
+  defaultValue,
   ...inputProps
 }: TextFieldProps) {
   const autoId = useId();
   const id = providedId || autoId;
   const hasError = Boolean(errorText);
+  const [isFocused, setIsFocused] = useState(false);
+  
+  const hasValue = Boolean(
+    value !== undefined ? String(value) : defaultValue !== undefined ? String(defaultValue) : ''
+  );
+  const isRaised = isFocused || hasValue;
   
   const wrapperClasses = [
     inputWrapper,
@@ -51,17 +61,19 @@ export function TextField({
   
   const labelClasses = [
     labelClass,
+    label && labelFloating,
+    isRaised && labelRaised,
     required && labelRequired,
   ].filter(Boolean).join(' ');
   
   return (
     <div className={containerClasses}>
-      {label && (
-        <label htmlFor={id} className={labelClasses}>
-          {label}
-        </label>
-      )}
       <div className={wrapperClasses}>
+        {label && (
+          <label htmlFor={id} className={labelClasses}>
+            {label}
+          </label>
+        )}
         {startIcon && <span className={icon}>{startIcon}</span>}
         <input
           id={id}
@@ -70,6 +82,10 @@ export function TextField({
           required={required}
           aria-invalid={hasError}
           aria-describedby={errorText ? `${id}-error` : helperText ? `${id}-helper` : undefined}
+          value={value}
+          defaultValue={defaultValue}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           {...inputProps}
         />
         {endIcon && <span className={icon}>{endIcon}</span>}
