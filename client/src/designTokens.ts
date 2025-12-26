@@ -15,8 +15,8 @@ export const DESIGN_TOKENS = {
       error: "#ba1a1a",
     },
     dark: {
-      primary: "#D0BCFF",
-      onPrimary: "#381E72",
+      primary: "#22c9a6",
+      onPrimary: "#00382f",
       surface: "#0f0f10",
       onSurface: "#f5f5f5",
       onSurfaceVariant: "rgba(245, 245, 245, 0.7)",

@@ -9,8 +9,12 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#D0BCFF",
-      contrastText: "#381E72",
+      main: "#22c9a6",
+      contrastText: "#00382f",
+    },
+    brand: {
+      main: "#22c9a6",
+      contrastText: "#00382f",
     },
     secondary: {
       main: "#CCC2DC",
