@@ -1,5 +1,4 @@
-import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
-import * as styles from "./select.css";
+import { FormControl, InputLabel, MenuItem, Select as MuiSelect } from "@mui/material";
 
 export type SelectOption = {
   value: string;
@@ -8,52 +7,44 @@ export type SelectOption = {
 
 export type SelectProps = {
   value: string;
-  onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  onChange: (event: { target: { value: string } }) => void;
   placeholder?: string;
+  label?: string;
   options: SelectOption[];
   disabled?: boolean;
   fullWidth?: boolean;
   ariaLabel?: string;
-  className?: string;
+  size?: 'small' | 'medium';
 };
 
 export function Select({
   value,
   onChange,
   placeholder = "",
+  label,
   options,
   disabled = false,
   fullWidth = false,
   ariaLabel,
-  className,
+  size = 'small',
 }: SelectProps) {
+  const displayLabel = label || placeholder;
+  
   return (
-    <div
-      className={`${styles.selectRoot} ${className || ""}`}
-      style={fullWidth ? { width: "100%" } : undefined}
-      data-disabled={disabled}
-    >
-      <select
+    <FormControl fullWidth={fullWidth} disabled={disabled} size={size}>
+      {displayLabel && <InputLabel>{displayLabel}</InputLabel>}
+      <MuiSelect
         value={value}
-        onChange={onChange}
-        disabled={disabled}
-        aria-label={ariaLabel || placeholder}
-        className={styles.selectElement}
+        onChange={(e) => onChange({ target: { value: e.target.value as string } })}
+        label={displayLabel}
+        aria-label={ariaLabel || displayLabel}
       >
-        {placeholder && (
-          <option value="" disabled>
-            {placeholder}
-          </option>
-        )}
         {options.map(option => (
-          <option key={option.value} value={option.value}>
+          <MenuItem key={option.value} value={option.value}>
             {option.label}
-          </option>
+          </MenuItem>
         ))}
-      </select>
-      <div className={styles.selectIcon}>
-        <KeyboardArrowDownRoundedIcon fontSize="small" />
-      </div>
-    </div>
+      </MuiSelect>
+    </FormControl>
   );
 }

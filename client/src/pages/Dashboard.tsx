@@ -25,14 +25,6 @@ import { Card } from "../ui/Card";
 import { CardSection as VeCardSection } from "../ui/CardSection";
 import SettingsDialog from "../components/SettingsDialog";
 import { interactiveCardSx } from "../styles/interactiveCard";
-import {
-  notificationsContainer,
-  notificationItem,
-  notificationContent,
-  notificationTitle,
-  notificationTime,
-  emptyState,
-} from "./dashboard.css";
 
 type Deal = {
   id: string;
@@ -619,7 +611,7 @@ export default function Dashboard() {
             }
           >
             {completedTasks.length > 0 ? (
-              <div className={notificationsContainer}>
+              <Stack spacing={1}>
                 {completedTasks.slice(0, notificationsCount).map(task => (
                   <VeCardSection
                     key={task.id}
@@ -634,21 +626,20 @@ export default function Dashboard() {
                         navigate(`/calendario?task=${task.taskId}`);
                       }
                     }}
-                    className={notificationItem}
                   >
-                    <div className={notificationContent}>
-                      <p className={notificationTitle}>{task.taskName}</p>
-                      <p className={notificationTime}>
+                    <Box>
+                      <Typography variant="body2">{task.taskName}</Typography>
+                      <Typography variant="caption" color="text.secondary">
                         Concluída {formatTimeAgo(task.completedAt)}
-                      </p>
-                    </div>
+                      </Typography>
+                    </Box>
                   </VeCardSection>
                 ))}
-              </div>
+              </Stack>
             ) : (
-              <p className={emptyState}>
+              <Typography variant="body2" color="text.secondary">
                 Nenhuma notificação recente
-              </p>
+              </Typography>
             )}
           </Card>
         ) : null}

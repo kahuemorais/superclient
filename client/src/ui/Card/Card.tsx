@@ -1,43 +1,28 @@
 import type { ReactNode } from 'react';
-import {
-  card,
-  cardHeader,
-  cardHeaderContent,
-  cardTitle,
-  cardSubtitle,
-  cardActions,
-  cardContent,
-} from './card.css';
+import { Box, Card as MuiCard, CardContent, CardHeader, Typography } from '@mui/material';
 
 export interface CardProps {
   children: ReactNode;
   title?: string;
   subtitle?: string;
   actionsSlot?: ReactNode;
-  className?: string;
 }
 
-export function Card({ children, title, subtitle, actionsSlot, className }: CardProps) {
+export function Card({ children, title, subtitle, actionsSlot }: CardProps) {
   const hasHeader = title || subtitle || actionsSlot;
 
   return (
-    <div className={`${card} ${className || ''}`}>
+    <MuiCard>
       {hasHeader && (
-        <div className={cardHeader}>
-          <div className={cardHeaderContent}>
-            {title && <h2 className={cardTitle}>{title}</h2>}
-            {subtitle && <p className={cardSubtitle}>{subtitle}</p>}
-          </div>
-          {actionsSlot && (
-            <div className={cardActions}>
-              {actionsSlot}
-            </div>
-          )}
-        </div>
+        <CardHeader
+          title={title && <Typography variant="h6">{title}</Typography>}
+          subheader={subtitle && <Typography variant="body2" color="text.secondary">{subtitle}</Typography>}
+          action={actionsSlot && <Box>{actionsSlot}</Box>}
+        />
       )}
-      <div className={cardContent}>
+      <CardContent>
         {children}
-      </div>
-    </div>
+      </CardContent>
+    </MuiCard>
   );
 }

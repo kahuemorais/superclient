@@ -9,18 +9,20 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#22c9a6",
+      main: "#D0BCFF",
+      contrastText: "#381E72",
     },
     secondary: {
-      main: "#f59e0b",
+      main: "#CCC2DC",
+      contrastText: "#332D41",
     },
     background: {
-      default: "#0b0f14",
-      paper: "#0f1720",
+      default: "#0f0f10",
+      paper: "#17171a",
     },
     text: {
-      primary: "#e6edf3",
-      secondary: "rgba(230, 237, 243, 0.68)",
+      primary: "#f5f5f5",
+      secondary: "rgba(245, 245, 245, 0.7)",
     },
   },
   components: {
@@ -157,21 +159,6 @@ const theme = createTheme({
         root: () => ({
           borderRadius: APP_RADIUS,
         }),
-      },
-    },
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: {
-          backgroundColor: "#1a1a1a",
-          color: "#e6edf3",
-          fontSize: "0.75rem",
-          fontWeight: 500,
-          padding: "6px 12px",
-          borderRadius: 8,
-        },
-        arrow: {
-          color: "#1a1a1a",
-        },
       },
     },
   },

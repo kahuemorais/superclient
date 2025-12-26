@@ -44,7 +44,6 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import api from "../api";
-import { APP_RADIUS } from "../designTokens";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import RichTextEditor from "../components/RichTextEditor";
 import {
@@ -1118,7 +1117,7 @@ export default function Calendar() {
           transform: CSS.Transform.toString(stableTransform),
           touchAction: "none",
           userSelect: "none",
-          borderRadius: APP_RADIUS,
+          
         })}
       >
         {children}
@@ -1147,7 +1146,7 @@ export default function Calendar() {
           borderColor: isOver ? "primary.main" : "divider",
           backgroundColor: isOver ? "action.hover" : "background.paper",
           transition: "border-color 0.2s ease, background-color 0.2s ease",
-          borderRadius: APP_RADIUS,
+          
         })}
       >
         {children}
@@ -2091,7 +2090,7 @@ export default function Calendar() {
                                                 alignItems: "center",
                                                 gap: 1,
                                                 p: 1,
-                                                borderRadius: APP_RADIUS,
+                                                
                                                 border: 1,
                                                 borderColor: "divider",
                                               })}
@@ -2380,7 +2379,7 @@ export default function Calendar() {
                         alignItems={{ xs: "stretch", sm: "center" }}
                         sx={{
                           width: "100%",
-                          borderRadius: APP_RADIUS,
+                          
                           p: 0.5,
                         }}
                       >
@@ -2442,7 +2441,7 @@ export default function Calendar() {
                       alignItems={{ xs: "stretch", sm: "center" }}
                       sx={{
                         width: "100%",
-                        borderRadius: APP_RADIUS,
+                        
                         p: 0.5,
                       }}
                     >
@@ -3398,7 +3397,7 @@ export default function Calendar() {
                             sx={{
                               width: 28,
                               height: 28,
-                              borderRadius: APP_RADIUS,
+                              
                               backgroundColor: color,
                               borderStyle: "solid",
                               borderWidth:
@@ -3465,7 +3464,7 @@ export default function Calendar() {
                             sx={{
                               width: 28,
                               height: 28,
-                              borderRadius: APP_RADIUS,
+                              
                               backgroundColor: color,
                               borderStyle: "solid",
                               borderWidth: newCategoryColor === color ? 2 : 1,

@@ -41,7 +41,6 @@ import Looks3RoundedIcon from "@mui/icons-material/Looks3Rounded";
 import LooksOneRoundedIcon from "@mui/icons-material/LooksOneRounded";
 import LooksTwoRoundedIcon from "@mui/icons-material/LooksTwoRounded";
 
-import { APP_RADIUS } from "../designTokens";
 import AppCard from "./layout/AppCard";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -157,7 +156,7 @@ function ResizableImageNodeView({
           maxWidth: "100%",
           width: widthStyle,
           height: "auto",
-          borderRadius: APP_RADIUS,
+          
           outline: selected ? "2px solid var(--mui-palette-primary-main, #1976d2)" : undefined,
           boxShadow: selected ? "0 0 0 4px rgba(25,118,210,0.2)" : undefined,
         }}
@@ -1000,7 +999,7 @@ export default function RichTextEditor({
 
       <Box
         sx={theme => ({
-          borderRadius: APP_RADIUS,
+          
           border: 1,
           borderColor: "divider",
           backgroundColor: "background.paper",
@@ -1056,7 +1055,7 @@ export default function RichTextEditor({
           },
           "& .tiptap img": {
             maxWidth: "100%",
-            borderRadius: APP_RADIUS,
+            
           },
           "& .tiptap img.ProseMirror-selectednode": {
             outline: "2px solid",
@@ -1064,7 +1063,7 @@ export default function RichTextEditor({
             boxShadow: `0 0 0 4px ${theme.palette.primary.main}33`,
           },
           "& .tiptap .pm-image-resize-overlay": {
-            borderRadius: APP_RADIUS,
+            
           },
           "& .tiptap .pm-image-resize-handle": {
             backgroundColor: theme.palette.action.hover,
@@ -1168,7 +1167,7 @@ export default function RichTextEditor({
         <ClickAwayListener onClickAway={closeLinkMenu}>
           <AppCard
             sx={theme => ({
-              borderRadius: APP_RADIUS,
+              
               border: 1,
               borderColor: "divider",
               backgroundColor: "background.paper",
@@ -1274,7 +1273,7 @@ export default function RichTextEditor({
       >
         <AppCard
           sx={theme => ({
-            borderRadius: APP_RADIUS,
+            
             border: 1,
             borderColor: "divider",
             backgroundColor: "background.paper",

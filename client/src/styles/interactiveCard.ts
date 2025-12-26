@@ -1,9 +1,7 @@
 import { alpha, type Theme } from "@mui/material/styles";
-import { APP_RADIUS } from "../designTokens";
 
-// Standard interactive card with hover effects - uses global 16px radius
+// Standard interactive card with hover effects
 export const interactiveCardSx = (theme: Theme) => ({
-  borderRadius: APP_RADIUS,
   backgroundColor: theme.palette.background.paper,
   border: `1px solid ${theme.palette.divider}`,
   transition: theme.transitions.create(["background-color", "border-color"], {
@@ -20,9 +18,8 @@ export const interactiveCardSx = (theme: Theme) => ({
 // Alias for backwards compatibility - same as interactiveCardSx
 export const interactiveItemSx = interactiveCardSx;
 
-// Static card: global radius, no hover effects
+// Static card: no hover effects
 export const staticCardSx = (theme: Theme) => ({
-  borderRadius: APP_RADIUS,
   backgroundColor: theme.palette.background.paper,
   border: `1px solid ${theme.palette.divider}`,
 });
@@ -33,7 +30,7 @@ export const staticItemSx = staticCardSx;
 // Interactive card with hover (alias for interactiveCardSx)
 export const clickableCardSx = interactiveCardSx;
 
-// Keep this export for any code still using it - returns APP_RADIUS as number
+// Keep this export for any code still using it
 export const getInteractiveItemRadiusPx = (_theme: Theme) => {
-  return 16;
+  return 4; // MUI default
 };

@@ -23,7 +23,6 @@ import AutoGraphRoundedIcon from "@mui/icons-material/AutoGraphRounded";
 import { Link as RouterLink, Route, Switch, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import theme from "./theme";
-import { APP_RADIUS } from "./designTokens";
 import api from "./api";
 import { Footer } from "./ui/Footer";
 import Login from "./pages/Login";
@@ -547,229 +546,86 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box
-        sx={{
-          minHeight: "100vh",
-          position: "relative",
-          overflow: "hidden",
-          background:
-            "radial-gradient(circle at top, #13202c 0%, #0b0f14 45%, #07090d 100%)",
-        }}
-      >
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              opacity: 0.7,
-              background:
-                "radial-gradient(circle at 20% 20%, rgba(45, 212, 191, 0.18) 0%, transparent 45%), radial-gradient(circle at 80% 10%, rgba(244, 114, 182, 0.12) 0%, transparent 42%)",
-              pointerEvents: "none",
-            }}
-          />
-          <Box
-            sx={{
-              position: "relative",
-              zIndex: 1,
-              display: "flex",
-              flexDirection: "column",
-              minHeight: "100vh",
-            }}
-          >
-          <AppBar
-            position="sticky"
-            elevation={0}
-            sx={{
-              borderBottom: "solid 1px",
-              borderBottomColor: "color-mix(in srgb, var(--md-sys-color-outline) calc(var(--md-sys-alpha-hover) * 100%), transparent)",
-              backdropFilter: "blur(16px)",
-              backgroundColor: "color-mix(in srgb, var(--md-sys-color-surface) 75%, transparent)",
-            }}
-          >
-            <Toolbar
-              sx={{
-                justifyContent: "space-between",
-                gap: 2,
-                minHeight: "var(--sc-header-height, 64px)",
-                px: { xs: "var(--sc-header-px-mobile, 16px)", md: "var(--sc-header-px-desktop, 24px)" },
-              }}
-            >
+      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+          <AppBar position="sticky">
+            <Toolbar sx={{ justifyContent: "space-between", gap: 2 }}>
               {/* Brand */}
-              <Box sx={{ flex: "0 0 auto" }}>
-                <Button
-                  variant="text"
-                  onClick={() => setLocation(isLoggedIn ? "/home" : "/")}
-                  startIcon={<AutoGraphRoundedIcon fontSize="small" />}
-                >
-                  Superclient
-                </Button>
-              </Box>
+              <Button
+                variant="text"
+                onClick={() => setLocation(isLoggedIn ? "/home" : "/")}
+                startIcon={<AutoGraphRoundedIcon />}
+                color="inherit"
+              >
+                Superclient
+              </Button>
 
               {/* Nav (desktop only) */}
-              <Box
+              <Stack
                 component="nav"
-                sx={{
-                  flex: "1 1 auto",
-                  display: { xs: "none", md: "flex" },
-                  justifyContent: "center",
-                  gap: "var(--sc-header-nav-gap, 6px)",
-                  minWidth: 0,
-                  flexWrap: "nowrap",
-                  overflowX: "auto",
-                  whiteSpace: "nowrap",
-                  scrollbarWidth: "thin",
-                }}
+                direction="row"
+                spacing={1}
+                sx={{ display: { xs: "none", md: "flex" } }}
               >
                 {visibleNavItems.map(item => (
                   <Button
                     key={item.href}
                     component={RouterLink}
                     href={item.href}
+                    variant="text"
+                    color="inherit"
                     aria-current={isActive(item.href) ? "page" : undefined}
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: "var(--sc-header-nav-font-weight, 500)",
-                      lineHeight: 1,
-                      px: "var(--sc-header-nav-px, 14px)",
-                      py: "var(--sc-header-nav-py, 10px)",
-                      borderRadius: "var(--sc-header-nav-radius, 999px)",
-                      color: isActive(item.href)
-                        ? "var(--sc-header-nav-fg-active)"
-                        : "var(--sc-header-nav-fg)",
-                      backgroundColor: isActive(item.href)
-                        ? "var(--sc-header-nav-bg-active)"
-                        : "transparent",
-                      minWidth: "auto",
-                      "&:hover": {
-                        backgroundColor: isActive(item.href)
-                          ? "var(--sc-header-nav-bg-active)"
-                          : "var(--sc-header-nav-bg-hover)",
-                      },
-                      "&:active": {
-                        backgroundColor: "var(--sc-header-nav-bg-pressed)",
-                      },
-                    }}
+                    sx={
+                      isActive(item.href)
+                        ? { backgroundColor: "action.selected" }
+                        : undefined
+                    }
                   >
                     {t(item.labelKey)}
                   </Button>
                 ))}
-              </Box>
+              </Stack>
 
               {/* Actions */}
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: "0 0 auto" }}>
+              <Stack direction="row" spacing={1} alignItems="center">
                 {isLoggedIn && (
                   <IconButton
                     component={RouterLink}
                     href="/notifications"
-                    sx={{
-                      color: "color-mix(in srgb, var(--md-sys-color-primary) 70%, transparent)",
-                      border: isActive("/notifications")
-                        ? "1px solid color-mix(in srgb, var(--md-sys-color-primary) 60%, transparent)"
-                        : "1px solid transparent",
-                      backgroundColor: isActive("/notifications")
-                        ? "color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent)"
-                        : "transparent",
-                      p: 0.5,
-                      "&:hover": {
-                        backgroundColor: "color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent)",
-                      },
-                      "&:active": {
-                        backgroundColor: "color-mix(in srgb, var(--md-sys-color-primary) 28%, transparent)",
-                        color: "var(--md-sys-color-primary)",
-                      },
-                    }}
+                    color={isActive("/notifications") ? "primary" : "default"}
                   >
-                    <Badge
-                      variant="dot"
-                      color="error"
-                      invisible={!hasNotifications}
-                    >
+                    <Badge variant="dot" color="error" invisible={!hasNotifications}>
                       <NotificationsNoneRoundedIcon />
                     </Badge>
                   </IconButton>
                 )}
                 {isLoggedIn && (
-                  <Button
+                  <IconButton
                     component={RouterLink}
                     href="/profile"
-                    variant="text"
-                    color="inherit"
-                    sx={{
-                      minWidth: 0,
-                      p: 0,
-                      borderRadius: APP_RADIUS,
-                      border: isActive("/profile")
-                        ? "1px solid color-mix(in srgb, var(--md-sys-color-primary) 60%, transparent)"
-                        : "1px solid transparent",
-                      backgroundColor: isActive("/profile")
-                        ? "color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent)"
-                        : "transparent",
-                      display: { xs: "none", md: "block" },
-                    }}
+                    sx={{ display: { xs: "none", md: "flex" } }}
                   >
-                    <Avatar
-                      src={profilePhoto}
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        fontSize: 14,
-                        bgcolor: "color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent)",
-                        color: "text.primary",
-                      }}
-                    >
+                    <Avatar src={profilePhoto} sx={{ width: 32, height: 32 }}>
                       {avatarInitial}
                     </Avatar>
-                  </Button>
+                  </IconButton>
                 )}
-                {/* Mobile avatar */}
                 {isLoggedIn && (
-                  <Button
+                  <IconButton
                     component={RouterLink}
                     href="/profile"
-                    variant="text"
-                    color="inherit"
-                    sx={{
-                      minWidth: 0,
-                      p: 0,
-                      borderRadius: APP_RADIUS,
-                      border: isActive("/profile")
-                        ? "1px solid color-mix(in srgb, var(--md-sys-color-primary) 60%, transparent)"
-                        : "1px solid transparent",
-                      backgroundColor: isActive("/profile")
-                        ? "color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent)"
-                        : "transparent",
-                      display: { xs: "block", md: "none" },
-                    }}
+                    sx={{ display: { xs: "flex", md: "none" } }}
                   >
-                    <Avatar
-                      src={profilePhoto}
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        fontSize: 14,
-                        bgcolor: "color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent)",
-                        color: "text.primary",
-                      }}
-                    >
+                    <Avatar src={profilePhoto} sx={{ width: 32, height: 32 }}>
                       {avatarInitial}
                     </Avatar>
-                  </Button>
+                  </IconButton>
                 )}
-                {/* Mobile menu button */}
                 <IconButton
                   aria-label="Abrir menu"
                   onClick={handleMobileMenuOpen}
-                  sx={{
-                    display: { xs: "inline-flex", md: "none" },
-                    color: "var(--md-sys-color-on-surface)",
-                    "&:hover": {
-                      backgroundColor: "color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent)",
-                    },
-                    "&:active": {
-                      backgroundColor: "color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent)",
-                    },
-                  }}
+                  sx={{ display: { xs: "inline-flex", md: "none" } }}
                 >
-                  <MenuIcon fontSize="small" />
+                  <MenuIcon />
                 </IconButton>
               </Stack>
             </Toolbar>
@@ -778,14 +634,6 @@ function App() {
             anchorEl={mobileAnchorEl}
             open={mobileMenuOpen}
             onClose={handleMobileMenuClose}
-            PaperProps={{
-              sx: {
-                mt: 1,
-                minWidth: 200,
-                border: "1px solid rgba(255,255,255,0.12)",
-                backgroundColor: "rgba(12, 18, 26, 0.98)",
-              },
-            }}
           >
             {visibleNavItems.map(item => (
               <MenuItem
@@ -794,12 +642,7 @@ function App() {
                   setLocation(item.href);
                   handleMobileMenuClose();
                 }}
-                sx={{
-                  fontWeight: 600,
-                  ...(isActive(item.href)
-                    ? { backgroundColor: "action.selected" }
-                    : null),
-                }}
+                selected={isActive(item.href)}
               >
                 {t(item.labelKey)}
               </MenuItem>
@@ -810,12 +653,7 @@ function App() {
                   setLocation("/profile");
                   handleMobileMenuClose();
                 }}
-                sx={{
-                  fontWeight: 600,
-                  ...(isActive("/profile")
-                    ? { backgroundColor: "action.selected" }
-                    : null),
-                }}
+                selected={isActive("/profile")}
               >
                 {t("profile.title")}
               </MenuItem>
@@ -893,7 +731,6 @@ function App() {
               },
             ]}
           />
-        </Box>
       </Box>
 
       <Snackbar

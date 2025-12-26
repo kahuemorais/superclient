@@ -1,27 +1,26 @@
-import { type InputHTMLAttributes, type ReactNode, useId, useState } from 'react';
-import {
-  textFieldContainer,
-  textFieldContainerInline,
-  label as labelClass,
-  labelRequired,
-  labelFloating,
-  labelRaised,
-  inputWrapper,
-  inputWrapperError,
-  inputWrapperDisabled,
-  input,
-  icon,
-  helperText as helperTextClass,
-  errorText as errorTextClass,
-} from './textField.css';
+import { type ReactNode } from 'react';
+import { TextField as MuiTextField, InputAdornment } from '@mui/material';
 
-export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className'> {
+export interface TextFieldProps {
   label?: string;
   helperText?: string;
   errorText?: string;
   startIcon?: ReactNode;
   endIcon?: ReactNode;
   fullWidth?: boolean;
+  disabled?: boolean;
+  required?: boolean;
+  id?: string;
+  value?: string;
+  defaultValue?: string;
+  name?: string;
+  type?: string;
+  placeholder?: string;
+  autoComplete?: string;
+  autoFocus?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export function TextField({
@@ -33,83 +32,49 @@ export function TextField({
   fullWidth = true,
   disabled,
   required,
-  id: providedId,
+  id,
   value,
   defaultValue,
-  ...inputProps
+  name,
+  type,
+  placeholder,
+  autoComplete,
+  autoFocus,
+  onChange,
+  onFocus,
+  onBlur,
 }: TextFieldProps) {
-  const autoId = useId();
-  const id = providedId || autoId;
   const hasError = Boolean(errorText);
-  const [isFocused, setIsFocused] = useState(false);
-  
-  const hasValue = (() => {
-    if (value !== undefined) {
-      const strValue = String(value);
-      return strValue.length > 0;
-    }
-    if (defaultValue !== undefined) {
-      const strDefault = String(defaultValue);
-      return strDefault.length > 0;
-    }
-    return false;
-  })();
-  
-  const isShrink = isFocused || hasValue;
-  
-  const wrapperClasses = [
-    inputWrapper,
-    hasError && inputWrapperError,
-    disabled && inputWrapperDisabled,
-  ].filter(Boolean).join(' ');
-  
-  const containerClasses = [
-    textFieldContainer,
-    !fullWidth && textFieldContainerInline,
-  ].filter(Boolean).join(' ');
-  
-  const labelClasses = [
-    labelClass,
-    label && labelFloating,
-    isShrink && labelRaised,
-    required && labelRequired,
-  ].filter(Boolean).join(' ');
   
   return (
-    <div className={containerClasses}>
-      <div className={wrapperClasses} data-ve="textfield-wrapper">
-        {label && (
-          <label htmlFor={id} className={labelClasses}>
-            {label}
-          </label>
-        )}
-        {startIcon && <span className={icon}>{startIcon}</span>}
-        <input
-          id={id}
-          className={input}
-          data-ve="textfield-input"
-          disabled={disabled}
-          required={required}
-          aria-invalid={hasError}
-          aria-describedby={errorText ? `${id}-error` : helperText ? `${id}-helper` : undefined}
-          value={value}
-          defaultValue={defaultValue}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          {...inputProps}
-        />
-        {endIcon && <span className={icon}>{endIcon}</span>}
-      </div>
-      {errorText && (
-        <p id={`${id}-error`} className={errorTextClass} role="alert">
-          {errorText}
-        </p>
-      )}
-      {!errorText && helperText && (
-        <p id={`${id}-helper`} className={helperTextClass}>
-          {helperText}
-        </p>
-      )}
-    </div>
+    <MuiTextField
+      id={id}
+      name={name}
+      type={type}
+      label={label}
+      placeholder={placeholder}
+      helperText={errorText || helperText}
+      error={hasError}
+      fullWidth={fullWidth}
+      disabled={disabled}
+      required={required}
+      value={value}
+      defaultValue={defaultValue}
+      autoComplete={autoComplete}
+      autoFocus={autoFocus}
+      onChange={onChange}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      slotProps={{
+        input: {
+          startAdornment: startIcon ? (
+            <InputAdornment position="start">{startIcon}</InputAdornment>
+          ) : undefined,
+          endAdornment: endIcon ? (
+            <InputAdornment position="end">{endIcon}</InputAdornment>
+          ) : undefined,
+        },
+      }}
+    />
   );
 }

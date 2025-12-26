@@ -53,7 +53,6 @@ import FormatUnderlinedRoundedIcon from "@mui/icons-material/FormatUnderlinedRou
 import ShuffleRoundedIcon from "@mui/icons-material/ShuffleRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import { APP_RADIUS, APP_RADIUS_PX } from "../designTokens";
 import { interactiveItemSx, interactiveCardSx } from "../styles/interactiveCard";
 import SettingsIconButton from "../components/SettingsIconButton";
 import ToggleCheckbox from "../components/ToggleCheckbox";
@@ -1174,7 +1173,8 @@ export default function Notes() {
               pr: 1,
               pl: 1,
               border: 1,
-              borderColor: isActive ? "primary.main" : "transparent",
+              borderColor: "transparent",
+              backgroundColor: isActive ? "action.hover" : undefined,
               cursor: "pointer",
             })}
           >
@@ -1258,7 +1258,8 @@ export default function Notes() {
             pr: 1,
             pl: 1 + depth * 3,
             border: 1,
-            borderColor: isActive ? "primary.main" : "transparent",
+            borderColor: "transparent",
+            backgroundColor: isActive ? "action.hover" : undefined,
             cursor: "pointer",
           })}
         >
@@ -1380,39 +1381,41 @@ export default function Notes() {
         </Button>
         <Tooltip title="Buscar notas" placement="bottom">
           <span>
-            <IconButton
+            <Button
               onClick={event => {
                 (event.currentTarget as HTMLElement).blur();
-                setShowSearch(!showSearch);
-                if (showSearch) {
+                const next = !showSearch;
+                setShowSearch(next);
+                if (!next) {
                   setNoteQuery("");
+                  return;
+                }
+                if (selectedNoteId) {
+                  setLocation(isArchiveView ? "/notas/arquivo" : "/notas");
                 }
               }}
-              size="small"
-              sx={theme => ({
-                borderRadius: APP_RADIUS,
-                border: 1,
-                borderColor: showSearch
-                  ? theme.palette.primary.main
-                  : theme.palette.primary.main,
-                backgroundColor: "transparent",
-                color: showSearch
-                  ? theme.palette.primary.main
-                  : theme.palette.primary.main,
-                "&:hover": {
-                  backgroundColor: theme.palette.action.hover,
-                  borderColor: theme.palette.primary.main,
-                },
-              })}
+              variant="outlined"
+              sx={{
+                minWidth: 0,
+                px: 1.75,
+              }}
             >
               <SearchRoundedIcon fontSize="small" />
-            </IconButton>
+            </Button>
           </span>
         </Tooltip>
         <SettingsIconButton onClick={() => setSettingsOpen(true)} />
       </Stack>
     ),
-    [addNote, archiveLink.href, archiveLink.label, showSearch, setShowSearch, setNoteQuery]
+    [
+      addNote,
+      archiveLink.href,
+      archiveLink.label,
+      showSearch,
+      selectedNoteId,
+      isArchiveView,
+      setLocation,
+    ]
   );
 
   return (

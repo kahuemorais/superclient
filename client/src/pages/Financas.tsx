@@ -9,7 +9,6 @@ import {
   Dialog,
   DialogContent,
   IconButton,
-  InputAdornment,
   MenuItem,
   Snackbar,
   Stack,
@@ -49,7 +48,7 @@ import { PageContainer } from "../ui/PageContainer/PageContainer";
 import { Select } from "../ui/Select";
 import SettingsDialog from "../components/SettingsDialog";
 import { interactiveCardSx } from "../styles/interactiveCard";
-import * as financasStyles from "./financas.css";
+import { SearchField } from "../ui/SearchField/SearchField";
 type Category = {
   id: string;
   name: string;
@@ -943,51 +942,25 @@ export default function Financas() {
         justifyContent="space-between"
         sx={{ mb: 2 }}
       >
-        <div className={financasStyles.filtersRow}>
-          <div className={financasStyles.searchWrap}>
-            <TextField
-              className={financasStyles.searchFill}
-              label="Buscar gastos"
-              variant="outlined"
-              size="medium"
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ width: '100%' }}>
+          <Box sx={{ flex: 1 }}>
+            <SearchField
               fullWidth
+              placeholder="Buscar gastos"
               value={expenseQuery}
               onChange={event => setExpenseQuery(event.target.value)}
-              onKeyDown={event => {
-                if (event.key === "Escape") {
-                  setExpenseQuery("");
-                }
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {expenseQuery ? (
-                      <IconButton
-                        size="small"
-                        onClick={() => setExpenseQuery("")}
-                        aria-label="Limpar busca"
-                        sx={{ width: 48, height: 48 }}
-                      >
-                        <CloseRoundedIcon fontSize="small" />
-                      </IconButton>
-                    ) : (
-                      <Box sx={{ width: 48, height: 48 }} />
-                    )}
-                  </InputAdornment>
-                ),
-              }}
+              onClear={() => setExpenseQuery("")}
             />
-          </div>
-          <div className={financasStyles.filterWrap}>
+          </Box>
+          <Box sx={{ flex: 1 }}>
             <CategoryFilter
-              className={financasStyles.filterFill}
               categories={categories}
               selectedIds={categoryFilters}
               onChange={setCategoryFilters}
               width="100%"
             />
-          </div>
-        </div>
+          </Box>
+        </Stack>
       </Stack>
 
       <TableContainer>

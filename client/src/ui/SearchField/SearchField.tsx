@@ -1,6 +1,4 @@
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { TextField } from "../TextField";
-import * as styles from "./searchField.css";
+import { TextField } from "@mui/material";
 
 export type SearchFieldProps = {
   value: string;
@@ -8,20 +6,16 @@ export type SearchFieldProps = {
   placeholder?: string;
   fullWidth?: boolean;
   onClear?: () => void;
-  endIcon?: React.ReactNode;
   ariaLabel?: string;
-  className?: string;
 };
 
 export function SearchField({
   value,
   onChange,
-  placeholder,
+  placeholder = "Buscar",
   fullWidth = false,
   onClear,
-  endIcon,
   ariaLabel,
-  className,
 }: SearchFieldProps) {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape" && onClear) {
@@ -30,38 +24,16 @@ export function SearchField({
     }
   };
 
-  const handleClear = () => {
-    if (onClear) {
-      onClear();
-    }
-  };
-
-  const showClearButton = value.length > 0;
-
-  const clearButton = showClearButton ? (
-    <button
-      type="button"
-      onClick={handleClear}
-      aria-label="Limpar busca"
-      className={styles.clearButton}
-    >
-      <CloseRoundedIcon fontSize="small" />
-    </button>
-  ) : (
-    <span className={styles.clearButtonGhost} aria-hidden="true" />
-  );
-
   return (
     <TextField
-      label={placeholder || "Buscar"}
+      label={placeholder}
       value={value}
       onChange={onChange}
       onKeyDown={handleKeyDown}
       fullWidth={fullWidth}
-      type="search"
-      endIcon={clearButton}
+      type="text"
+      size="medium"
       aria-label={ariaLabel || placeholder}
-      className={className}
     />
   );
 }

@@ -1,11 +1,5 @@
-import { Link } from 'wouter';
-import {
-  footerContainer,
-  footerInner,
-  footerCopyright,
-  footerLinks,
-  footerLink,
-} from './footer.css';
+import { Box, Link, Stack, Typography } from '@mui/material';
+import { Link as RouterLink } from 'wouter';
 
 export interface FooterLinkItem {
   href: string;
@@ -22,20 +16,43 @@ export function Footer({ copyright, links = [] }: FooterProps) {
   const copyrightText = copyright || `Superclient © ${currentYear}`;
   
   return (
-    <footer className={footerContainer}>
-      <div className={footerInner}>
-        <div className={footerCopyright}>{copyrightText}</div>
+    <Box
+      component="footer"
+      sx={{
+        py: 3,
+        px: 2,
+        mt: 'auto',
+        borderTop: 1,
+        borderColor: 'divider',
+      }}
+    >
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems="center"
+        spacing={2}
+      >
+        <Typography variant="body2" color="text.secondary">
+          {copyrightText}
+        </Typography>
         
         {links.length > 0 && (
-          <nav className={footerLinks}>
+          <Stack component="nav" direction="row" spacing={2}>
             {links.map((link) => (
-              <Link key={link.href} href={link.href} className={footerLink}>
+              <Link
+                key={link.href}
+                component={RouterLink}
+                href={link.href}
+                variant="body2"
+                color="text.secondary"
+                underline="hover"
+              >
                 {link.label}
               </Link>
             ))}
-          </nav>
+          </Stack>
         )}
-      </div>
-    </footer>
+      </Stack>
+    </Box>
   );
 }

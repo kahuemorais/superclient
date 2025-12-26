@@ -19,7 +19,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { APP_RADIUS_PX } from "../designTokens";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
@@ -36,7 +35,7 @@ import CardSection from "../components/layout/CardSection";
 import CategoryFilter from "../components/CategoryFilter";
 import SettingsDialog from "../components/SettingsDialog";
 import { loadUserStorage, saveUserStorage } from "../userStorage";
-import * as contactStyles from "./contacts.css";
+import { SearchField } from "../ui/SearchField/SearchField";
 
 type Contact = {
   id: string;
@@ -965,51 +964,25 @@ export default function Contacts() {
           </CardSection>
         ) : (
           <Stack spacing={2}>
-            <div className={contactStyles.filtersRow}>
-              <div className={contactStyles.searchWrap}>
-                <TextField
-                  className={contactStyles.searchFill}
-                  label="Buscar contatos"
-                  variant="outlined"
-                  size="medium"
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+              <Box sx={{ flex: 1 }}>
+                <SearchField
                   fullWidth
+                  placeholder="Buscar contatos"
                   value={contactQuery}
                   onChange={event => setContactQuery(event.target.value)}
-                  onKeyDown={event => {
-                    if (event.key === "Escape") {
-                      setContactQuery("");
-                    }
-                  }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        {contactQuery ? (
-                          <IconButton
-                            size="small"
-                            onClick={() => setContactQuery("")}
-                            aria-label="Limpar busca"
-                            sx={{ width: 48, height: 48 }}
-                          >
-                            <CloseRoundedIcon fontSize="small" />
-                          </IconButton>
-                        ) : (
-                          <Box sx={{ width: 48, height: 48 }} />
-                        )}
-                      </InputAdornment>
-                    ),
-                  }}
+                  onClear={() => setContactQuery("")}
                 />
-              </div>
-              <div className={contactStyles.categoryWrap}>
+              </Box>
+              <Box sx={{ flex: 1 }}>
                 <CategoryFilter
-                  className={contactStyles.filterFill}
                   categories={categories}
                   selectedIds={categoryFilters}
                   onChange={setCategoryFilters}
                   width="100%"
                 />
-              </div>
-            </div>
+              </Box>
+            </Stack>
             {filteredContacts.length === 0 ? (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Nenhum contato encontrado.
@@ -1472,15 +1445,11 @@ export default function Contacts() {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
               PaperProps={{
-                sx: theme => ({
+                sx: {
                   mt: 1,
                   p: 2,
-                  borderRadius: APP_RADIUS_PX,
-                  border: 1,
-                  borderColor: "divider",
-                  backgroundColor: "background.paper",
                   minWidth: 280,
-                }),
+                },
               }}
             >
               <Stack spacing={1.5}>

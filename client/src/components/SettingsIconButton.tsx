@@ -1,6 +1,5 @@
-import { IconButton, Tooltip } from "@mui/material";
+import { Button, Tooltip } from "@mui/material";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import { APP_RADIUS } from "../designTokens";
 
 type SettingsIconButtonProps = {
   title?: string;
@@ -12,40 +11,30 @@ type SettingsIconButtonProps = {
 export default function SettingsIconButton({
   title = "Configura\u00e7\u00f5es",
   onClick,
-  size = "small",
+  size = "medium",
   disabled = false,
 }: SettingsIconButtonProps) {
-  const iconFontSize = size === "small" ? "small" : "medium";
+  const iconFontSize = "small";
+  const minHeight = size === "small" ? 30 : 36;
   return (
     <Tooltip title={title} placement="bottom">
       <span>
-        <IconButton
+        <Button
           onClick={event => {
             (event.currentTarget as HTMLElement).blur();
             onClick();
           }}
           disabled={disabled}
           size={size}
-          sx={theme => ({
-            borderRadius: APP_RADIUS,
-            border: 1,
-            borderColor: disabled
-              ? theme.palette.action.disabled
-              : theme.palette.primary.main,
-            backgroundColor: "transparent",
-            color: disabled
-              ? theme.palette.action.disabled
-              : theme.palette.primary.main,
-            "&:hover": disabled
-              ? undefined
-              : {
-                  backgroundColor: theme.palette.action.hover,
-                  borderColor: theme.palette.primary.main,
-                },
-          })}
+          variant="outlined"
+          sx={{
+            minWidth: 0,
+            px: 1.75,
+            minHeight,
+          }}
         >
           <SettingsRoundedIcon fontSize={iconFontSize} />
-        </IconButton>
+        </Button>
       </span>
     </Tooltip>
   );

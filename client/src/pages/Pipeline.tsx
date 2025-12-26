@@ -10,7 +10,6 @@ import {
   DialogContent,
   Snackbar,
   IconButton,
-  InputAdornment,
   Alert,
   MenuItem,
   Stack,
@@ -40,11 +39,10 @@ import { PageContainer } from "../ui/PageContainer/PageContainer";
 import AppAccordion from "../components/layout/AppAccordion";
 import CardSection from "../components/layout/CardSection";
 import SettingsDialog from "../components/SettingsDialog";
-import { APP_RADIUS } from "../designTokens";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import { CategoryChip } from "../components/CategoryChip";
 import CategoryFilter from "../components/CategoryFilter";
-import * as pipelineStyles from "./pipeline.css";
+import { SearchField } from "../ui/SearchField/SearchField";
 import {
   DndContext,
   PointerSensor,
@@ -2209,57 +2207,42 @@ export default function Pipeline() {
 
   const pageActions = useMemo(
     () => (
-      <div className={pipelineStyles.filtersRow}>
-        <div className={pipelineStyles.searchWrap}>
-          <TextField
-            className={pipelineStyles.searchFill}
-            placeholder="Buscar tasks"
-            label="Buscar tasks"
-            variant="outlined"
-            size="medium"
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+        <Box
+          sx={{
+            flex: { xs: '1 1 auto', md: '3 1 520px' },
+            width: { xs: '100%', md: 'auto' },
+            minWidth: { xs: '100%', md: 440 },
+          }}
+        >
+          <SearchField
             fullWidth
+            placeholder="Buscar tasks"
             value={taskQuery}
             onChange={e => setTaskQuery(e.target.value)}
-            onKeyDown={event => {
-              if (event.key === "Escape") {
-                setTaskQuery("");
-              }
-            }}
-            aria-label="Buscar tasks"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  {taskQuery ? (
-                    <IconButton
-                      size="small"
-                      onClick={() => setTaskQuery("")}
-                      aria-label="Limpar busca"
-                      sx={{ width: 48, height: 48 }}
-                    >
-                      <CloseRoundedIcon fontSize="small" />
-                    </IconButton>
-                  ) : (
-                    <Box sx={{ width: 48, height: 48 }} />
-                  )}
-                </InputAdornment>
-              ),
-            }}
+            onClear={() => setTaskQuery("")}
+            ariaLabel="Buscar tasks"
           />
-        </div>
-        <div className={pipelineStyles.filterWrap}>
+        </Box>
+        <Box
+          sx={{
+            flex: { xs: '1 1 auto', md: '1 1 280px' },
+            width: { xs: '100%', md: 'auto' },
+            minWidth: { xs: '100%', md: 240 },
+          }}
+        >
           <CategoryFilter
-            className={pipelineStyles.filterFill}
             categories={categories}
             selectedIds={categoryFilters}
             onChange={setCategoryFilters}
             width="100%"
           />
-        </div>
+        </Box>
         <SettingsIconButton
           onClick={() => setTaskFieldSettingsOpen(true)}
           disabled={!permissions.pipeline_edit_tasks}
         />
-      </div>
+      </Stack>
     ),
     [taskQuery, categories, categoryFilters, permissions.pipeline_edit_tasks]
   );
@@ -2380,7 +2363,7 @@ export default function Pipeline() {
                   },
                   "&::-webkit-scrollbar-thumb": {
                     backgroundColor: theme.palette.divider,
-                    borderRadius: APP_RADIUS,
+                    
                   },
                   "&::-webkit-scrollbar-thumb:hover": {
                     backgroundColor: theme.palette.text.secondary,
@@ -2463,7 +2446,7 @@ export default function Pipeline() {
                         sx={theme => ({
                           p: 2.5,
                           minWidth: 280,
-                          borderRadius: APP_RADIUS,
+                          
                           border: 1,
                           borderColor: "divider",
                           backgroundColor: "background.paper",
@@ -2498,7 +2481,7 @@ export default function Pipeline() {
                                 key={deal.id}
                                 sx={theme => ({
                                   p: 2,
-                                  borderRadius: APP_RADIUS,
+                                  
                                   border: 1,
                                   borderColor: "divider",
                                   backgroundColor: "background.paper",
@@ -2541,7 +2524,7 @@ export default function Pipeline() {
                         <Box
                           sx={theme => ({
                             p: 2,
-                            borderRadius: APP_RADIUS,
+                            
                             border: 1,
                             borderColor: "divider",
                             backgroundColor: "background.paper",
@@ -2891,7 +2874,7 @@ export default function Pipeline() {
                 </Typography>
                 <Box
                   sx={theme => ({
-                    borderRadius: APP_RADIUS,
+                    
                     border: 1,
                     borderColor: "divider",
                     backgroundColor: "background.paper",
@@ -2921,7 +2904,7 @@ export default function Pipeline() {
                           direction={{ xs: "column", sm: "row" }}
                           spacing={0.75}
                           alignItems={{ xs: "stretch", sm: "center" }}
-                          sx={{ width: "100%", borderRadius: APP_RADIUS, p: 0.5 }}
+                          sx={{ width: "100%",  p: 0.5 }}
                         >
                           <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
                             <Checkbox
@@ -2968,7 +2951,7 @@ export default function Pipeline() {
                         direction={{ xs: "column", sm: "row" }}
                         spacing={0.75}
                         alignItems={{ xs: "stretch", sm: "center" }}
-                        sx={{ width: "100%", borderRadius: APP_RADIUS, p: 0.5 }}
+                        sx={{ width: "100%",  p: 0.5 }}
                       >
                         <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
                           <Checkbox size="small" disabled sx={{ visibility: "hidden", p: 0.5 }} />
@@ -3304,7 +3287,7 @@ export default function Pipeline() {
                               sx={theme => ({
                                 width: 28,
                                 height: 28,
-                                borderRadius: APP_RADIUS,
+                                
                                 backgroundColor: color,
                                 borderStyle: "solid",
                                 borderWidth:
@@ -3374,7 +3357,7 @@ export default function Pipeline() {
                               sx={theme => ({
                                 width: 28,
                                 height: 28,
-                                borderRadius: APP_RADIUS,
+                                
                                 backgroundColor: color,
                                 borderStyle: "solid",
                                 borderWidth: newCategoryColor === color ? 2 : 1,
@@ -4181,7 +4164,7 @@ function SortableDeal({
       ref={setNodeRef}
       sx={theme => ({
         p: 2,
-        borderRadius: APP_RADIUS,
+        
         border: 1,
         borderColor: "divider",
         backgroundColor: "background.paper",

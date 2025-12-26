@@ -1,34 +1,28 @@
 import type { ReactNode, HTMLAttributes } from 'react';
-import {
-  cardSection,
-  cardSectionInteractive,
-  cardSectionCompact,
-} from './cardSection.css';
+import { Box } from '@mui/material';
 
 export interface CardSectionProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   size?: 'default' | 'compact';
   interactive?: boolean;
-  className?: string;
 }
 
 export function CardSection({ 
   children, 
   size = 'default',
   interactive = false,
-  className = '',
   ...rest
 }: CardSectionProps) {
-  const classes = [
-    cardSection,
-    size === 'compact' && cardSectionCompact,
-    interactive && cardSectionInteractive,
-    className,
-  ].filter(Boolean).join(' ');
-
   return (
-    <div className={classes} {...rest}>
+    <Box
+      sx={{
+        p: size === 'compact' ? 1 : 2,
+        cursor: interactive ? 'pointer' : undefined,
+        '&:hover': interactive ? { bgcolor: 'action.hover' } : undefined,
+      }}
+      {...rest}
+    >
       {children}
-    </div>
+    </Box>
   );
 }
