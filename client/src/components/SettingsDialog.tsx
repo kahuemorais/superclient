@@ -6,6 +6,7 @@ import {
   DialogContent,
   IconButton,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { useState, type ReactNode } from "react";
@@ -139,16 +140,18 @@ export function SettingsDialog({
             }}
           >
             <Typography variant="h6">{title}</Typography>
-            <IconButton
-              onClick={handleClose}
-              aria-label="Fechar"
-              sx={{
-                color: "text.secondary",
-                "&:hover": { backgroundColor: "action.hover" },
-              }}
-            >
-              <CloseRoundedIcon fontSize="small" />
-            </IconButton>
+            <Tooltip title="Fechar" placement="top">
+              <IconButton
+                onClick={handleClose}
+                aria-label="Fechar"
+                sx={{
+                  color: "text.secondary",
+                  "&:hover": { backgroundColor: "action.hover" },
+                }}
+              >
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
 
           {/* Content */}

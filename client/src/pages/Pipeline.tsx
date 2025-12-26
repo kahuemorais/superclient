@@ -41,8 +41,10 @@ import CardSection from "../components/layout/CardSection";
 import SettingsDialog from "../components/SettingsDialog";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import { CategoryChip } from "../components/CategoryChip";
+import { CategoryColorPicker } from "../components/CategoryColorPicker";
 import CategoryFilter from "../components/CategoryFilter";
 import { SearchField } from "../ui/SearchField/SearchField";
+import { CATEGORY_COLOR_OPTIONS } from "../lib/resolveThemeColor";
 import {
   DndContext,
   PointerSensor,
@@ -162,20 +164,7 @@ const DEFAULT_PERMISSIONS: Permissions = {
   finance_edit: true,
 };
 
-const DEFAULT_COLORS = [
-  "#0f766e",
-  "#1d4ed8",
-  "#6d28d9",
-  "#7c2d12",
-  "#7c4a03",
-  "#0f172a",
-  "#334155",
-  "#166534",
-  "#9d174d",
-  "#312e81",
-  "#1f2937",
-  "#0f3d3e",
-];
+const DEFAULT_COLORS = CATEGORY_COLOR_OPTIONS;
 
 const defaultCategories: Category[] = [
   { id: "cat-moradia", name: "Bug", color: DEFAULT_COLORS[0] },
@@ -188,8 +177,8 @@ const defaultCategories: Category[] = [
   { id: "cat-impostos", name: "QA", color: DEFAULT_COLORS[7] },
   { id: "cat-investimentos", name: "DevOps", color: DEFAULT_COLORS[8] },
   { id: "cat-viagem", name: "Cliente", color: DEFAULT_COLORS[9] },
-  { id: "cat-compras", name: "Interno", color: DEFAULT_COLORS[10] },
-  { id: "cat-outros", name: "Backlog", color: DEFAULT_COLORS[11] },
+  { id: "cat-compras", name: "Interno", color: DEFAULT_COLORS[0] },
+  { id: "cat-outros", name: "Backlog", color: DEFAULT_COLORS[1] },
 ];
 
 const LEGACY_PIPELINE_NAMES = new Set([
@@ -532,12 +521,14 @@ export default function Pipeline() {
     ...defaultTaskFieldSettings,
   });
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [newCategoryColor, setNewCategoryColor] = useState<string>(
+    DEFAULT_COLORS[0]
+  );
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
     null
   );
   const [editingCategoryName, setEditingCategoryName] = useState("");
-  const [editingCategoryColor, setEditingCategoryColor] = useState(
+  const [editingCategoryColor, setEditingCategoryColor] = useState<string>(
     DEFAULT_COLORS[0]
   );
   const [taskQuery, setTaskQuery] = useState("");
@@ -1521,7 +1512,10 @@ export default function Pipeline() {
       return;
     }
     const id = `cat-${Date.now()}`;
-    setCategories(prev => [...prev, { id, name, color: newCategoryColor }]);
+    const color = (DEFAULT_COLORS as readonly string[]).includes(newCategoryColor)
+      ? newCategoryColor
+      : DEFAULT_COLORS[0];
+    setCategories(prev => [...prev, { id, name, color }]);
     setNewCategoryName("");
   };
 
@@ -1562,7 +1556,11 @@ export default function Pipeline() {
   const startEditCategory = (cat: Category) => {
     setEditingCategoryId(cat.id);
     setEditingCategoryName(cat.name);
-    setEditingCategoryColor(cat.color);
+    setEditingCategoryColor(
+      (DEFAULT_COLORS as readonly string[]).includes(cat.color)
+        ? cat.color
+        : DEFAULT_COLORS[0]
+    );
   };
 
   const cancelEditCategory = () => {
@@ -1577,10 +1575,13 @@ export default function Pipeline() {
     if (!name) {
       return;
     }
+    const color = (DEFAULT_COLORS as readonly string[]).includes(editingCategoryColor)
+      ? editingCategoryColor
+      : DEFAULT_COLORS[0];
     setCategories(prev =>
       prev.map(cat =>
         cat.id === editingCategoryId
-          ? { ...cat, name, color: editingCategoryColor }
+          ? { ...cat, name, color }
           : cat
       )
     );
@@ -2770,12 +2771,14 @@ export default function Pipeline() {
                   >
                     {formatDealDateLabel(viewingDeal)}
                   </Typography>
-                  <IconButton
-                    onClick={handleViewClose}
-                    sx={{ color: "text.secondary" }}
-                  >
-                    <CloseRoundedIcon fontSize="small" />
-                  </IconButton>
+                    <Tooltip title="Fechar" placement="top">
+                      <IconButton
+                        onClick={handleViewClose}
+                        sx={{ color: "text.secondary" }}
+                      >
+                        <CloseRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                 </Stack>
               </Box>
               {taskFieldSettings.value ? (
@@ -2870,14 +2873,8 @@ export default function Pipeline() {
                 >
                   Descrição
                 </Typography>
-                <Box
-                  sx={theme => ({
-                    border: 1,
-                    borderColor: "divider",
-                    backgroundColor: "background.paper",
-                    p: 2,
-                    minHeight: 120,
-                  })}
+                <AppCard
+                  sx={{ p: 2, minHeight: 120 }}
                   dangerouslySetInnerHTML={{
                     __html:
                       viewingDeal?.descriptionHtml ||
@@ -3307,23 +3304,11 @@ export default function Pipeline() {
                           flexWrap="wrap"
                           useFlexGap
                         >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => setEditingCategoryColor(color)}
-                              sx={theme => ({
-                                width: 28,
-                                height: 28,
-                                
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth:
-                                  editingCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              })}
-                            />
-                          ))}
+                          <CategoryColorPicker
+                            value={editingCategoryColor}
+                            onChange={setEditingCategoryColor}
+                            colors={DEFAULT_COLORS}
+                          />
                         </Stack>
                         <Stack
                           direction="row"
@@ -3377,22 +3362,11 @@ export default function Pipeline() {
                           flexWrap="wrap"
                           useFlexGap
                         >
-                          {DEFAULT_COLORS.map(color => (
-                            <Box
-                              key={color}
-                              onClick={() => setNewCategoryColor(color)}
-                              sx={theme => ({
-                                width: 28,
-                                height: 28,
-                                
-                                backgroundColor: color,
-                                borderStyle: "solid",
-                                borderWidth: newCategoryColor === color ? 2 : 1,
-                                borderColor: "divider",
-                                cursor: "pointer",
-                              })}
-                            />
-                          ))}
+                          <CategoryColorPicker
+                            value={newCategoryColor}
+                            onChange={setNewCategoryColor}
+                            colors={DEFAULT_COLORS}
+                          />
                         </Stack>
                         <Button
                           variant="outlined"
@@ -3550,12 +3524,14 @@ export default function Pipeline() {
                 }}
               >
                 <Typography variant="h6">Remover tarefa</Typography>
-                <IconButton
-                  onClick={() => setRemoveDealOpen(false)}
-                  sx={{ color: "text.secondary" }}
-                >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Fechar" placement="top">
+                  <IconButton
+                    onClick={() => setRemoveDealOpen(false)}
+                    sx={{ color: "text.secondary" }}
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Você confirma a exclusão desta tarefa? Essa ação não pode ser
@@ -3622,12 +3598,14 @@ export default function Pipeline() {
                 }}
               >
                 <Typography variant="h6">Duplicar tarefa</Typography>
-                <IconButton
-                  onClick={handleCloseDuplicateDeal}
-                  sx={{ color: "text.secondary" }}
-                >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Fechar" placement="top">
+                  <IconButton
+                    onClick={handleCloseDuplicateDeal}
+                    sx={{ color: "text.secondary" }}
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Você confirma a duplicação desta tarefa?
@@ -3681,15 +3659,17 @@ export default function Pipeline() {
                 }}
               >
                 <Typography variant="h6">Remover coluna</Typography>
-                <IconButton
-                  onClick={() => {
-                    setRemoveColumnOpen(false);
-                    setRemoveColumnTarget(null);
-                  }}
-                  sx={{ color: "text.secondary" }}
-                >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Fechar" placement="top">
+                  <IconButton
+                    onClick={() => {
+                      setRemoveColumnOpen(false);
+                      setRemoveColumnTarget(null);
+                    }}
+                    sx={{ color: "text.secondary" }}
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Você confirma a exclusão da coluna{" "}
@@ -3741,9 +3721,11 @@ export default function Pipeline() {
             <Stack spacing={2.5}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <Typography variant="h6">Editar tarefa</Typography>
-                <IconButton onClick={handleEditClose} sx={{ color: "text.secondary" }}>
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Fechar" placement="top">
+                  <IconButton onClick={handleEditClose} sx={{ color: "text.secondary" }}>
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
               <TextField
                 label="Titulo"

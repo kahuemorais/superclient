@@ -11,6 +11,7 @@ import {
   Snackbar,
   Stack,
   TextField,
+  Tooltip,
   Typography,
   Avatar,
 } from "@mui/material";
@@ -1856,12 +1857,15 @@ export default function Profile() {
                     : "Desativar módulo"
                   : "Modulo"}
               </Typography>
-              <IconButton
-                onClick={() => setModuleDialog(null)}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={() => setModuleDialog(null)}
+                  sx={{ color: "text.secondary" }}
+                  aria-label="Fechar"
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             {moduleDialog ? (
               <Stack spacing={1.5}>
@@ -1932,12 +1936,15 @@ export default function Profile() {
               }}
             >
               <Typography variant="h6">Alterar idioma</Typography>
-              <IconButton
-                onClick={handleLanguageCancel}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={handleLanguageCancel}
+                  sx={{ color: "text.secondary" }}
+                  aria-label="Fechar"
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
               Deseja alterar o idioma para{" "}
@@ -1976,12 +1983,15 @@ export default function Profile() {
               }}
             >
               <Typography variant="h6">Trocar de conta</Typography>
-              <IconButton
-                onClick={() => setSwitchDialogOpen(false)}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={() => setSwitchDialogOpen(false)}
+                  sx={{ color: "text.secondary" }}
+                  aria-label="Fechar"
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             {switchAccounts.length ? (
               <Stack spacing={1}>

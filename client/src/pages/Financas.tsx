@@ -43,12 +43,15 @@ import { saveUserStorage } from "../userStorage";
 import SettingsIconButton from "../components/SettingsIconButton";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import CategoryFilter from "../components/CategoryFilter";
+import { CategoryColorPicker } from "../components/CategoryColorPicker";
 import CardSection from "../components/layout/CardSection";
+import { CategoryChip } from "../components/CategoryChip";
 import { PageContainer } from "../ui/PageContainer/PageContainer";
 import { Select } from "../ui/Select";
 import SettingsDialog from "../components/SettingsDialog";
 import { interactiveCardSx } from "../styles/interactiveCard";
 import { SearchField } from "../ui/SearchField/SearchField";
+import { CATEGORY_COLOR_OPTIONS, resolveThemeColor } from "../lib/resolveThemeColor";
 type Category = {
   id: string;
   name: string;
@@ -74,20 +77,7 @@ type Contact = {
 const STORAGE_KEY = "finance_data_v1";
 const TABLE_FIELDS_KEY = "finance_table_fields_v1";
 const TABLE_LAYOUT_KEY = "finance_table_layout_v1";
-const DEFAULT_COLORS = [
-  "#0f766e",
-  "#1d4ed8",
-  "#6d28d9",
-  "#7c2d12",
-  "#7c4a03",
-  "#0f172a",
-  "#334155",
-  "#166534",
-  "#9d174d",
-  "#312e81",
-  "#1f2937",
-  "#0f3d3e",
-];
+const DEFAULT_COLORS = CATEGORY_COLOR_OPTIONS;
 
 const defaultCategories: Category[] = [
   { id: "cat-moradia", name: "Pessoal", color: DEFAULT_COLORS[0] },
@@ -100,8 +90,8 @@ const defaultCategories: Category[] = [
   { id: "cat-impostos", name: "Impostos", color: DEFAULT_COLORS[7] },
   { id: "cat-investimentos", name: "Viagens", color: DEFAULT_COLORS[8] },
   { id: "cat-viagem", name: "Treinamento", color: DEFAULT_COLORS[9] },
-  { id: "cat-compras", name: "Fornecedores", color: DEFAULT_COLORS[10] },
-  { id: "cat-outros", name: "Outros", color: DEFAULT_COLORS[11] },
+  { id: "cat-compras", name: "Fornecedores", color: DEFAULT_COLORS[0] },
+  { id: "cat-outros", name: "Outros", color: DEFAULT_COLORS[1] },
 ];
 
 const LEGACY_FINANCE_NAMES = new Set([
@@ -147,10 +137,11 @@ const normalizeCategory = (
     typeof cat.id === "string" && cat.id.trim()
       ? cat.id.trim()
       : `cat-${Date.now()}-${index}`;
-  const color =
-    typeof cat.color === "string" && cat.color.trim()
-      ? cat.color.trim()
-      : DEFAULT_COLORS[index % DEFAULT_COLORS.length];
+  const candidateColor =
+    typeof cat.color === "string" && cat.color.trim() ? cat.color.trim() : "";
+  const color = (DEFAULT_COLORS as readonly string[]).includes(candidateColor)
+    ? candidateColor
+    : DEFAULT_COLORS[index % DEFAULT_COLORS.length];
   return { id, name, color };
 };
 
@@ -307,12 +298,14 @@ export default function Financas() {
   const [expenseQuery, setExpenseQuery] = useState("");
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [newCategoryColor, setNewCategoryColor] = useState<string>(
+    DEFAULT_COLORS[0]
+  );
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
     null
   );
   const [editingCategoryName, setEditingCategoryName] = useState("");
-  const [editingCategoryColor, setEditingCategoryColor] = useState(
+  const [editingCategoryColor, setEditingCategoryColor] = useState<string>(
     DEFAULT_COLORS[0]
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -323,8 +316,10 @@ export default function Financas() {
     ...defaultFinanceTableFields,
   });
   const [tablePosition, setTablePosition] = useState<"below" | "above">(
-    "below"
+    "above"
   );
+  const [showCategoryChart, setShowCategoryChart] = useState(true);
+  const [showMonthlyChart, setShowMonthlyChart] = useState(true);
   const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [removeExpenseOpen, setRemoveExpenseOpen] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -341,6 +336,8 @@ export default function Financas() {
     categories: Category[];
     tableFields: typeof tableFields;
     tablePosition: typeof tablePosition;
+    showCategoryChart: boolean;
+    showMonthlyChart: boolean;
     settingsAccordion: typeof settingsAccordion;
     newCategoryName: string;
     newCategoryColor: string;
@@ -386,6 +383,8 @@ export default function Financas() {
       categories,
       tableFields,
       tablePosition,
+      showCategoryChart,
+      showMonthlyChart,
       settingsAccordion,
       newCategoryName,
       newCategoryColor,
@@ -399,7 +398,9 @@ export default function Financas() {
     setSettingsAccordion(false);
     setCategories(defaultCategories);
     setTableFields({ ...defaultFinanceTableFields });
-    setTablePosition("below");
+    setTablePosition("above");
+    setShowCategoryChart(true);
+    setShowMonthlyChart(true);
     setRestoreDefaultsSnackbarOpen(true);
   };
 
@@ -412,6 +413,8 @@ export default function Financas() {
     setCategories(snapshot.categories);
     setTableFields(snapshot.tableFields);
     setTablePosition(snapshot.tablePosition);
+    setShowCategoryChart(snapshot.showCategoryChart);
+    setShowMonthlyChart(snapshot.showMonthlyChart);
     setSettingsAccordion(snapshot.settingsAccordion);
     setNewCategoryName(snapshot.newCategoryName);
     setNewCategoryColor(snapshot.newCategoryColor);
@@ -618,12 +621,22 @@ export default function Financas() {
     try {
       const parsed = JSON.parse(stored) as {
         tablePosition?: "below" | "above";
+        showCategoryChart?: boolean;
+        showMonthlyChart?: boolean;
       };
       if (
         parsed.tablePosition === "below" ||
         parsed.tablePosition === "above"
       ) {
         setTablePosition(parsed.tablePosition);
+      }
+
+      if (typeof parsed.showCategoryChart === "boolean") {
+        setShowCategoryChart(parsed.showCategoryChart);
+      }
+
+      if (typeof parsed.showMonthlyChart === "boolean") {
+        setShowMonthlyChart(parsed.showMonthlyChart);
       }
     } catch {
       window.localStorage.removeItem(TABLE_LAYOUT_KEY);
@@ -633,13 +646,17 @@ export default function Financas() {
   useEffect(() => {
     window.localStorage.setItem(
       TABLE_LAYOUT_KEY,
-      JSON.stringify({ tablePosition })
+      JSON.stringify({ tablePosition, showCategoryChart, showMonthlyChart })
     );
     const timeoutId = setTimeout(() => {
-      void saveUserStorage(TABLE_LAYOUT_KEY, { tablePosition });
+      void saveUserStorage(TABLE_LAYOUT_KEY, {
+        tablePosition,
+        showCategoryChart,
+        showMonthlyChart,
+      });
     }, 600);
     return () => clearTimeout(timeoutId);
-  }, [tablePosition]);
+  }, [tablePosition, showCategoryChart, showMonthlyChart]);
 
   useEffect(() => {
     if (!isLoadedRef.current) {
@@ -685,9 +702,9 @@ export default function Financas() {
       id: cat.id,
       name: cat.name,
       value: totals.get(cat.id) || 0,
-      color: cat.color,
+      color: resolveThemeColor(theme, cat.color),
     }));
-  }, [categories, expenses]);
+  }, [categories, expenses, theme]);
 
   const totalsByMonth = useMemo(() => {
     const buckets = new Map<string, number>();
@@ -808,7 +825,9 @@ export default function Financas() {
 
   const handleAddCategory = () => {
     const name = newCategoryName.trim();
-    const color = newCategoryColor;
+    const color = (DEFAULT_COLORS as readonly string[]).includes(newCategoryColor)
+      ? newCategoryColor
+      : DEFAULT_COLORS[0];
     if (!name) {
       return;
     }
@@ -843,7 +862,11 @@ export default function Financas() {
   const startEditCategory = (cat: Category) => {
     setEditingCategoryId(cat.id);
     setEditingCategoryName(cat.name);
-    setEditingCategoryColor(cat.color);
+    setEditingCategoryColor(
+      (DEFAULT_COLORS as readonly string[]).includes(cat.color)
+        ? cat.color
+        : DEFAULT_COLORS[0]
+    );
   };
 
   const cancelEditCategory = () => {
@@ -858,7 +881,9 @@ export default function Financas() {
     if (!name) {
       return;
     }
-    const color = editingCategoryColor;
+    const color = (DEFAULT_COLORS as readonly string[]).includes(editingCategoryColor)
+      ? editingCategoryColor
+      : DEFAULT_COLORS[0];
     setCategories(prev =>
       prev.map(cat =>
         cat.id === editingCategoryId ? { ...cat, name, color } : cat
@@ -867,71 +892,77 @@ export default function Financas() {
     setEditingCategoryId(null);
   };
 
-  const chartsSection = (
-    <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-      <CardSection sx={{ flex: 1, overflow: "hidden" }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-          Gastos por categoria
-        </Typography>
-        <Box sx={{ height: 240, overflow: "hidden" }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-              <Pie
-                data={totalsByCategory}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={isSmDown ? 52 : 60}
-                outerRadius={isSmDown ? 78 : 90}
-                label={isSmDown ? false : ({ name }) => `${name}`}
-                labelLine={false}
-              >
-                {totalsByCategory.map(entry => (
-                  <Cell key={entry.id} fill={entry.color} />
-                ))}
-              </Pie>
-              <RechartsTooltip
-                contentStyle={{
-                  background: "rgba(12, 18, 26, 0.98)",
-                  border: 1,
-                  borderColor: "divider",
-                  color: "#e6edf3",
-                }}
-                labelStyle={{ color: "#e6edf3" }}
-                itemStyle={{ color: "#e6edf3" }}
-                cursor={{ fill: "rgba(12, 18, 26, 0.45)" }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </Box>
-      </CardSection>
+  const chartsEnabled = showCategoryChart || showMonthlyChart;
 
-      <CardSection sx={{ flex: 1, overflow: "hidden" }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-          Evolucao mensal
-        </Typography>
-        <Box sx={{ height: 240, overflow: "hidden" }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={totalsByMonth}>
-              <XAxis dataKey="month" tick={{ fill: "#9aa6b2", fontSize: 12 }} />
-              <YAxis tick={{ fill: "#9aa6b2", fontSize: 12 }} />
-              <RechartsTooltip
-                contentStyle={{
-                  background: "rgba(12, 18, 26, 0.98)",
-                  border: 1,
-                  borderColor: "divider",
-                  color: "#e6edf3",
-                }}
-                labelStyle={{ color: "#e6edf3" }}
-                itemStyle={{ color: "#e6edf3" }}
-                cursor={{ fill: "rgba(12, 18, 26, 0.45)" }}
-              />
-              <Bar dataKey="value" fill="#22c9a6" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Box>
-      </CardSection>
+  const chartsSection = chartsEnabled ? (
+    <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+      {showCategoryChart ? (
+        <CardSection sx={{ flex: 1, overflow: "hidden" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+            Gastos por categoria
+          </Typography>
+          <Box sx={{ height: 240, overflow: "hidden" }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                <Pie
+                  data={totalsByCategory}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={isSmDown ? 52 : 60}
+                  outerRadius={isSmDown ? 78 : 90}
+                  label={isSmDown ? false : ({ name }) => `${name}`}
+                  labelLine={false}
+                >
+                  {totalsByCategory.map(entry => (
+                    <Cell key={entry.id} fill={entry.color} />
+                  ))}
+                </Pie>
+                <RechartsTooltip
+                  contentStyle={{
+                    background: "rgba(12, 18, 26, 0.98)",
+                    border: 1,
+                    borderColor: "divider",
+                    color: "#e6edf3",
+                  }}
+                  labelStyle={{ color: "#e6edf3" }}
+                  itemStyle={{ color: "#e6edf3" }}
+                  cursor={{ fill: "rgba(12, 18, 26, 0.45)" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </Box>
+        </CardSection>
+      ) : null}
+
+      {showMonthlyChart ? (
+        <CardSection sx={{ flex: 1, overflow: "hidden" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+            Evolucao mensal
+          </Typography>
+          <Box sx={{ height: 240, overflow: "hidden" }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={totalsByMonth}>
+                <XAxis dataKey="month" tick={{ fill: "#9aa6b2", fontSize: 12 }} />
+                <YAxis tick={{ fill: "#9aa6b2", fontSize: 12 }} />
+                <RechartsTooltip
+                  contentStyle={{
+                    background: "rgba(12, 18, 26, 0.98)",
+                    border: 1,
+                    borderColor: "divider",
+                    color: "#e6edf3",
+                  }}
+                  labelStyle={{ color: "#e6edf3" }}
+                  itemStyle={{ color: "#e6edf3" }}
+                  cursor={{ fill: "rgba(12, 18, 26, 0.45)" }}
+                />
+                <Bar dataKey="value" fill="#22c9a6" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Box>
+        </CardSection>
+      ) : null}
     </Stack>
-  );
+  ) : null;
 
   const tableSection = (
     <CardSection size="md">
@@ -1022,13 +1053,10 @@ export default function Financas() {
                     {tableFields.category ? (
                       <TableCell>
                         {category ? (
-                          <Chip
+                          <CategoryChip
                             size="small"
                             label={category.name}
-                            sx={{
-                              color: "#e6edf3",
-                              backgroundColor: darkenColor(category.color, 0.5),
-                            }}
+                            categoryColor={category.color}
                           />
                         ) : (
                           "-"
@@ -1094,15 +1122,17 @@ export default function Financas() {
               <Typography variant="h6">
                 {editingExpenseId ? "Editar gasto" : "Adicionar gasto"}
               </Typography>
-              <IconButton
-                onClick={() => {
-                  setOpen(false);
-                  setEditingExpenseId(null);
-                }}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={() => {
+                    setOpen(false);
+                    setEditingExpenseId(null);
+                  }}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
 
             <Stack spacing={2}>
@@ -1232,24 +1262,11 @@ export default function Financas() {
                         flexWrap="wrap"
                         useFlexGap
                       >
-                        {DEFAULT_COLORS.map(color => (
-                          <Box
-                            key={color}
-                            onClick={() => {
-                              setEditingCategoryColor(color);
-                            }}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              backgroundColor: color,
-                              borderStyle: "solid",
-                              borderWidth:
-                                editingCategoryColor === color ? 2 : 1,
-                              borderColor: "divider",
-                              cursor: "pointer",
-                            }}
-                          />
-                        ))}
+                        <CategoryColorPicker
+                          value={editingCategoryColor}
+                          onChange={setEditingCategoryColor}
+                          colors={DEFAULT_COLORS}
+                        />
                       </Stack>
                       <Stack
                         direction="row"
@@ -1268,15 +1285,12 @@ export default function Financas() {
                 ) : null}
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {categories.map(cat => (
-                    <Chip
+                    <CategoryChip
                       key={cat.id}
                       label={cat.name}
                       onClick={() => startEditCategory(cat)}
                       onDelete={() => handleRemoveCategory(cat.id)}
-                      sx={{
-                        color: "#e6edf3",
-                        backgroundColor: darkenColor(cat.color, 0.5),
-                      }}
+                      categoryColor={cat.color}
                     />
                   ))}
                 </Stack>
@@ -1304,23 +1318,11 @@ export default function Financas() {
                         flexWrap="wrap"
                         useFlexGap
                       >
-                        {DEFAULT_COLORS.map(color => (
-                          <Box
-                            key={color}
-                            onClick={() => {
-                              setNewCategoryColor(color);
-                            }}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              backgroundColor: color,
-                              borderStyle: "solid",
-                              borderWidth: newCategoryColor === color ? 2 : 1,
-                              borderColor: "divider",
-                              cursor: "pointer",
-                            }}
-                          />
-                        ))}
+                        <CategoryColorPicker
+                          value={newCategoryColor}
+                          onChange={setNewCategoryColor}
+                          colors={DEFAULT_COLORS}
+                        />
                       </Stack>
                       <Button
                         variant="outlined"
@@ -1337,6 +1339,85 @@ export default function Financas() {
                     </Stack>
                   </Box>
                 )}
+              </Stack>
+            ),
+          },
+          {
+            key: "charts",
+            title: "Gráficos",
+            content: (
+              <Stack spacing={1.5}>
+                <CardSection
+                  size="flush"
+                  variant="outlined"
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    ...interactiveCardSx(theme),
+                  })}
+                  onClick={() => {
+                    const next = !(showCategoryChart || showMonthlyChart);
+                    setShowCategoryChart(next);
+                    setShowMonthlyChart(next);
+                  }}
+                >
+                  <Typography variant="subtitle2">Mostrar gráficos</Typography>
+                  <ToggleCheckbox
+                    checked={showCategoryChart || showMonthlyChart}
+                    onChange={event => {
+                      setShowCategoryChart(event.target.checked);
+                      setShowMonthlyChart(event.target.checked);
+                    }}
+                    onClick={event => event.stopPropagation()}
+                  />
+                </CardSection>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                    gap: 1.5,
+                  }}
+                >
+                  {[
+                    {
+                      key: "category",
+                      label: "Gastos por categoria",
+                      checked: showCategoryChart,
+                      setChecked: setShowCategoryChart,
+                    },
+                    {
+                      key: "monthly",
+                      label: "Evolucao mensal",
+                      checked: showMonthlyChart,
+                      setChecked: setShowMonthlyChart,
+                    },
+                  ].map(item => (
+                    <CardSection
+                      key={item.key}
+                      size="flush"
+                      variant="outlined"
+                      sx={theme => ({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        cursor: "pointer",
+                        ...interactiveCardSx(theme),
+                      })}
+                      onClick={() => item.setChecked(!item.checked)}
+                    >
+                      <Typography variant="subtitle2">{item.label}</Typography>
+                      <ToggleCheckbox
+                        checked={item.checked}
+                        onChange={event => item.setChecked(event.target.checked)}
+                        onClick={event => event.stopPropagation()}
+                      />
+                    </CardSection>
+                  ))}
+                </Box>
               </Stack>
             ),
           },
@@ -1465,12 +1546,14 @@ export default function Financas() {
               <Typography variant="h6">
                 {viewingExpense?.title || "Detalhes do gasto"}
               </Typography>
-              <IconButton
-                onClick={handleViewClose}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={handleViewClose}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             <Stack spacing={0.5}>
               <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
@@ -1587,12 +1670,14 @@ export default function Financas() {
               }}
             >
               <Typography variant="h6">Remover gasto</Typography>
-              <IconButton
-                onClick={() => setRemoveExpenseOpen(false)}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={() => setRemoveExpenseOpen(false)}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
               Você confirma a exclusão deste gasto? Essa ação não pode ser

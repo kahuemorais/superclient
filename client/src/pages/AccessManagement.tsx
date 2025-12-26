@@ -11,6 +11,7 @@ import {
   MenuItem,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import api from "../api";
@@ -494,15 +495,17 @@ export default function AccessManagement() {
                     Crie, renomeie ou exclua cargos.
                   </Typography>
                 </Box>
-                <IconButton
-                  onClick={() => {
-                    setRoleSettingsOpen(false);
-                    setNewRoleError("");
-                  }}
-                  aria-label="Fechar"
-                >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Fechar" placement="top">
+                  <IconButton
+                    onClick={() => {
+                      setRoleSettingsOpen(false);
+                      setNewRoleError("");
+                    }}
+                    aria-label="Fechar"
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
 
               <Stack
@@ -845,15 +848,17 @@ export default function AccessManagement() {
                       : "Selecione um cargo."}
                   </Typography>
                 </Box>
-                <IconButton
-                  onClick={() => {
-                    setPermissionDialogOpen(false);
-                    setActiveRole(null);
-                  }}
-                  aria-label="Fechar"
-                >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Fechar" placement="top">
+                  <IconButton
+                    onClick={() => {
+                      setPermissionDialogOpen(false);
+                      setActiveRole(null);
+                    }}
+                    aria-label="Fechar"
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
               <Box
                 sx={{

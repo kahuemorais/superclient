@@ -1693,7 +1693,6 @@ export default function Notes() {
                   flexDirection: "column",
                   flex: 1,
                   minHeight: 0,
-                  border: 0,
                 }}
               >
                 <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
@@ -1904,6 +1903,32 @@ export default function Notes() {
                               : "Marcar como favorito"
                           }
                         />
+                      </MenuItem>
+                      <Divider />
+                      <MenuItem
+                        onClick={() => {
+                          setNoteMenuAnchorEl(null);
+                          requestNoteAction(
+                            selectedNote,
+                            selectedNote.archived ? "restore" : "archive"
+                          );
+                        }}
+                      >
+                        <ListItemText
+                          primary={
+                            selectedNote.archived
+                              ? "Restaurar nota"
+                              : "Arquivar nota"
+                          }
+                        />
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          setNoteMenuAnchorEl(null);
+                          requestNoteAction(selectedNote, "delete");
+                        }}
+                      >
+                        <ListItemText primary="Remover nota" />
                       </MenuItem>
                       <Divider />
                       <MenuItem
@@ -2133,6 +2158,36 @@ export default function Notes() {
                   />
 
                   <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Tooltip
+                      title={
+                        selectedNote.favorite
+                          ? "Remover dos favoritos"
+                          : "Marcar como favorito"
+                      }
+                      placement="top"
+                    >
+                      <Button
+                        variant="outlined"
+                        aria-label={
+                          selectedNote.favorite
+                            ? "Remover dos favoritos"
+                            : "Marcar como favorito"
+                        }
+                        onClick={() => toggleFavorite(selectedNote.id)}
+                        sx={{
+                          textTransform: "none",
+                          fontWeight: 600,
+                          minWidth: 0,
+                          px: 1.25,
+                        }}
+                      >
+                        {selectedNote.favorite ? (
+                          <StarRoundedIcon fontSize="small" />
+                        ) : (
+                          <StarBorderRoundedIcon fontSize="small" />
+                        )}
+                      </Button>
+                    </Tooltip>
                     <Tooltip title="Remover" placement="top">
                       <Button
                         variant="outlined"
@@ -2269,6 +2324,7 @@ export default function Notes() {
       />
       <ConfirmDialog
         open={Boolean(noteConfirm)}
+        intent={noteConfirm?.type === "delete" ? "danger" : "default"}
         title={
           noteConfirm?.type === "delete"
             ? "Remover nota"
@@ -2331,17 +2387,20 @@ export default function Notes() {
 
 function ConfirmDialog({
   open,
+  intent = "default",
   title,
   description,
   onCancel,
   onConfirm,
 }: {
   open: boolean;
+  intent?: "default" | "danger";
   title: string;
   description: string;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const isDanger = intent === "danger";
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
       <DialogContent>
@@ -2356,12 +2415,25 @@ function ConfirmDialog({
             alignItems={{ xs: "stretch", sm: "center" }}
             justifyContent="flex-end"
           >
-            <Button variant="outlined" onClick={onCancel}>
-              Cancelar
-            </Button>
-            <Button variant="contained" onClick={onConfirm}>
-              Confirmar
-            </Button>
+            {isDanger ? (
+              <>
+                <Button variant="contained" color="error" onClick={onConfirm}>
+                  Remover
+                </Button>
+                <Button variant="outlined" onClick={onCancel}>
+                  Cancelar
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outlined" onClick={onCancel}>
+                  Cancelar
+                </Button>
+                <Button variant="contained" onClick={onConfirm}>
+                  Confirmar
+                </Button>
+              </>
+            )}
           </Stack>
         </Stack>
       </DialogContent>

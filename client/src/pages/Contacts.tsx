@@ -34,9 +34,12 @@ import { interactiveCardSx } from "../styles/interactiveCard";
 import { PageContainer } from "../ui/PageContainer/PageContainer";
 import CardSection from "../components/layout/CardSection";
 import CategoryFilter from "../components/CategoryFilter";
+import { CategoryColorPicker } from "../components/CategoryColorPicker";
+import { CategoryChip } from "../components/CategoryChip";
 import SettingsDialog from "../components/SettingsDialog";
 import { loadUserStorage, saveUserStorage } from "../userStorage";
 import { SearchField } from "../ui/SearchField/SearchField";
+import { CATEGORY_COLOR_OPTIONS } from "../lib/resolveThemeColor";
 
 type Contact = {
   id: string;
@@ -86,20 +89,7 @@ const USER_ROLE_STORAGE_KEY = "sc_user_roles";
 const CARD_FIELDS_KEY = "contact_card_fields_v1";
 const DETAIL_FIELDS_KEY = "contact_detail_fields_v1";
 
-const DEFAULT_COLORS = [
-  "#0f766e",
-  "#1d4ed8",
-  "#6d28d9",
-  "#7c2d12",
-  "#7c4a03",
-  "#0f172a",
-  "#334155",
-  "#166534",
-  "#9d174d",
-  "#312e81",
-  "#1f2937",
-  "#0f3d3e",
-];
+const DEFAULT_COLORS = CATEGORY_COLOR_OPTIONS;
 
 const roleOptions = ["Administrador", "Gestor", "Analista", "Leitor"];
 
@@ -114,8 +104,8 @@ const defaultCategories: Category[] = [
   { id: "cat-vip", name: "VIP", color: DEFAULT_COLORS[7] },
   { id: "cat-suporte", name: "Suporte", color: DEFAULT_COLORS[8] },
   { id: "cat-financeiro", name: "Financeiro", color: DEFAULT_COLORS[9] },
-  { id: "cat-equipe", name: "Equipe", color: DEFAULT_COLORS[10] },
-  { id: "cat-outros", name: "Outros", color: DEFAULT_COLORS[11] },
+  { id: "cat-equipe", name: "Equipe", color: DEFAULT_COLORS[0] },
+  { id: "cat-outros", name: "Outros", color: DEFAULT_COLORS[1] },
 ];
 
 const darkenColor = (value: string, factor: number) => {
@@ -302,12 +292,14 @@ export default function Contacts() {
     ...defaultContactDetailFields,
   });
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [newCategoryColor, setNewCategoryColor] = useState<string>(
+    DEFAULT_COLORS[0]
+  );
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
     null
   );
   const [editingCategoryName, setEditingCategoryName] = useState("");
-  const [editingCategoryColor, setEditingCategoryColor] = useState(
+  const [editingCategoryColor, setEditingCategoryColor] = useState<string>(
     DEFAULT_COLORS[0]
   );
   const [copyMessage, setCopyMessage] = useState("");
@@ -621,7 +613,10 @@ export default function Contacts() {
       return;
     }
     const id = `cat-${Date.now()}`;
-    setCategories(prev => [...prev, { id, name, color: newCategoryColor }]);
+    const color = (DEFAULT_COLORS as readonly string[]).includes(newCategoryColor)
+      ? newCategoryColor
+      : DEFAULT_COLORS[0];
+    setCategories(prev => [...prev, { id, name, color }]);
     setNewCategoryName("");
   };
 
@@ -657,7 +652,11 @@ export default function Contacts() {
   const startEditCategory = (cat: Category) => {
     setEditingCategoryId(cat.id);
     setEditingCategoryName(cat.name);
-    setEditingCategoryColor(cat.color);
+    setEditingCategoryColor(
+      (DEFAULT_COLORS as readonly string[]).includes(cat.color)
+        ? cat.color
+        : DEFAULT_COLORS[0]
+    );
   };
 
   const cancelEditCategory = () => {
@@ -672,10 +671,13 @@ export default function Contacts() {
     if (!name) {
       return;
     }
+    const color = (DEFAULT_COLORS as readonly string[]).includes(editingCategoryColor)
+      ? editingCategoryColor
+      : DEFAULT_COLORS[0];
     setCategories(prev =>
       prev.map(cat =>
         cat.id === editingCategoryId
-          ? { ...cat, name, color: editingCategoryColor }
+          ? { ...cat, name, color }
           : cat
       )
     );
@@ -1094,12 +1096,14 @@ export default function Contacts() {
               <Typography variant="h6">
                 {selectedContact?.name || "Contato"}
               </Typography>
-              <IconButton
-                onClick={closeSelectedContact}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={closeSelectedContact}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             {detailFields.birthday ? (
               <Stack spacing={0.5}>
@@ -1130,17 +1134,11 @@ export default function Contacts() {
                       .map(catId => categoryMap.get(catId))
                       .filter(Boolean)
                       .map(cat => (
-                        <Chip
+                        <CategoryChip
                           key={cat?.id}
                           label={cat?.name}
                           size="small"
-                          sx={{
-                            color: "#e6edf3",
-                            backgroundColor: darkenColor(
-                              cat?.color || "#0f172a",
-                              0.5
-                            ),
-                          }}
+                          categoryColor={cat?.color || "#0f172a"}
                         />
                       ))}
                   </Stack>
@@ -1357,12 +1355,14 @@ export default function Contacts() {
                   ? `Editar ${editingContact.name}`
                   : "Novo contato"}
               </Typography>
-              <IconButton
-                onClick={() => setEditingContact(null)}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={() => setEditingContact(null)}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             <TextField
               label="Nome"
@@ -1597,15 +1597,12 @@ export default function Contacts() {
               )}
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
-                  <Chip
+                  <CategoryChip
                     {...getTagProps({ index })}
                     key={option.id}
                     label={option.name}
                     size="small"
-                    sx={{
-                      color: "#e6edf3",
-                      backgroundColor: darkenColor(option.color, 0.5),
-                    }}
+                    categoryColor={option.color}
                   />
                 ))
               }
@@ -1826,12 +1823,14 @@ export default function Contacts() {
               }}
             >
               <Typography variant="h6">Remover contato</Typography>
-              <IconButton
-                onClick={() => setRemoveContactOpen(false)}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={() => setRemoveContactOpen(false)}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
               Você confirma a exclusão deste contato? Essa ação não pode ser
@@ -1905,22 +1904,11 @@ export default function Contacts() {
                         flexWrap="wrap"
                         useFlexGap
                       >
-                        {DEFAULT_COLORS.map(color => (
-                          <Box
-                            key={color}
-                            onClick={() => setEditingCategoryColor(color)}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              backgroundColor: color,
-                              borderStyle: "solid",
-                              borderWidth:
-                                editingCategoryColor === color ? 2 : 1,
-                              borderColor: "divider",
-                              cursor: "pointer",
-                            }}
-                          />
-                        ))}
+                        <CategoryColorPicker
+                          value={editingCategoryColor}
+                          onChange={setEditingCategoryColor}
+                          colors={DEFAULT_COLORS}
+                        />
                       </Stack>
                       <Stack
                         direction="row"
@@ -1939,15 +1927,12 @@ export default function Contacts() {
                 ) : null}
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {categories.map(cat => (
-                    <Chip
+                    <CategoryChip
                       key={cat.id}
                       label={cat.name}
                       onClick={() => startEditCategory(cat)}
                       onDelete={() => handleRemoveCategory(cat.id)}
-                      sx={{
-                        color: "#e6edf3",
-                        backgroundColor: darkenColor(cat.color, 0.5),
-                      }}
+                      categoryColor={cat.color}
                     />
                   ))}
                 </Stack>
@@ -1974,21 +1959,11 @@ export default function Contacts() {
                         flexWrap="wrap"
                         useFlexGap
                       >
-                        {DEFAULT_COLORS.map(color => (
-                          <Box
-                            key={color}
-                            onClick={() => setNewCategoryColor(color)}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              backgroundColor: color,
-                              borderStyle: "solid",
-                              borderWidth: newCategoryColor === color ? 2 : 1,
-                              borderColor: "divider",
-                              cursor: "pointer",
-                            }}
-                          />
-                        ))}
+                        <CategoryColorPicker
+                          value={newCategoryColor}
+                          onChange={setNewCategoryColor}
+                          colors={DEFAULT_COLORS}
+                        />
                       </Stack>
                       <Button
                         variant="outlined"

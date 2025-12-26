@@ -22,7 +22,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, type Theme } from "@mui/material/styles";
 import { Link as RouterLink } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
@@ -57,9 +57,14 @@ import { PageContainer } from "../ui/PageContainer/PageContainer";
 import AppCard from "../components/layout/AppCard";
 import CardSection from "../components/layout/CardSection";
 import { CategoryChip } from "../components/CategoryChip";
+import { CategoryColorPicker } from "../components/CategoryColorPicker";
 import CategoryFilter from "../components/CategoryFilter";
 import SettingsDialog from "../components/SettingsDialog";
 import { loadUserStorage, saveUserStorage } from "../userStorage";
+import {
+  CATEGORY_COLOR_OPTIONS,
+  resolveThemeColor,
+} from "../lib/resolveThemeColor";
 
 type Category = {
   id: string;
@@ -124,39 +129,47 @@ const STORAGE_CATEGORIES = "calendar_categories_v1";
 const STORAGE_CALENDARS = "calendar_sources_v1";
 const STORAGE_CATEGORY_FILTER = "sc_calendar_category_filter";
 
-const DEFAULT_COLORS = [
-  "#0f766e",
-  "#1d4ed8",
-  "#6d28d9",
-  "#7c2d12",
-  "#7c4a03",
-  "#0f172a",
-  "#334155",
-  "#166534",
-  "#9d174d",
-  "#312e81",
-  "#1f2937",
-  "#0f3d3e",
-];
+// NOTE: category/calendar colors accept MUI palette tokens (e.g. "primary", "primary.dark")
+// and legacy hex values. Rendering is normalized via resolveThemeColor().
 
 const defaultCategories: Category[] = [
-  { id: "cat-reunioes", name: "Reuniões", color: DEFAULT_COLORS[0] },
-  { id: "cat-trabalho", name: "Trabalho", color: DEFAULT_COLORS[1] },
-  { id: "cat-pessoal", name: "Pessoal", color: DEFAULT_COLORS[2] },
-  { id: "cat-aniversario", name: "Aniversários", color: DEFAULT_COLORS[3] },
-  { id: "cat-viagem", name: "Viagem", color: DEFAULT_COLORS[4] },
-  { id: "cat-saude", name: "Saude", color: DEFAULT_COLORS[5] },
-  { id: "cat-estudos", name: "Estudos", color: DEFAULT_COLORS[6] },
-  { id: "cat-financas", name: "Pagamentos", color: DEFAULT_COLORS[7] },
-  { id: "cat-feriados", name: "Feriados", color: DEFAULT_COLORS[8] },
-  { id: "cat-lembretes", name: "Lembretes", color: DEFAULT_COLORS[9] },
+  { id: "cat-reunioes", name: "Reuniões", color: "info" },
+  { id: "cat-trabalho", name: "Trabalho", color: "primary" },
+  { id: "cat-pessoal", name: "Pessoal", color: "success" },
+  { id: "cat-aniversario", name: "Aniversários", color: "secondary" },
+  { id: "cat-viagem", name: "Viagem", color: "warning" },
+  { id: "cat-saude", name: "Saude", color: "error" },
+  { id: "cat-estudos", name: "Estudos", color: "secondary" },
+  { id: "cat-financas", name: "Pagamentos", color: "warning" },
+  { id: "cat-feriados", name: "Feriados", color: "info" },
+  { id: "cat-lembretes", name: "Lembretes", color: "primary" },
 ];
 
 const defaultCalendars: CalendarSource[] = [
-  { id: "cal-trabalho", name: "Trabalho", color: "#1d4ed8", enabled: true },
-  { id: "cal-pessoal", name: "Pessoal", color: "#16a34a", enabled: true },
-  { id: "cal-equipe", name: "Equipe", color: "#7c3aed", enabled: true },
-  { id: "cal-financas", name: "Financeiro", color: "#ea580c", enabled: true },
+  {
+    id: "cal-trabalho",
+    name: "Trabalho",
+    color: CATEGORY_COLOR_OPTIONS[0],
+    enabled: true,
+  },
+  {
+    id: "cal-pessoal",
+    name: "Pessoal",
+    color: CATEGORY_COLOR_OPTIONS[1] ?? CATEGORY_COLOR_OPTIONS[0],
+    enabled: true,
+  },
+  {
+    id: "cal-equipe",
+    name: "Equipe",
+    color: CATEGORY_COLOR_OPTIONS[2] ?? CATEGORY_COLOR_OPTIONS[0],
+    enabled: true,
+  },
+  {
+    id: "cal-financas",
+    name: "Financeiro",
+    color: CATEGORY_COLOR_OPTIONS[3] ?? CATEGORY_COLOR_OPTIONS[0],
+    enabled: true,
+  },
 ];
 
 const monthLabels = [
@@ -436,13 +449,15 @@ export default function Calendar() {
   });
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryColor, setNewCategoryColor] = useState(DEFAULT_COLORS[0]);
+  const [newCategoryColor, setNewCategoryColor] = useState<string>(
+    CATEGORY_COLOR_OPTIONS[0]
+  );
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
     null
   );
   const [editingCategoryName, setEditingCategoryName] = useState("");
-  const [editingCategoryColor, setEditingCategoryColor] = useState(
-    DEFAULT_COLORS[0]
+  const [editingCategoryColor, setEditingCategoryColor] = useState<string>(
+    CATEGORY_COLOR_OPTIONS[0]
   );
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const today = new Date();
@@ -471,6 +486,7 @@ export default function Calendar() {
   } | null>(null);
   const restoreDefaultsSnapshotRef = useRef<{
     categories: Category[];
+    calendarSources: CalendarSource[];
     calendarSettings: typeof calendarSettings;
     configAccordion: typeof configAccordion;
     newCategoryName: string;
@@ -488,6 +504,17 @@ export default function Calendar() {
   const theme = useTheme();
   const isSmDown = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const coerceAllowedColor = (value: string) =>
+    (CATEGORY_COLOR_OPTIONS as readonly string[]).includes(value)
+      ? value
+      : CATEGORY_COLOR_OPTIONS[0];
+
+  const sanitizeCalendarSources = (sources: CalendarSource[]) =>
+    sources.map(source => ({
+      ...source,
+      color: coerceAllowedColor(source.color),
+    }));
 
   useEffect(() => {
     let cancelled = false;
@@ -611,10 +638,11 @@ export default function Calendar() {
           return;
         }
         if (Array.isArray(fromDb) && fromDb.length) {
-          setCalendarSources(fromDb);
+          const sanitized = sanitizeCalendarSources(fromDb);
+          setCalendarSources(sanitized);
           window.localStorage.setItem(
             STORAGE_CALENDARS,
-            JSON.stringify(fromDb)
+            JSON.stringify(sanitized)
           );
           return;
         }
@@ -629,8 +657,9 @@ export default function Calendar() {
       try {
         const parsed = JSON.parse(stored) as CalendarSource[];
         if (Array.isArray(parsed) && parsed.length) {
-          setCalendarSources(parsed);
-          void saveUserStorage(STORAGE_CALENDARS, parsed);
+          const sanitized = sanitizeCalendarSources(parsed);
+          setCalendarSources(sanitized);
+          void saveUserStorage(STORAGE_CALENDARS, sanitized);
         }
       } catch {
         window.localStorage.removeItem(STORAGE_CALENDARS);
@@ -1539,28 +1568,35 @@ export default function Calendar() {
     const nextCategory = {
       id: `cat-${Date.now()}`,
       name,
-      color: newCategoryColor,
+      color: (CATEGORY_COLOR_OPTIONS as readonly string[]).includes(newCategoryColor)
+        ? newCategoryColor
+        : CATEGORY_COLOR_OPTIONS[0],
     };
     handleSaveCategories([...categories, nextCategory]);
     setNewCategoryName("");
-    setNewCategoryColor(DEFAULT_COLORS[0]);
+    setNewCategoryColor(CATEGORY_COLOR_OPTIONS[0]);
   };
 
   const startEditCategory = (category: Category) => {
     setEditingCategoryId(category.id);
     setEditingCategoryName(category.name);
-    setEditingCategoryColor(category.color);
+    setEditingCategoryColor(
+      (CATEGORY_COLOR_OPTIONS as readonly string[]).includes(category.color)
+        ? category.color
+        : CATEGORY_COLOR_OPTIONS[0]
+    );
   };
 
   const cancelEditCategory = () => {
     setEditingCategoryId(null);
     setEditingCategoryName("");
-    setEditingCategoryColor(DEFAULT_COLORS[0]);
+    setEditingCategoryColor(CATEGORY_COLOR_OPTIONS[0]);
   };
 
   const handleRestoreCalendarDefaults = () => {
     restoreDefaultsSnapshotRef.current = {
       categories,
+      calendarSources,
       calendarSettings,
       configAccordion,
       newCategoryName,
@@ -1571,9 +1607,10 @@ export default function Calendar() {
     };
     cancelEditCategory();
     setNewCategoryName("");
-    setNewCategoryColor(DEFAULT_COLORS[0]);
+    setNewCategoryColor(CATEGORY_COLOR_OPTIONS[0]);
     setConfigAccordion(false);
     setCalendarSettings({ ...defaultCalendarSettings });
+    setCalendarSources(defaultCalendars);
     handleSaveCategories(defaultCategories);
     setRestoreDefaultsSnackbarOpen(true);
   };
@@ -1591,6 +1628,7 @@ export default function Calendar() {
     setNewCategoryColor(snapshot.newCategoryColor);
     setConfigAccordion(snapshot.configAccordion);
     setCalendarSettings(snapshot.calendarSettings);
+    setCalendarSources(snapshot.calendarSources);
     handleSaveCategories(snapshot.categories);
     restoreDefaultsSnapshotRef.current = null;
     setRestoreDefaultsSnackbarOpen(false);
@@ -1604,9 +1642,14 @@ export default function Calendar() {
     if (!name) {
       return;
     }
+    const color = (CATEGORY_COLOR_OPTIONS as readonly string[]).includes(
+      editingCategoryColor
+    )
+      ? editingCategoryColor
+      : CATEGORY_COLOR_OPTIONS[0];
     const nextCategories = categories.map(cat =>
       cat.id === editingCategoryId
-        ? { ...cat, name, color: editingCategoryColor }
+        ? { ...cat, name, color }
         : cat
     );
     handleSaveCategories(nextCategories);
@@ -1774,6 +1817,7 @@ export default function Calendar() {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          borderRadius: getInteractiveItemRadiusPx(theme),
                           border: isSelected ? 1 : "1px solid transparent",
                           borderColor: isSelected
                             ? "primary.main"
@@ -1863,11 +1907,21 @@ export default function Calendar() {
                         px: 1,
                         py: 0.5,
                         cursor: "pointer",
+                        borderRadius: getInteractiveItemRadiusPx(theme),
                         ...interactiveItemSx(theme),
                       })}
                     >
                       <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Box sx={{ width: 12, height: 12, backgroundColor: source.color }} />
+                        <Box
+                          sx={theme => ({
+                            width: 12,
+                            height: 12,
+                            borderRadius: "50%",
+                            backgroundColor: resolveThemeColor(theme, source.color),
+                            border: 1,
+                            borderColor: "divider",
+                          })}
+                        />
                         <Typography variant="body2">{source.name}</Typography>
                       </Stack>
                       <Checkbox
@@ -2248,9 +2302,12 @@ export default function Calendar() {
                     width: 8,
                     height: 8,
                     backgroundColor:
-                      calendarSources.find(
-                        source => source.id === viewingTask?.calendarId
-                      )?.color || "primary.main",
+                      resolveThemeColor(
+                        theme,
+                        calendarSources.find(
+                          source => source.id === viewingTask?.calendarId
+                        )?.color || "primary"
+                      ),
                     ml: 1,
                     alignSelf: "center",
                   })}
@@ -2282,12 +2339,15 @@ export default function Calendar() {
                 >
                   {viewingTask ? formatTaskDateTimeLabel(viewingTask) : ""}
                 </Typography>
-                <IconButton
-                  onClick={handleCloseView}
-                  sx={{ color: "text.secondary" }}
-                >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Fechar" placement="top">
+                  <IconButton
+                    onClick={handleCloseView}
+                    sx={{ color: "text.secondary" }}
+                    aria-label="Fechar"
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Stack>
             </Box>
             <Stack spacing={1.5}>
@@ -2509,9 +2569,14 @@ export default function Calendar() {
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 Calendário
               </Typography>
-              <IconButton onClick={() => setMobileSidebarOpen(false)}>
-                <CloseRoundedIcon />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={() => setMobileSidebarOpen(false)}
+                  aria-label="Fechar"
+                >
+                  <CloseRoundedIcon />
+                </IconButton>
+              </Tooltip>
             </Stack>
 
             <CategoryFilter
@@ -2606,6 +2671,7 @@ export default function Calendar() {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          borderRadius: getInteractiveItemRadiusPx(theme),
                           border: isSelected ? 1 : "1px solid transparent",
                           borderColor: isSelected
                             ? "primary.main"
@@ -2695,11 +2761,21 @@ export default function Calendar() {
                         px: 1,
                         py: 0.5,
                         cursor: "pointer",
+                        borderRadius: getInteractiveItemRadiusPx(theme),
                         ...interactiveItemSx(theme),
                       })}
                     >
                       <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Box sx={{ width: 12, height: 12, backgroundColor: source.color }} />
+                        <Box
+                          sx={theme => ({
+                            width: 12,
+                            height: 12,
+                            borderRadius: "50%",
+                            backgroundColor: resolveThemeColor(theme, source.color),
+                            border: 1,
+                            borderColor: "divider",
+                          })}
+                        />
                         <Typography variant="body2">{source.name}</Typography>
                       </Stack>
                       <Checkbox
@@ -2749,12 +2825,15 @@ export default function Calendar() {
               }}
             >
               <Typography variant="h6">Editar tarefa</Typography>
-              <IconButton
-                onClick={handleCloseEdit}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <Tooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={handleCloseEdit}
+                  sx={{ color: "text.secondary" }}
+                  aria-label="Fechar"
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             <TextField
               label="Titulo"
@@ -3211,6 +3290,7 @@ export default function Calendar() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      borderRadius: getInteractiveItemRadiusPx(theme),
                       border: isSelected ? 1 : "1px solid transparent",
                       borderColor: isSelected ? "primary.main" : "transparent",
                       cursor: day ? "pointer" : "default",
@@ -3267,6 +3347,7 @@ export default function Calendar() {
                       p: 1.5,
                       borderColor: "divider",
                       cursor: "pointer",
+                      borderRadius: getInteractiveItemRadiusPx(theme),
                       ...interactiveItemSx(theme),
                     })}
                     onClick={() =>
@@ -3338,6 +3419,79 @@ export default function Calendar() {
             ),
           },
           {
+            key: "calendars",
+            title: "Calendários",
+            content: (
+              <Stack spacing={1.5}>
+                {calendarSources.map(source => (
+                  <Box
+                    key={source.id}
+                    sx={theme => ({
+                      p: 1.5,
+                      borderColor: "divider",
+                      ...interactiveItemSx(theme),
+                    })}
+                  >
+                    <Stack spacing={1.5}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Box
+                          sx={theme => ({
+                            width: 12,
+                            height: 12,
+                            borderRadius: "50%",
+                            flexShrink: 0,
+                            backgroundColor: resolveThemeColor(
+                              theme,
+                              coerceAllowedColor(source.color)
+                            ),
+                            border: 1,
+                            borderColor: "divider",
+                          })}
+                        />
+                        <TextField
+                          label="Nome"
+                          fullWidth
+                          value={source.name}
+                          onChange={event =>
+                            setCalendarSources(prev =>
+                              prev.map(item =>
+                                item.id === source.id
+                                  ? { ...item, name: event.target.value }
+                                  : item
+                              )
+                            )
+                          }
+                        />
+                      </Stack>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                      >
+                        <CategoryColorPicker
+                          value={coerceAllowedColor(source.color)}
+                          onChange={nextColor =>
+                            setCalendarSources(prev =>
+                              prev.map(item =>
+                                item.id === source.id
+                                  ? {
+                                      ...item,
+                                      color: coerceAllowedColor(nextColor),
+                                    }
+                                  : item
+                              )
+                            )
+                          }
+                        />
+                      </Stack>
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
+            ),
+          },
+          {
             key: "categories",
             title: "Categorias",
             content: (
@@ -3362,23 +3516,10 @@ export default function Calendar() {
                         flexWrap="wrap"
                         useFlexGap
                       >
-                        {DEFAULT_COLORS.map(color => (
-                          <Box
-                            key={color}
-                            onClick={() => setEditingCategoryColor(color)}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              
-                              backgroundColor: color,
-                              borderStyle: "solid",
-                              borderWidth:
-                                editingCategoryColor === color ? 2 : 1,
-                              borderColor: "divider",
-                              cursor: "pointer",
-                            }}
-                          />
-                        ))}
+                        <CategoryColorPicker
+                          value={editingCategoryColor}
+                          onChange={setEditingCategoryColor}
+                        />
                       </Stack>
                       <Stack
                         direction="row"
@@ -3429,22 +3570,10 @@ export default function Calendar() {
                         flexWrap="wrap"
                         useFlexGap
                       >
-                        {DEFAULT_COLORS.map(color => (
-                          <Box
-                            key={color}
-                            onClick={() => setNewCategoryColor(color)}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              
-                              backgroundColor: color,
-                              borderStyle: "solid",
-                              borderWidth: newCategoryColor === color ? 2 : 1,
-                              borderColor: "divider",
-                              cursor: "pointer",
-                            }}
-                          />
-                        ))}
+                        <CategoryColorPicker
+                          value={newCategoryColor}
+                          onChange={setNewCategoryColor}
+                        />
                       </Stack>
                       <Button
                         variant="outlined"

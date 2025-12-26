@@ -16,6 +16,7 @@ const AppCard = forwardRef<HTMLDivElement, PaperProps>(function AppCard(
           border: 1,
           borderColor: "divider",
           backgroundColor: "background.paper",
+          borderRadius: "var(--radius-card)",
         },
         ...(Array.isArray(sx) ? sx : [sx]),
       ].filter(Boolean)}

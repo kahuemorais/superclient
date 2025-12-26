@@ -9,6 +9,7 @@ import {
   MenuItem,
   Stack,
   TextField,
+  Tooltip as MuiTooltip,
   Typography,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -17,7 +18,7 @@ import {
   Bar,
   BarChart,
   ResponsiveContainer,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   XAxis,
   YAxis,
 } from "recharts";
@@ -377,7 +378,7 @@ export default function PipelineData() {
                     tick={{ fill: "#9aa6b2", fontSize: 12 }}
                   />
                   <YAxis tick={{ fill: "#9aa6b2", fontSize: 12 }} />
-                  <Tooltip
+                  <RechartsTooltip
                     formatter={(value, name) => {
                       if (name === "count") {
                         return [value, "Cards"];
@@ -477,12 +478,14 @@ export default function PipelineData() {
               }}
             >
               <Typography variant="h6">Editar oportunidade</Typography>
-              <IconButton
-                onClick={() => setEditingDeal(null)}
-                sx={{ color: "text.secondary" }}
-              >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
+              <MuiTooltip title="Fechar" placement="top">
+                <IconButton
+                  onClick={() => setEditingDeal(null)}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </MuiTooltip>
             </Box>
             <TextField
               label="Nome"
