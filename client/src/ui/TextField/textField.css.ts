@@ -70,7 +70,7 @@ export const labelRequired = style({
 export const inputWrapper = style({
   position: 'relative',
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'stretch',
   gap: '8px',
   backgroundColor: 'var(--sc-input-bg)',
   border: '1px solid var(--sc-input-border-default)',
@@ -114,6 +114,7 @@ export const inputWrapperDisabled = style({
 
 export const input = style({
   flex: '1 1 auto',
+  alignSelf: 'stretch',
   minWidth: 0,
   width: '100%',
   backgroundColor: 'transparent',
@@ -124,7 +125,7 @@ export const input = style({
   fontSize: '16px',
   fontFamily: 'inherit',
   lineHeight: '1.4375em',
-  padding: 0,
+  padding: '16.5px 0',
   height: 'auto',
   margin: 0,
   boxSizing: 'border-box',
