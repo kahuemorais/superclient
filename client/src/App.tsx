@@ -599,20 +599,6 @@ function App() {
                   variant="text"
                   onClick={() => setLocation(isLoggedIn ? "/home" : "/")}
                   startIcon={<AutoGraphRoundedIcon fontSize="small" />}
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 700,
-                    fontSize: "0.875rem",
-                    letterSpacing: "0.02857em",
-                    color: "primary.main",
-                    backgroundColor: "transparent",
-                    px: 1.75,
-                    py: 1.25,
-                    minWidth: "auto",
-                    "&:hover": {
-                      backgroundColor: "action.hover",
-                    },
-                  }}
                 >
                   Superclient
                 </Button>
