@@ -1032,6 +1032,8 @@ export default function Profile() {
                 >
                   <TextField
                     label={`Telefone ${index + 1}`}
+                    variant="outlined"
+                    size="medium"
                     fullWidth
                     value={phone}
                     onChange={event =>
@@ -1043,6 +1045,7 @@ export default function Profile() {
                       )
                     }
                     inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+                    sx={{ "& .MuiOutlinedInput-root": { height: 56 } }}
                   />
                   <IconButton onClick={() => removeListItem(setPhones, index)}>
                     <CloseRoundedIcon fontSize="small" />
@@ -1079,11 +1082,14 @@ export default function Profile() {
                 >
                   <TextField
                     label={`Email ${index + 1}`}
+                    variant="outlined"
+                    size="medium"
                     fullWidth
                     value={item}
                     onChange={event =>
                       updateListItem(setEmails, index, event.target.value)
                     }
+                    sx={{ "& .MuiOutlinedInput-root": { height: 56 } }}
                   />
                   <IconButton onClick={() => removeListItem(setEmails, index)}>
                     <CloseRoundedIcon fontSize="small" />
@@ -1117,11 +1123,14 @@ export default function Profile() {
                 >
                   <TextField
                     label={`Endereço ${index + 1}`}
+                    variant="outlined"
+                    size="medium"
                     fullWidth
                     value={address}
                     onChange={event =>
                       updateListItem(setAddresses, index, event.target.value)
                     }
+                    sx={{ "& .MuiOutlinedInput-root": { height: 56 } }}
                   />
                   <IconButton
                     component="a"
@@ -1172,6 +1181,8 @@ export default function Profile() {
                 >
                   <TextField
                     label={`Comentario ${index + 1}`}
+                    variant="outlined"
+                    size="medium"
                     fullWidth
                     multiline
                     minRows={2}
