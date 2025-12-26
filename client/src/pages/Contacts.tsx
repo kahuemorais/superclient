@@ -969,7 +969,6 @@ export default function Contacts() {
               <div className={contactStyles.searchWrap}>
                 <TextField
                   className={contactStyles.searchFill}
-                  placeholder="Buscar contatos"
                   label="Buscar contatos"
                   variant="outlined"
                   size="medium"

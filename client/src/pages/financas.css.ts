@@ -19,7 +19,6 @@ export const filtersRow = style({
 export const searchWrap = style({
   flex: "1 1 420px",
   minWidth: "240px",
-  overflow: "hidden",
   boxSizing: "border-box",
   "@media": {
     "(min-width: 960px)": {

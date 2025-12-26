@@ -947,7 +947,6 @@ export default function Financas() {
           <div className={financasStyles.searchWrap}>
             <TextField
               className={financasStyles.searchFill}
-              placeholder="Buscar gastos"
               label="Buscar gastos"
               variant="outlined"
               size="medium"
