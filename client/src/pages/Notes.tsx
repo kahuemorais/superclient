@@ -18,6 +18,8 @@ import {
   Dialog,
   DialogContent,
   IconButton,
+  Menu,
+  MenuItem,
   InputAdornment,
   List,
   ListItemButton,
@@ -37,7 +39,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import FormatBoldRoundedIcon from "@mui/icons-material/FormatBoldRounded";
@@ -502,6 +504,43 @@ const defaultNoteFieldSettings = {
   showEditorToolbar: false,
 };
 
+const formatDateTimePtBr = (value: string) => {
+  try {
+    return new Date(value).toLocaleString("pt-BR");
+  } catch {
+    return value;
+  }
+};
+
+const safeFilename = (value: string) =>
+  (value || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, " ")
+    .slice(0, 80) || "nota";
+
+const htmlToPlainText = (html: string) => {
+  try {
+    const doc = new DOMParser().parseFromString(html || "", "text/html");
+    const text = doc.body?.innerText || "";
+    return text.replace(/\n{3,}/g, "\n\n").trim();
+  } catch {
+    return (html || "").replace(/<[^>]*>/g, "").trim();
+  }
+};
+
+const downloadTextFile = (opts: { filename: string; content: string; mime: string }) => {
+  const blob = new Blob([opts.content], { type: opts.mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = opts.filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
+
 export default function Notes() {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
@@ -518,6 +557,12 @@ export default function Notes() {
   const [settingsAccordion, setSettingsAccordion] = useState<
     "display" | false
   >(false);
+
+  const [noteMenuAnchorEl, setNoteMenuAnchorEl] = useState<HTMLElement | null>(
+    null
+  );
+  const noteMenuOpen = Boolean(noteMenuAnchorEl);
+
   const [fieldSettings, setFieldSettings] = useState({
     ...defaultNoteFieldSettings,
   });
@@ -1178,9 +1223,15 @@ export default function Notes() {
               border: 1,
               borderColor: "transparent",
               backgroundColor: isActive ? "action.hover" : undefined,
+              minWidth: 0,
             })}
           >
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{ minWidth: 0, flex: 1 }}
+            >
               <Box
                 sx={{
                   width: 24,
@@ -1267,9 +1318,15 @@ export default function Notes() {
             border: 1,
             borderColor: "transparent",
             backgroundColor: isActive ? "action.hover" : undefined,
+            minWidth: 0,
           })}
         >
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            sx={{ minWidth: 0, flex: 1 }}
+          >
             <Box
               sx={{
                 width: 24,
@@ -1631,7 +1688,13 @@ export default function Notes() {
             {selectedNote ? (
               <CardSection
                 size="xs"
-                sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: 1,
+                  minHeight: 0,
+                  border: 0,
+                }}
               >
                 <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
                   <Stack spacing={2}>
@@ -1776,6 +1839,7 @@ export default function Notes() {
                       </Popper>
                       <MuiTextField
                         label="Titulo"
+                        variant="standard"
                         value={selectedNote.title}
                         onChange={event =>
                           updateNote({
@@ -1785,6 +1849,7 @@ export default function Notes() {
                           })
                         }
                         fullWidth
+                        InputProps={{ disableUnderline: true }}
                         sx={{
                           "& .MuiInputBase-root": {
                             height: 56,
@@ -1795,50 +1860,119 @@ export default function Notes() {
                             fontWeight: 600,
                             lineHeight: 1.25,
                           },
+                          "& .MuiInputBase-root:before, & .MuiInputBase-root:after": {
+                            display: "none",
+                          },
                         }}
                       />
-                      <Stack direction="row" alignItems="center">
-                        <Tooltip
-                          title={
+                      <Tooltip title="Opções" placement="top">
+                        <IconButton
+                          size="small"
+                          aria-label="Opções da nota"
+                          onClick={event => setNoteMenuAnchorEl(event.currentTarget)}
+                          sx={{ color: "text.secondary" }}
+                        >
+                          <MoreVertRoundedIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+
+                    <Menu
+                      anchorEl={noteMenuAnchorEl}
+                      open={noteMenuOpen}
+                      onClose={() => setNoteMenuAnchorEl(null)}
+                      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                      transformOrigin={{ vertical: "top", horizontal: "right" }}
+                    >
+                      <MenuItem disabled>
+                        <ListItemText
+                          primary={`Criada: ${formatDateTimePtBr(selectedNote.createdAt)}`}
+                          secondary={`Atualizada: ${formatDateTimePtBr(selectedNote.updatedAt)}`}
+                        />
+                      </MenuItem>
+                      <Divider />
+                      <MenuItem
+                        onClick={() => {
+                          toggleFavorite(selectedNote.id);
+                          setNoteMenuAnchorEl(null);
+                        }}
+                      >
+                        <ListItemText
+                          primary={
                             selectedNote.favorite
                               ? "Remover dos favoritos"
                               : "Marcar como favorito"
                           }
-                          placement="top"
+                        />
+                      </MenuItem>
+                      <Divider />
+                      <MenuItem
+                        disabled
+                        sx={{ opacity: 1, cursor: "default" }}
+                        onClick={event => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", fontWeight: 700, letterSpacing: 0.3 }}
                         >
-                          <IconButton
-                            size="small"
-                            onClick={() => toggleFavorite(selectedNote.id)}
-                            sx={{
-                              color: selectedNote.favorite
-                                ? "text.primary"
-                                : "text.secondary",
-                            }}
-                            aria-label={
-                              selectedNote.favorite
-                                ? "Remover favorito"
-                                : "Marcar favorito"
-                            }
-                          >
-                            {selectedNote.favorite ? (
-                              <StarRoundedIcon fontSize="small" />
-                            ) : (
-                              <StarBorderRoundedIcon fontSize="small" />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip
-                          title={`Criada em ${new Date(selectedNote.createdAt).toLocaleString(
-                            "pt-BR"
-                          )}`}
-                          placement="top"
-                        >
-                          <IconButton size="small" sx={{ color: "text.secondary" }}>
-                            <InfoOutlinedIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    </Stack>
+                          Exportar
+                        </Typography>
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          setNoteMenuAnchorEl(null);
+                          const title = `${selectedNote.emoji || ""} ${selectedNote.title || ""}`.trim();
+                          const html = `<!doctype html><html><head><meta charset=\"utf-8\"/><title>${title}</title><style>body{font-family:Arial,sans-serif;padding:24px;}h1{font-size:20px;margin:0 0 12px;} .meta{color:#666;font-size:12px;margin-bottom:16px;} img{max-width:100%;}</style></head><body><h1>${title}</h1><div class=\"meta\">Criada: ${formatDateTimePtBr(selectedNote.createdAt)} | Atualizada: ${formatDateTimePtBr(selectedNote.updatedAt)}</div>${selectedNote.contentHtml || ""}</body></html>`;
+                          const w = window.open("", "_blank", "noopener,noreferrer");
+                          if (!w) return;
+                          w.document.open();
+                          w.document.write(html);
+                          w.document.close();
+                          w.focus();
+                          w.print();
+                        }}
+                      >
+                        <ListItemText
+                          primary="PDF"
+                          secondary="(usar Imprimir / Salvar como PDF)"
+                        />
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          setNoteMenuAnchorEl(null);
+                          const base = safeFilename(selectedNote.title || "nota");
+                          const content = htmlToPlainText(selectedNote.contentHtml || "");
+                          downloadTextFile({
+                            filename: `${base}.txt`,
+                            content,
+                            mime: "text/plain;charset=utf-8",
+                          });
+                        }}
+                      >
+                        <ListItemText primary="TXT" />
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          setNoteMenuAnchorEl(null);
+                          const base = safeFilename(selectedNote.title || "nota");
+                          const titleLine = `# ${(selectedNote.emoji || "").trim()} ${(selectedNote.title || "Nota").trim()}`
+                            .replace(/\s+/g, " ")
+                            .trim();
+                          const body = htmlToPlainText(selectedNote.contentHtml || "");
+                          const md = `${titleLine}\n\n${body}\n`;
+                          downloadTextFile({
+                            filename: `${base}.md`,
+                            content: md,
+                            mime: "text/markdown;charset=utf-8",
+                          });
+                        }}
+                      >
+                        <ListItemText primary="Markdown" />
+                      </MenuItem>
+                    </Menu>
                   </Stack>
 
                   {fieldSettings.showLinks ? (
@@ -1990,6 +2124,7 @@ export default function Notes() {
                     }
                     placeholder=""
                     showToolbar={Boolean(fieldSettings.showEditorToolbar)}
+                    showBorder={false}
                     onNavigate={href => setLocation(href)}
                     onCreateChildPage={() => createChildNote(selectedNote)}
                     noteEmoji={"😊"}

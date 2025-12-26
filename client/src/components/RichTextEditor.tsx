@@ -276,6 +276,7 @@ export type RichTextEditorProps = {
   autoFocus?: boolean;
 
   showToolbar?: boolean;
+  showBorder?: boolean;
 
   onNavigate?: (href: string) => void;
   onCreateChildPage?: () => ChildPage;
@@ -307,6 +308,7 @@ export default function RichTextEditor({
   placeholder,
   autoFocus,
   showToolbar = true,
+  showBorder = true,
   onNavigate,
   onCreateChildPage,
   noteEmoji,
@@ -984,9 +986,11 @@ export default function RichTextEditor({
       ) : null}
 
       <Paper
-        variant="outlined"
+        variant={showBorder ? "outlined" : "elevation"}
+        elevation={0}
         sx={theme => ({
           overflow: "hidden",
+          ...(showBorder ? null : { border: 0 }),
           flex: 1,
           minHeight: 0,
           display: "flex",
