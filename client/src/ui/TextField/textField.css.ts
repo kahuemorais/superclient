@@ -1,9 +1,14 @@
 import { style } from '@vanilla-extract/css';
 
-// Label transform constants (MUI-aligned)
+// Label transform constants derived from MUI TextField outlined Material 3
+// Measured from getComputedStyle on MUI default state
 const LABEL_DEFAULT_FONT_SIZE = '16px';
 const LABEL_SCALE = 0.75;
-const LABEL_ANCHOR_LEFT = '16px';
+// Default state: label positioned at input padding position
+const LABEL_DEFAULT_TRANSLATE_X = '14px';
+const LABEL_DEFAULT_TRANSLATE_Y = '16px';
+// Shrink state: label moves up and scales
+const LABEL_SHRINK_TRANSLATE_X = '14px';
 const LABEL_SHRINK_TRANSLATE_Y = '-9px';
 
 export const textFieldContainer = style({
@@ -27,9 +32,9 @@ export const label = style({
 
 export const labelFloating = style({
   position: 'absolute',
-  left: LABEL_ANCHOR_LEFT,
-  top: '16px',
-  transform: 'translate(0, 0) scale(1)',
+  left: 0,
+  top: 0,
+  transform: `translate(${LABEL_DEFAULT_TRANSLATE_X}, ${LABEL_DEFAULT_TRANSLATE_Y}) scale(1)`,
   transformOrigin: 'top left',
   fontSize: LABEL_DEFAULT_FONT_SIZE,
   lineHeight: 1,
@@ -47,7 +52,7 @@ export const labelFloating = style({
 });
 
 export const labelRaised = style({
-  transform: `translate(0, ${LABEL_SHRINK_TRANSLATE_Y}) scale(${LABEL_SCALE})`,
+  transform: `translate(${LABEL_SHRINK_TRANSLATE_X}, ${LABEL_SHRINK_TRANSLATE_Y}) scale(${LABEL_SCALE})`,
   fontSize: LABEL_DEFAULT_FONT_SIZE,
   color: 'var(--sc-input-label-color)',
   backgroundColor: 'var(--sc-input-bg)',

@@ -40,6 +40,7 @@ import Notifications from "./pages/Notifications";
 import Calendar from "./pages/Calendar";
 import CalendarCompleted from "./pages/CalendarCompleted";
 import Notes from "./pages/Notes";
+import { TextFieldDiagnostic } from "./pages/TextFieldDiagnostic";
 import AppBreadcrumbRow from "./components/AppBreadcrumbRow";
 import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 
@@ -785,6 +786,7 @@ function App() {
                   <Route path="/profile" component={Profile} />
                   <Route path="/access" component={AccessManagement} />
                   <Route path="/support" component={Support} />
+                  <Route path="/textfield-diagnostic" component={TextFieldDiagnostic} />
                   <Route path="/pipeline/dados" component={PipelineData} />
                   <Route path="/pipeline" component={Pipeline} />
                   <Route path="/financas" component={Financas} />
