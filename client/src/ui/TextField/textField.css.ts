@@ -21,7 +21,7 @@ export const label = style({
 
 export const labelFloating = style({
   position: 'absolute',
-  left: '12px',
+  left: '16px',
   top: '50%',
   transform: 'translateY(-50%)',
   transformOrigin: 'top left',
@@ -29,12 +29,12 @@ export const labelFloating = style({
   lineHeight: 1,
   color: 'var(--sc-input-placeholder-color)',
   pointerEvents: 'none',
-  transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1), font-size 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+  transition: 'transform 200ms cubic-bezier(0.0, 0, 0.2, 1), color 200ms cubic-bezier(0.0, 0, 0.2, 1)',
   backgroundColor: 'transparent',
-  paddingInline: '4px',
-  marginLeft: '-4px',
+  paddingInline: '6px',
+  marginLeft: '-6px',
   zIndex: 1,
-  maxWidth: 'calc(100% - 24px)',
+  maxWidth: 'calc(100% - 32px)',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
@@ -42,9 +42,10 @@ export const labelFloating = style({
 
 export const labelRaised = style({
   transform: 'translateY(-28px) scale(0.75)',
-  fontSize: '16px',
   color: 'var(--sc-input-label-color)',
   backgroundColor: 'var(--sc-input-bg)',
+  paddingInline: '8px',
+  marginLeft: '-8px',
 });
 
 export const labelRequired = style({
@@ -62,9 +63,10 @@ export const inputWrapper = style({
   backgroundColor: 'var(--sc-input-bg)',
   border: '1px solid var(--sc-input-border-default)',
   borderRadius: 'var(--sc-input-radius)',
-  padding: '0 var(--sc-input-padding-x)',
+  padding: '0 16px',
   minHeight: '56px',
-  transition: 'border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+  boxSizing: 'border-box',
+  transition: 'border-color 200ms cubic-bezier(0.0, 0, 0.2, 1)',
   
   ':hover': {
     borderColor: 'var(--sc-input-border-hover)',
@@ -72,7 +74,7 @@ export const inputWrapper = style({
   
   ':focus-within': {
     borderColor: 'var(--sc-input-border-focus)',
-    boxShadow: '0 0 0 3px var(--sc-input-focus-ring)',
+    outline: 'none',
   },
 });
 
@@ -85,7 +87,6 @@ export const inputWrapperError = style({
   
   ':focus-within': {
     borderColor: 'var(--sc-input-border-error)',
-    boxShadow: '0 0 0 3px color-mix(in srgb, var(--sc-input-error-color) 20%, transparent)',
   },
 });
 
@@ -103,15 +104,25 @@ export const input = style({
   flex: 1,
   minWidth: 0,
   backgroundColor: 'transparent',
-  border: 'none',
-  outline: 'none',
+  border: '0',
+  outline: '0',
+  boxShadow: 'none',
   color: 'var(--sc-input-text-color)',
   fontSize: '16px',
-  lineHeight: 1.5,
+  lineHeight: '24px',
   padding: '16px 0',
+  height: 'auto',
+  boxSizing: 'border-box',
   
   '::placeholder': {
     color: 'transparent',
+    opacity: 0,
+  },
+  
+  ':focus': {
+    border: '0',
+    outline: '0',
+    boxShadow: 'none',
   },
   
   ':disabled': {
