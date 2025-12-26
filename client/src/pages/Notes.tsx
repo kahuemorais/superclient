@@ -1412,7 +1412,7 @@ export default function Notes() {
         <SettingsIconButton onClick={() => setSettingsOpen(true)} />
       </Stack>
     ),
-    [addNote, archiveLink.href, archiveLink.label]
+    [addNote, archiveLink.href, archiveLink.label, showSearch, setShowSearch, setNoteQuery]
   );
 
   return (
