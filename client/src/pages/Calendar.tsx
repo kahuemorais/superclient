@@ -1386,6 +1386,30 @@ export default function Calendar() {
       month: "short",
     });
 
+  const formatTaskRelativeDateLabel = (dateKey?: string) => {
+    if (!dateKey) {
+      return "";
+    }
+    const date = parseDateKey(dateKey);
+    date.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.round(
+      (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (diffDays === 0) {
+      return "today";
+    }
+    if (diffDays > 0 && diffDays < 7) {
+      const label = date.toLocaleDateString("pt-BR", { weekday: "long" });
+      return label
+        ? label.charAt(0).toUpperCase() + label.slice(1)
+        : label;
+    }
+    return date.toLocaleDateString("pt-BR");
+  };
+
   const handleOpenEditForTask = (task: CalendarTask) => {
     setDraftTask({ ...task });
     setEditCameFromView(false);
@@ -2165,6 +2189,7 @@ export default function Calendar() {
                           const taskCategory = taskCategoryId
                             ? categories.find(cat => cat.id === taskCategoryId)
                             : null;
+                          const taskDateLabel = formatTaskRelativeDateLabel(task.date);
 
                           return (
                             <DraggableTaskCard
@@ -2234,17 +2259,30 @@ export default function Calendar() {
                                   </Typography>
                                 </Stack>
 
-                                {subtaskCount > 0 ? (
-                                  <Typography
-                                    variant="caption"
-                                    sx={{
-                                      color: "text.secondary",
-                                      pl: 4.5,
-                                      lineHeight: 1.2,
-                                    }}
+                                {taskDateLabel || subtaskCount > 0 ? (
+                                  <Stack
+                                    direction="row"
+                                    spacing={1.25}
+                                    alignItems="center"
+                                    sx={{ pl: 4.5, lineHeight: 1.2 }}
                                   >
-                                    {subtaskCount} subtarefas
-                                  </Typography>
+                                    {taskDateLabel ? (
+                                      <Typography
+                                        variant="caption"
+                                        sx={{ color: "text.secondary" }}
+                                      >
+                                        {taskDateLabel}
+                                      </Typography>
+                                    ) : null}
+                                    {subtaskCount > 0 ? (
+                                      <Typography
+                                        variant="caption"
+                                        sx={{ color: "text.secondary" }}
+                                      >
+                                        {subtaskCount} subtarefas
+                                      </Typography>
+                                    ) : null}
+                                  </Stack>
                                 ) : null}
                               </Stack>
                             </DraggableTaskCard>
