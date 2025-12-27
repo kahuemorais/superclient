@@ -207,6 +207,74 @@ const parseDateKey = (value: string) => {
   return new Date(year, month - 1, day);
 };
 
+const extractInlineTaskDate = (rawTitle: string) => {
+  const original = rawTitle;
+  const trimmed = original.trim();
+  if (!trimmed) {
+    return { title: original, date: null as Date | null };
+  }
+
+  const dateMatch = trimmed.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/);
+  if (dateMatch) {
+    const day = Number(dateMatch[1]);
+    const month = Number(dateMatch[2]);
+    const year = Number(dateMatch[3]);
+    const candidate = new Date(year, month - 1, day);
+    if (
+      candidate.getFullYear() === year &&
+      candidate.getMonth() === month - 1 &&
+      candidate.getDate() === day
+    ) {
+      const nextTitle = trimmed
+        .replace(dateMatch[0], " ")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      candidate.setHours(0, 0, 0, 0);
+      return { title: nextTitle, date: candidate };
+    }
+  }
+
+  const normalize = (value: string) =>
+    value
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+  const weekdayRegex =
+    /\b(dom(ingo)?|seg(unda)?|ter(ca|ça)?|qua(rta)?|qui(nta)?|sex(ta)?|sab(ado)?|s[aá]b(ado)?|s[aá]b|s[aá]bado)\b/i;
+
+  const weekdayMatch = trimmed.match(weekdayRegex);
+  if (weekdayMatch) {
+    const token = normalize(weekdayMatch[0]);
+    const targetDow = (() => {
+      if (token.startsWith("dom")) return 0;
+      if (token.startsWith("seg")) return 1;
+      if (token.startsWith("ter")) return 2;
+      if (token.startsWith("qua")) return 3;
+      if (token.startsWith("qui")) return 4;
+      if (token.startsWith("sex")) return 5;
+      if (token.startsWith("sab")) return 6;
+      return null;
+    })();
+
+    if (targetDow != null) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const candidate = new Date(today);
+      while (candidate.getDay() !== targetDow) {
+        candidate.setDate(candidate.getDate() + 1);
+      }
+      const nextTitle = trimmed
+        .replace(weekdayRegex, " ")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      return { title: nextTitle, date: candidate };
+    }
+  }
+
+  return { title: original, date: null as Date | null };
+};
+
 const getCalendarDays = (base: Date) => {
   const start = new Date(base.getFullYear(), base.getMonth(), 1);
   const end = new Date(base.getFullYear(), base.getMonth() + 1, 0);
@@ -433,6 +501,22 @@ const InlineAddTaskRow = memo(function InlineAddTaskRow({
   onFocusChange: (focused: boolean) => void;
 }) {
   const [draftTitle, setDraftTitle] = useState("");
+
+  const handleSubmit = () => {
+    const parsed = extractInlineTaskDate(draftTitle);
+    const nextTitle = parsed.title;
+    const nextDateKey = parsed.date ? formatDateKey(parsed.date) : dateKey;
+
+    if (nextTitle !== draftTitle) {
+      setDraftTitle(nextTitle);
+    }
+
+    const added = onAdd(nextDateKey, nextTitle);
+    if (added) {
+      setDraftTitle("");
+    }
+  };
+
   return (
     <AppCard
       elevation={0}
@@ -473,10 +557,7 @@ const InlineAddTaskRow = memo(function InlineAddTaskRow({
             onKeyDown={event => {
               if (event.key === "Enter") {
                 event.preventDefault();
-                const added = onAdd(dateKey, draftTitle);
-                if (added) {
-                  setDraftTitle("");
-                }
+                handleSubmit();
               }
             }}
             fullWidth
@@ -502,12 +583,7 @@ const InlineAddTaskRow = memo(function InlineAddTaskRow({
             event.preventDefault();
           }}
           onPointerDownCapture={event => event.stopPropagation()}
-          onClick={() => {
-            const added = onAdd(dateKey, draftTitle);
-            if (added) {
-              setDraftTitle("");
-            }
-          }}
+          onClick={handleSubmit}
           size="small"
           sx={{
             p: 0.5,
