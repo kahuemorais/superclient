@@ -23,12 +23,12 @@ import CardSection from "../components/layout/CardSection";
 
 const highlights = [
   {
-    title: "Pipeline visual",
-    desc: "Arraste negócios entre etapas. Veja o que está parado e o que avança.",
+    title: "Tarefas (agenda)",
+    desc: "Planeje seus dias, conclua tarefas e acompanhe o que ficou pendente.",
   },
   {
-    title: "Agenda integrada",
-    desc: "Lembretes, tarefas e follow-ups no mesmo lugar que suas vendas.",
+    title: "Notas",
+    desc: "Crie, aninhe, duplique, arquive e importe arquivos direto nas notas.",
   },
   {
     title: "Controle financeiro",
@@ -37,6 +37,14 @@ const highlights = [
   {
     title: "Contatos organizados",
     desc: "Campos personalizados, categorias e histórico em cada ficha.",
+  },
+  {
+    title: "Pipeline",
+    desc: "Organize negociações e próximos passos em etapas e mova com drag & drop.",
+  },
+  {
+    title: "Dashboard",
+    desc: "Visão geral do seu dia e do seu trabalho em um só lugar.",
   },
 ];
 
@@ -279,13 +287,13 @@ export default function Login() {
       <Box sx={{ pr: { md: 4 } }}>
         <Stack spacing={2.5}>
           <Typography variant="h3" sx={{ fontWeight: 700 }}>
-            Tenha clareza do que fazer a cada etapa.
+            Work and life management, sem fricção.
           </Typography>
           <Typography
             variant="body1"
             sx={{ color: "text.secondary", fontSize: 18 }}
           >
-            Pipeline, agenda, finanças e contatos no mesmo lugar para você vender com mais consistência e acompanhar o que ficou pendente.
+            O Superclient é um aplicativo de work and life management: tarefas (agenda), notas, pipeline, finanças e contatos no mesmo lugar — para você ter clareza do que fazer hoje e do que vem depois.
           </Typography>
           <Box
             sx={{
@@ -316,13 +324,13 @@ export default function Login() {
             </Typography>
             <Stack spacing={1.25}>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                • Registro de leads, tarefas e próximos passos em um só lugar.
+                  • Tudo que você precisa para tocar trabalho e vida em um fluxo só.
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                • Visibilidade do que está parado e do que precisa de atenção.
+                  • Tarefas por dia, notas para organizar contexto e finanças para fechar o mês.
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                • Menos planilhas e menos troca de abas durante o dia.
+                  • Menos planilhas e menos troca de abas durante o dia.
               </Typography>
             </Stack>
           </CardSection>
