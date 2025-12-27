@@ -2351,6 +2351,21 @@ export default function Calendar() {
               </Stack>
             </Box>
             <Stack spacing={1.5}>
+              {calendarSettings.showCategories &&
+              viewingTask?.categoryIds?.length ? (
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {viewingTask.categoryIds
+                    .map(id => categories.find(cat => cat.id === id))
+                    .filter((cat): cat is Category => Boolean(cat))
+                    .map(cat => (
+                      <CategoryChip
+                        key={cat.id}
+                        label={cat.name}
+                        categoryColor={cat.color}
+                      />
+                    ))}
+                </Stack>
+              ) : null}
               {calendarSettings.showLocation && viewingTask?.location ? (
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
                   {viewingTask.location}
@@ -2380,21 +2395,6 @@ export default function Calendar() {
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
                   Notificação: {viewingTask?.notification || "app"}
                 </Typography>
-              ) : null}
-              {calendarSettings.showCategories &&
-              viewingTask?.categoryIds?.length ? (
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {viewingTask.categoryIds
-                    .map(id => categories.find(cat => cat.id === id))
-                    .filter((cat): cat is Category => Boolean(cat))
-                    .map(cat => (
-                      <CategoryChip
-                        key={cat.id}
-                        label={cat.name}
-                        categoryColor={cat.color}
-                      />
-                    ))}
-                </Stack>
               ) : null}
               {calendarSettings.showDescription &&
               viewingTask?.descriptionHtml ? (
