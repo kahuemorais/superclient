@@ -2004,7 +2004,7 @@ export default function Calendar() {
             }}
           >
             <CardSection size="xs">
-              <Stack spacing={1.5}>
+              <Stack spacing={2}>
                 <Stack
                   direction="row"
                   alignItems="center"
@@ -2013,21 +2013,21 @@ export default function Calendar() {
                   <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                     Categorias
                   </Typography>
-                  <Tooltip title="Buscar tarefas" placement="bottom">
-                    <IconButton
-                      size="small"
-                      aria-label="Buscar tarefas"
-                      onClick={() => {
-                        const next = !showTaskSearch;
-                        setShowTaskSearch(next);
-                        if (!next) {
-                          setTaskQuery("");
-                        }
-                      }}
-                    >
-                      <SearchRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => {
+                      const next = !showTaskSearch;
+                      setShowTaskSearch(next);
+                      if (!next) {
+                        setTaskQuery("");
+                      }
+                    }}
+                    startIcon={<SearchRoundedIcon fontSize="small" />}
+                    sx={{ textTransform: "none", fontWeight: 600, minWidth: 0 }}
+                  >
+                    Busca
+                  </Button>
                 </Stack>
 
                 {showTaskSearch ? (
@@ -2066,13 +2066,7 @@ export default function Calendar() {
                     }}
                   />
                 ) : null}
-              </Stack>
-            </CardSection>
-            <CardSection size="xs">
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Categorias
-                </Typography>
+
                 <Stack spacing={0.5}>
                   <Box
                     onClick={() => setCategoryFilter([])}
@@ -2089,9 +2083,10 @@ export default function Calendar() {
                         selectedCategoryId === "" ? theme.palette.action.selected : undefined,
                     })}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      Todas
-                    </Typography>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box sx={{ width: 12, height: 12 }} />
+                      <Typography variant="body2">Todas</Typography>
+                    </Stack>
                   </Box>
                   {categories.map(cat => (
                     <Box
@@ -2128,15 +2123,12 @@ export default function Calendar() {
                     </Box>
                   ))}
                 </Stack>
-              </Stack>
-            </CardSection>
 
-            {isCategoryListMode ? null : (
-              <CardSection size="xs">
-                <Stack spacing={1.5}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Tarefas
-                  </Typography>
+                {isCategoryListMode ? null : (
+                  <Stack spacing={1.5}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Tarefas
+                    </Typography>
 
                   <Stack
                     direction="row"
@@ -2283,9 +2275,10 @@ export default function Calendar() {
                       );
                     })}
                   </Box>
-                </Stack>
-              </CardSection>
-            )}
+                  </Stack>
+                )}
+              </Stack>
+            </CardSection>
           </Stack>
 
           <Stack spacing={{ xs: 2, md: 2.5 }}>
@@ -2918,20 +2911,21 @@ export default function Calendar() {
                   Categorias
               </Typography>
               <Stack direction="row" spacing={0.5} alignItems="center">
-                <Tooltip title="Buscar tarefas" placement="top">
-                  <IconButton
-                    onClick={() => {
-                      const next = !showTaskSearch;
-                      setShowTaskSearch(next);
-                      if (!next) {
-                        setTaskQuery("");
-                      }
-                    }}
-                    aria-label="Buscar tarefas"
-                  >
-                    <SearchRoundedIcon />
-                  </IconButton>
-                </Tooltip>
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => {
+                    const next = !showTaskSearch;
+                    setShowTaskSearch(next);
+                    if (!next) {
+                      setTaskQuery("");
+                    }
+                  }}
+                  startIcon={<SearchRoundedIcon />}
+                  sx={{ textTransform: "none", fontWeight: 600, minWidth: 0 }}
+                >
+                  Busca
+                </Button>
                 <Tooltip title="Fechar" placement="top">
                   <IconButton
                     onClick={() => setMobileSidebarOpen(false)}
@@ -2981,10 +2975,7 @@ export default function Calendar() {
             ) : null}
 
             <CardSection size="xs">
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Categorias
-                </Typography>
+              <Stack spacing={2}>
                 <Stack spacing={0.5}>
                   <Box
                     onClick={() => setCategoryFilter([])}
@@ -3001,9 +2992,10 @@ export default function Calendar() {
                         selectedCategoryId === "" ? theme.palette.action.selected : undefined,
                     })}
                   >
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      Todas
-                    </Typography>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box sx={{ width: 12, height: 12 }} />
+                      <Typography variant="body2">Todas</Typography>
+                    </Stack>
                   </Box>
                   {categories.map(cat => (
                     <Box
@@ -3043,167 +3035,165 @@ export default function Calendar() {
                     </Box>
                   ))}
                 </Stack>
-              </Stack>
-            </CardSection>
 
-            {isCategoryListMode ? null : (
-              <CardSection size="xs">
-                <Stack spacing={1.5}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Tarefas
-                  </Typography>
-
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <IconButton
-                      size="small"
-                      onClick={() =>
-                        setMiniCalendarMonth(
-                          new Date(
-                            miniCalendarMonth.getFullYear(),
-                            miniCalendarMonth.getMonth() - 1,
-                            1
-                          )
-                        )
-                      }
-                      aria-label="Mês anterior"
-                    >
-                      <ChevronLeftRoundedIcon fontSize="small" />
-                    </IconButton>
-
+                {isCategoryListMode ? null : (
+                  <Stack spacing={1.5}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                      {monthLabels[miniCalendarMonth.getMonth()]}{" "}
-                      {miniCalendarMonth.getFullYear()}
+                      Tarefas
                     </Typography>
 
-                    <IconButton
-                      size="small"
-                      onClick={() =>
-                        setMiniCalendarMonth(
-                          new Date(
-                            miniCalendarMonth.getFullYear(),
-                            miniCalendarMonth.getMonth() + 1,
-                            1
-                          )
-                        )
-                      }
-                      aria-label="Próximo mês"
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
                     >
-                      <ChevronRightRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-
-                  <Stack spacing={1}>
-                    <Autocomplete
-                      freeSolo
-                      options={miniCalendarYearOptions}
-                      getOptionLabel={option => String(option)}
-                      value={miniCalendarMonth.getFullYear()}
-                      inputValue={miniCalendarYearInput}
-                      onInputChange={(_, value) => setMiniCalendarYearInput(value)}
-                      onChange={(_, value) => {
-                        const parsed = parseYearInput(value);
-                        if (parsed == null) {
-                          return;
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setMiniCalendarMonth(
+                            new Date(
+                              miniCalendarMonth.getFullYear(),
+                              miniCalendarMonth.getMonth() - 1,
+                              1
+                            )
+                          )
                         }
-                        setMiniCalendarYear(parsed);
-                        setMobileSidebarOpen(false);
-                      }}
-                      renderInput={params => (
-                        <TextField
-                          {...params}
-                          label="Ano"
-                          size="small"
-                          onFocus={() => setIsMiniCalendarYearEditing(true)}
-                          onBlur={() => {
-                            setIsMiniCalendarYearEditing(false);
-                            const parsed = parseYearInput(miniCalendarYearInput);
-                            if (parsed == null) {
-                              setMiniCalendarYearInput(
-                                String(miniCalendarMonth.getFullYear())
-                              );
-                              return;
-                            }
-                            setMiniCalendarYear(parsed);
-                            setMobileSidebarOpen(false);
-                          }}
-                        />
-                      )}
-                    />
-                  </Stack>
-
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(7, 1fr)",
-                      gap: 0.5,
-                    }}
-                  >
-                    {weekLabels.map((label, index) => (
-                      <Typography
-                        key={`mini-mobile-weekday-${index}`}
-                        variant="caption"
-                        sx={{ textAlign: "center", color: "text.secondary" }}
+                        aria-label="Mês anterior"
                       >
-                        {label}
-                      </Typography>
-                    ))}
-                    {getCalendarDays(miniCalendarMonth).map((day, index) => {
-                      const selectedKey = formatDateKey(selectedDate);
-                      const dayKey = day ? formatDateKey(day) : "";
-                      const isSelected = Boolean(day && dayKey === selectedKey);
-                      const hasTasks = Boolean(day && tasksByDate.has(dayKey));
+                        <ChevronLeftRoundedIcon fontSize="small" />
+                      </IconButton>
 
-                      return (
-                        <Box
-                          key={`mini-mobile-${day ? day.toISOString() : "empty"}-${index}`}
-                          onClick={() => {
-                            if (!day) {
-                              return;
-                            }
-                            const next = new Date(day);
-                            next.setHours(0, 0, 0, 0);
-                            setSelectedDate(next);
-                            setMobileSidebarOpen(false);
-                          }}
-                          sx={theme => ({
-                            ...interactiveItemSx(theme),
-                            height: 32,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: getInteractiveItemRadiusPx(theme),
-                            border: isSelected ? 1 : "1px solid transparent",
-                            borderColor: isSelected ? "primary.main" : "transparent",
-                            cursor: day ? "pointer" : "default",
-                            color: isSelected ? "primary.main" : "text.secondary",
-                            fontWeight: isSelected ? 600 : 500,
-                            position: "relative",
-                          })}
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {monthLabels[miniCalendarMonth.getMonth()]}{" "}
+                        {miniCalendarMonth.getFullYear()}
+                      </Typography>
+
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setMiniCalendarMonth(
+                            new Date(
+                              miniCalendarMonth.getFullYear(),
+                              miniCalendarMonth.getMonth() + 1,
+                              1
+                            )
+                          )
+                        }
+                        aria-label="Próximo mês"
+                      >
+                        <ChevronRightRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+
+                    <Stack spacing={1}>
+                      <Autocomplete
+                        freeSolo
+                        options={miniCalendarYearOptions}
+                        getOptionLabel={option => String(option)}
+                        value={miniCalendarMonth.getFullYear()}
+                        inputValue={miniCalendarYearInput}
+                        onInputChange={(_, value) => setMiniCalendarYearInput(value)}
+                        onChange={(_, value) => {
+                          const parsed = parseYearInput(value);
+                          if (parsed == null) {
+                            return;
+                          }
+                          setMiniCalendarYear(parsed);
+                          setMobileSidebarOpen(false);
+                        }}
+                        renderInput={params => (
+                          <TextField
+                            {...params}
+                            label="Ano"
+                            size="small"
+                            onFocus={() => setIsMiniCalendarYearEditing(true)}
+                            onBlur={() => {
+                              setIsMiniCalendarYearEditing(false);
+                              const parsed = parseYearInput(miniCalendarYearInput);
+                              if (parsed == null) {
+                                setMiniCalendarYearInput(
+                                  String(miniCalendarMonth.getFullYear())
+                                );
+                                return;
+                              }
+                              setMiniCalendarYear(parsed);
+                              setMobileSidebarOpen(false);
+                            }}
+                          />
+                        )}
+                      />
+                    </Stack>
+
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(7, 1fr)",
+                        gap: 0.5,
+                      }}
+                    >
+                      {weekLabels.map((label, index) => (
+                        <Typography
+                          key={`mini-mobile-weekday-${index}`}
+                          variant="caption"
+                          sx={{ textAlign: "center", color: "text.secondary" }}
                         >
-                          {day ? day.getDate() : ""}
-                          {hasTasks ? (
-                            <Box
-                              sx={theme => ({
-                                width: 6,
-                                height: 6,
-                                borderRadius: "50%",
-                                backgroundColor: theme.palette.text.secondary,
-                                position: "absolute",
-                                bottom: 4,
-                              })}
-                            />
-                          ) : null}
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                </Stack>
-              </CardSection>
-            )}
+                          {label}
+                        </Typography>
+                      ))}
+                      {getCalendarDays(miniCalendarMonth).map((day, index) => {
+                        const selectedKey = formatDateKey(selectedDate);
+                        const dayKey = day ? formatDateKey(day) : "";
+                        const isSelected = Boolean(day && dayKey === selectedKey);
+                        const hasTasks = Boolean(day && tasksByDate.has(dayKey));
+
+                        return (
+                          <Box
+                            key={`mini-mobile-${day ? day.toISOString() : "empty"}-${index}`}
+                            onClick={() => {
+                              if (!day) {
+                                return;
+                              }
+                              const next = new Date(day);
+                              next.setHours(0, 0, 0, 0);
+                              setSelectedDate(next);
+                              setMobileSidebarOpen(false);
+                            }}
+                            sx={theme => ({
+                              ...interactiveItemSx(theme),
+                              height: 32,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: getInteractiveItemRadiusPx(theme),
+                              border: isSelected ? 1 : "1px solid transparent",
+                              borderColor: isSelected ? "primary.main" : "transparent",
+                              cursor: day ? "pointer" : "default",
+                              color: isSelected ? "primary.main" : "text.secondary",
+                              fontWeight: isSelected ? 600 : 500,
+                              position: "relative",
+                            })}
+                          >
+                            {day ? day.getDate() : ""}
+                            {hasTasks ? (
+                              <Box
+                                sx={theme => ({
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: "50%",
+                                  backgroundColor: theme.palette.text.secondary,
+                                  position: "absolute",
+                                  bottom: 4,
+                                })}
+                              />
+                            ) : null}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Stack>
+                )}
+              </Stack>
+            </CardSection>
           </Stack>
         </DialogContent>
       </Dialog>
