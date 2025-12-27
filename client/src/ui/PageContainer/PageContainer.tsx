@@ -17,9 +17,33 @@ export function PageContainer({ children, breadcrumbSlot, actionsSlot, title, su
   return (
     <Container maxWidth="lg" sx={{ py: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
       {(effectiveBreadcrumb || actionsSlot) && (
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-          {effectiveBreadcrumb && <Box>{effectiveBreadcrumb}</Box>}
-          {actionsSlot && <Stack direction="row" spacing={1}>{actionsSlot}</Stack>}
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          justifyContent="space-between"
+          alignItems={{ xs: 'stretch', md: 'center' }}
+          spacing={1.5}
+          sx={{ mb: 2, minWidth: 0 }}
+        >
+          {effectiveBreadcrumb && (
+            <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
+              {effectiveBreadcrumb}
+            </Box>
+          )}
+          {actionsSlot && (
+            <Box
+              sx={{
+                flex: '0 0 auto',
+                minWidth: 0,
+                width: { xs: '100%', md: 'auto' },
+                display: 'flex',
+                justifyContent: { xs: 'stretch', md: 'flex-end' },
+              }}
+            >
+              <Box sx={{ width: { xs: '100%', md: 'auto' }, minWidth: 0 }}>
+                {actionsSlot}
+              </Box>
+            </Box>
+          )}
         </Stack>
       )}
       {(title || subtitle) && (

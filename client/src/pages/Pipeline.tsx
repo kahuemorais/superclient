@@ -2224,12 +2224,18 @@ export default function Pipeline() {
 
   const pageActions = useMemo(
     () => (
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={2}
+        alignItems={{ xs: "stretch", md: "center" }}
+        sx={{ width: "100%", minWidth: 0 }}
+      >
         <Box
           sx={{
-            flex: { xs: '1 1 auto', md: '3 1 520px' },
-            width: { xs: '100%', md: 'auto' },
-            minWidth: { xs: '100%', md: 440 },
+            flex: { xs: "1 1 auto", md: "1 1 360px" },
+            width: { xs: "100%", md: "auto" },
+            minWidth: 0,
+            maxWidth: { md: 560 },
           }}
         >
           <SearchField
@@ -2243,9 +2249,10 @@ export default function Pipeline() {
         </Box>
         <Box
           sx={{
-            flex: { xs: '1 1 auto', md: '1 1 280px' },
-            width: { xs: '100%', md: 'auto' },
-            minWidth: { xs: '100%', md: 240 },
+            flex: { xs: "1 1 auto", md: "0 1 260px" },
+            width: { xs: "100%", md: "auto" },
+            minWidth: 0,
+            maxWidth: { md: 360 },
           }}
         >
           <CategoryFilter
