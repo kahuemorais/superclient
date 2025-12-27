@@ -1813,17 +1813,17 @@ export default function Profile() {
                             aria-label={`Cor ${token}`}
                             onClick={() => handlePrimaryColorSelect(token)}
                             sx={theme => ({
-                              width: 18,
-                              height: 18,
+                              width: theme.spacing(3),
+                              height: theme.spacing(3),
                               padding: 0,
                               borderRadius: "50%",
-                              border: `1px solid ${theme.palette.divider}`,
+                              border: `2px solid ${
+                                selected
+                                  ? theme.palette.text.primary
+                                  : theme.palette.divider
+                              }`,
                               backgroundColor: color,
                               cursor: "pointer",
-                              outline: selected
-                                ? `2px solid ${theme.palette.text.primary}`
-                                : "none",
-                              outlineOffset: 2,
                               "&:hover": {
                                 borderColor: theme.palette.text.secondary,
                               },
