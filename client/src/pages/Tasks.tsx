@@ -1979,24 +1979,23 @@ export default function Tasks() {
       >
         Tarefas feitas
       </Button>
-      {isCategoryListMode ? null : (
-        <Button
-          variant="outlined"
-          onClick={() => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            setSelectedDate(today);
-          }}
-          sx={{
-            textTransform: "none",
-            fontWeight: 600,
-            minWidth: 0,
-            whiteSpace: "nowrap",
-          }}
-        >
-          Hoje
-        </Button>
-      )}
+      <Button
+        variant="outlined"
+        onClick={() => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          setCategoryFilter([]);
+          setSelectedDate(today);
+        }}
+        sx={{
+          textTransform: "none",
+          fontWeight: 600,
+          minWidth: 0,
+          whiteSpace: "nowrap",
+        }}
+      >
+        Hoje
+      </Button>
       <SettingsIconButton onClick={() => setCalendarSettingsOpen(true)} />
     </Stack>
   );
@@ -2128,24 +2127,23 @@ export default function Tasks() {
                 >
                   Categorias
                 </Button>
-                {isCategoryListMode ? null : (
-                  <Button
-                    variant="outlined"
-                    onClick={() => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      setSelectedDate(today);
-                    }}
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 600,
-                      whiteSpace: "nowrap",
-                      minWidth: 0,
-                    }}
-                  >
-                    Hoje
-                  </Button>
-                )}
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    setCategoryFilter([]);
+                    setSelectedDate(today);
+                  }}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                    minWidth: 0,
+                  }}
+                >
+                  Hoje
+                </Button>
               </Stack>
             ) : null}
 
