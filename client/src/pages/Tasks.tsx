@@ -2307,106 +2307,125 @@ export default function Tasks() {
                         </Stack>
 
                         <Box
-                          sx={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(7, 1fr)",
-                            gap: 0.5,
-                          }}
-                        >
-                          {weekLabels.map((label, index) => (
-                            <Typography
-                              key={`mini-main-weekday-${index}`}
-                              variant="caption"
-                              sx={{ textAlign: "center", color: "text.secondary" }}
-                            >
-                              {label}
-                            </Typography>
-                          ))}
-                          {getCalendarDays(miniCalendarMonth).map((day, index) => {
-                            const selectedKey = formatDateKey(selectedDate);
-                            const dayKey = day ? formatDateKey(day) : "";
-                            const isSelected = Boolean(day && dayKey === selectedKey);
-                            const hasTasks = Boolean(day && tasksByDate.has(dayKey));
-
-                            return (
-                              <Box
-                                key={`mini-main-${day ? day.toISOString() : "empty"}-${index}`}
-                                onClick={() => {
-                                  if (!day) {
-                                    return;
-                                  }
-                                  const next = new Date(day);
-                                  next.setHours(0, 0, 0, 0);
-                                  setSelectedDate(next);
-                                  setMiniCalendarAnchorEl(null);
-                                }}
-                                sx={theme => ({
-                                  ...interactiveItemSx(theme),
-                                  height: 32,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  borderRadius: getInteractiveItemRadiusPx(theme),
-                                  border: isSelected ? 1 : "1px solid transparent",
-                                  borderColor: isSelected ? "primary.main" : "transparent",
-                                  cursor: day ? "pointer" : "default",
-                                  color: isSelected ? "primary.main" : "text.secondary",
-                                  fontWeight: isSelected ? 600 : 500,
-                                  position: "relative",
-                                })}
-                              >
-                                {day ? day.getDate() : ""}
-                                {hasTasks ? (
-                                  <Box
-                                    sx={theme => ({
-                                      width: 6,
-                                      height: 6,
-                                      borderRadius: "50%",
-                                      backgroundColor: theme.palette.text.secondary,
-                                      position: "absolute",
-                                      bottom: 4,
-                                    })}
-                                  />
-                                ) : null}
-                              </Box>
-                            );
+                          sx={theme => ({
+                            border: 1,
+                            borderColor: "divider",
+                            borderRadius: getInteractiveItemRadiusPx(theme),
+                            p: 1,
                           })}
-                        </Box>
+                        >
+                          <Box
+                            sx={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(7, 1fr)",
+                              gap: 0.5,
+                            }}
+                          >
+                            {weekLabels.map((label, index) => (
+                              <Typography
+                                key={`mini-main-weekday-${index}`}
+                                variant="caption"
+                                sx={{ textAlign: "center", color: "text.secondary" }}
+                              >
+                                {label}
+                              </Typography>
+                            ))}
+                            {getCalendarDays(miniCalendarMonth).map((day, index) => {
+                              const selectedKey = formatDateKey(selectedDate);
+                              const dayKey = day ? formatDateKey(day) : "";
+                              const isSelected = Boolean(day && dayKey === selectedKey);
+                              const hasTasks = Boolean(day && tasksByDate.has(dayKey));
 
-                        <Autocomplete
-                          freeSolo
-                          options={miniCalendarYearOptions}
-                          getOptionLabel={option => String(option)}
-                          value={miniCalendarMonth.getFullYear()}
-                          inputValue={miniCalendarYearInput}
-                          onInputChange={(_, value) => setMiniCalendarYearInput(value)}
-                          onChange={(_, value) => {
-                            const parsed = parseYearInput(value);
-                            if (parsed == null) {
-                              return;
-                            }
-                            setMiniCalendarYear(parsed);
-                          }}
-                          renderInput={params => (
-                            <TextField
-                              {...params}
-                              label="Ano"
-                              size="small"
-                              onFocus={() => setIsMiniCalendarYearEditing(true)}
-                              onBlur={() => {
-                                setIsMiniCalendarYearEditing(false);
-                                const parsed = parseYearInput(miniCalendarYearInput);
+                              return (
+                                <Box
+                                  key={`mini-main-${day ? day.toISOString() : "empty"}-${index}`}
+                                  onClick={() => {
+                                    if (!day) {
+                                      return;
+                                    }
+                                    const next = new Date(day);
+                                    next.setHours(0, 0, 0, 0);
+                                    setSelectedDate(next);
+                                    setMiniCalendarAnchorEl(null);
+                                  }}
+                                  sx={theme => ({
+                                    ...interactiveItemSx(theme),
+                                    height: 32,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    borderRadius: getInteractiveItemRadiusPx(theme),
+                                    border: isSelected ? 1 : "1px solid transparent",
+                                    borderColor: isSelected ? "primary.main" : "transparent",
+                                    cursor: day ? "pointer" : "default",
+                                    color: isSelected ? "primary.main" : "text.secondary",
+                                    fontWeight: isSelected ? 600 : 500,
+                                    position: "relative",
+                                  })}
+                                >
+                                  {day ? day.getDate() : ""}
+                                  {hasTasks ? (
+                                    <Box
+                                      sx={theme => ({
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: "50%",
+                                        backgroundColor: theme.palette.text.secondary,
+                                        position: "absolute",
+                                        bottom: 4,
+                                      })}
+                                    />
+                                  ) : null}
+                                </Box>
+                              );
+                            })}
+                          </Box>
+
+                          <Box sx={{ mt: 0.75 }}>
+                            <Autocomplete
+                              freeSolo
+                              options={miniCalendarYearOptions}
+                              getOptionLabel={option => String(option)}
+                              value={miniCalendarMonth.getFullYear()}
+                              inputValue={miniCalendarYearInput}
+                              onInputChange={(_, value) => setMiniCalendarYearInput(value)}
+                              onChange={(_, value) => {
+                                const parsed = parseYearInput(value);
                                 if (parsed == null) {
-                                  setMiniCalendarYearInput(
-                                    String(miniCalendarMonth.getFullYear())
-                                  );
                                   return;
                                 }
                                 setMiniCalendarYear(parsed);
                               }}
+                              renderInput={params => (
+                                <TextField
+                                  {...params}
+                                  label="Ano"
+                                  size="small"
+                                  variant="standard"
+                                  InputProps={{
+                                    ...params.InputProps,
+                                    disableUnderline: true,
+                                  }}
+                                  onFocus={() => setIsMiniCalendarYearEditing(true)}
+                                  onBlur={() => {
+                                    setIsMiniCalendarYearEditing(false);
+                                    const parsed = parseYearInput(miniCalendarYearInput);
+                                    if (parsed == null) {
+                                      setMiniCalendarYearInput(
+                                        String(miniCalendarMonth.getFullYear())
+                                      );
+                                      return;
+                                    }
+                                    setMiniCalendarYear(parsed);
+                                  }}
+                                  sx={{
+                                    "& .MuiInputBase-root": { px: 1, py: 0.25 },
+                                  }}
+                                />
+                              )}
                             />
-                          )}
-                        />
+                          </Box>
+                        </Box>
                       </Stack>
                     </Box>
                   </ClickAwayListener>
