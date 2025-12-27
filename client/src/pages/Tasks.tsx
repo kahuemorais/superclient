@@ -2073,19 +2073,6 @@ export default function Tasks() {
       )}
       <Button
         variant="outlined"
-        component={RouterLink}
-        href="/tarefas/concluidas"
-        sx={{
-          textTransform: "none",
-          fontWeight: 600,
-          minWidth: 0,
-          whiteSpace: "nowrap",
-        }}
-      >
-        Tarefas feitas
-      </Button>
-      <Button
-        variant="outlined"
         onClick={() => {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -2100,6 +2087,19 @@ export default function Tasks() {
         }}
       >
         Hoje
+      </Button>
+      <Button
+        variant="outlined"
+        component={RouterLink}
+        href="/tarefas/concluidas"
+        sx={{
+          textTransform: "none",
+          fontWeight: 600,
+          minWidth: 0,
+          whiteSpace: "nowrap",
+        }}
+      >
+        Tarefas feitas
       </Button>
       <SettingsIconButton onClick={() => setCalendarSettingsOpen(true)} />
     </Stack>
