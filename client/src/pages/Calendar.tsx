@@ -26,6 +26,7 @@ import { Link as RouterLink } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   type DragEndEvent,
+  useDroppable,
   DndContext,
   PointerSensor,
   useSensor,
@@ -1086,7 +1087,7 @@ export default function Calendar() {
     [visibleTasks]
   );
 
-  const handleAgendaDragEnd = (dateKey: string, { active, over }: DragEndEvent) => {
+  const handleAgendaDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over) {
       return;
     }
@@ -1096,47 +1097,135 @@ export default function Calendar() {
       return;
     }
 
-    const dayTaskIds = tasks
-      .filter(task => !task.done && task.date === dateKey)
-      .sort((a, b) => {
+    const byId = new Map(tasks.map(task => [task.id, task] as const));
+    const activeTask = byId.get(activeId);
+    if (!activeTask?.date) {
+      return;
+    }
+    const sourceDateKey = activeTask.date;
+
+    const overDateKey = (() => {
+      if (overId.startsWith("day:")) {
+        return overId.slice(4);
+      }
+      const overTask = byId.get(overId);
+      return overTask?.date || "";
+    })();
+    if (!overDateKey) {
+      return;
+    }
+
+    const sortDayTasks = (items: CalendarTask[]) =>
+      items.sort((a, b) => {
         const aOrder = a.sortOrder ?? Number.POSITIVE_INFINITY;
         const bOrder = b.sortOrder ?? Number.POSITIVE_INFINITY;
         if (aOrder !== bOrder) {
           return aOrder - bOrder;
         }
         return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
-      })
-      .map(task => task.id);
+      });
 
-    const oldIndex = dayTaskIds.indexOf(activeId);
-    const newIndex = dayTaskIds.indexOf(overId);
-    if (oldIndex < 0 || newIndex < 0) {
+    const getDayTaskIds = (dateKey: string, list: CalendarTask[]) =>
+      sortDayTasks(list.filter(task => !task.done && task.date === dateKey)).map(
+        task => task.id
+      );
+
+    const sourceIds = getDayTaskIds(sourceDateKey, tasks);
+    const destIds =
+      overDateKey === sourceDateKey
+        ? [...sourceIds]
+        : getDayTaskIds(overDateKey, tasks);
+
+    const sourceIndex = sourceIds.indexOf(activeId);
+    if (sourceIndex < 0) {
       return;
     }
 
-    const nextIds = arrayMove(dayTaskIds, oldIndex, newIndex);
-    setTasks(prev => {
-      const dayTasks = prev
-        .filter(task => !task.done && task.date === dateKey)
-        .sort((a, b) => {
-          const aOrder = a.sortOrder ?? Number.POSITIVE_INFINITY;
-          const bOrder = b.sortOrder ?? Number.POSITIVE_INFINITY;
-          if (aOrder !== bOrder) {
-            return aOrder - bOrder;
-          }
-          return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
-        });
+    const nextSourceIds = [...sourceIds];
+    nextSourceIds.splice(sourceIndex, 1);
 
-      const existingOrders = dayTasks
+    const nextDestIds =
+      overDateKey === sourceDateKey ? nextSourceIds : [...destIds];
+
+    const insertIndex = (() => {
+      if (overId.startsWith("day:")) {
+        return nextDestIds.length;
+      }
+      const index = nextDestIds.indexOf(overId);
+      return index < 0 ? nextDestIds.length : index;
+    })();
+
+    nextDestIds.splice(insertIndex, 0, activeId);
+
+    const getBaseOrder = (dateKey: string, list: CalendarTask[]) => {
+      const day = sortDayTasks(list.filter(task => !task.done && task.date === dateKey));
+      const existingOrders = day
         .map(task => task.sortOrder)
-        .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
-      const base = existingOrders.length ? Math.min(...existingOrders) : Date.now();
+        .filter(
+          (value): value is number =>
+            typeof value === "number" && Number.isFinite(value)
+        );
+      return existingOrders.length ? Math.min(...existingOrders) : Date.now();
+    };
 
-      const nextOrder = new Map(nextIds.map((id, index) => [id, base + index] as const));
-      return prev.map(task =>
-        nextOrder.has(task.id) ? { ...task, sortOrder: nextOrder.get(task.id) } : task
+    setTasks(prev => {
+      const next = [...prev];
+      const baseSource = getBaseOrder(sourceDateKey, prev);
+      const baseDest =
+        overDateKey === sourceDateKey ? baseSource : getBaseOrder(overDateKey, prev);
+
+      const sourceOrder = new Map(
+        (overDateKey === sourceDateKey ? nextDestIds : nextSourceIds).map((id, index) =>
+          [id, baseSource + index] as const
+        )
       );
+      const destOrder = new Map(
+        nextDestIds.map((id, index) => [id, baseDest + index] as const)
+      );
+
+      return next.map(task => {
+        if (task.id === activeId) {
+          const nextTask = {
+            ...task,
+            date: overDateKey,
+            sortOrder: destOrder.get(activeId),
+          };
+          return nextTask;
+        }
+
+        if (task.date === sourceDateKey && sourceOrder.has(task.id)) {
+          return { ...task, sortOrder: sourceOrder.get(task.id) };
+        }
+
+        if (task.date === overDateKey && destOrder.has(task.id)) {
+          return { ...task, sortOrder: destOrder.get(task.id) };
+        }
+
+        return task;
+      });
     });
+  };
+
+  const AgendaDayDropZone = ({
+    dateKey,
+    children,
+  }: {
+    dateKey: string;
+    children: ReactNode;
+  }) => {
+    const { setNodeRef, isOver } = useDroppable({ id: `day:${dateKey}` });
+    return (
+      <Box
+        ref={setNodeRef}
+        sx={theme => ({
+          borderRadius: getInteractiveItemRadiusPx(theme),
+          outline: isOver ? `1px solid ${theme.palette.primary.main}` : "1px solid transparent",
+          outlineOffset: 2,
+        })}
+      >
+        {children}
+      </Box>
+    );
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
@@ -2416,9 +2505,10 @@ export default function Calendar() {
                     p: 2,
                   })}
                 >
-                  <Stack spacing={1.25}>
-                    {calendarDaySections.map(section => (
-                      <Stack key={section.dateKey} spacing={0.75}>
+                  <DndContext sensors={sensors} onDragEnd={handleAgendaDragEnd}>
+                    <Stack spacing={1.25}>
+                      {calendarDaySections.map(section => (
+                        <Stack key={section.dateKey} spacing={0.75}>
                         <Stack
                           direction="row"
                           alignItems="center"
@@ -2442,111 +2532,113 @@ export default function Calendar() {
                         </Stack>
 
                         <Stack spacing={0.5}>
-                          <DndContext
-                            sensors={sensors}
-                            onDragEnd={event => handleAgendaDragEnd(section.dateKey, event)}
-                          >
+                          <AgendaDayDropZone dateKey={section.dateKey}>
                             <SortableContext
                               items={section.tasks.map(task => task.id)}
                               strategy={verticalListSortingStrategy}
                             >
-                              {section.tasks.map(task => {
-                                const subtaskCount = task.subtasks?.length ?? 0;
-                                const taskCategoryId = task.categoryIds?.[0];
-                                const taskCategory = taskCategoryId
-                                  ? categories.find(cat => cat.id === taskCategoryId)
-                                  : null;
+                              <Stack spacing={0.5}>
+                                {section.tasks.map(task => {
+                                  const subtaskCount = task.subtasks?.length ?? 0;
+                                  const taskCategoryId = task.categoryIds?.[0];
+                                  const taskCategory = taskCategoryId
+                                    ? categories.find(cat => cat.id === taskCategoryId)
+                                    : null;
 
-                                return (
-                                  <DraggableTaskCard
-                                    key={task.id}
-                                    taskId={task.id}
-                                    onClick={() => handleViewTask(task)}
-                                    onContextMenu={event => {
-                                      event.preventDefault();
-                                      setTaskContextMenu({
-                                        task,
-                                        mouseX: event.clientX,
-                                        mouseY: event.clientY,
-                                      });
-                                    }}
-                                  >
-                                    <Stack spacing={0.25}>
-                                      <Stack
-                                        direction="row"
-                                        spacing={1.5}
-                                        alignItems="center"
-                                        justifyContent="space-between"
-                                      >
+                                  return (
+                                    <DraggableTaskCard
+                                      key={task.id}
+                                      taskId={task.id}
+                                      onClick={() => handleViewTask(task)}
+                                      onContextMenu={event => {
+                                        event.preventDefault();
+                                        setTaskContextMenu({
+                                          task,
+                                          mouseX: event.clientX,
+                                          mouseY: event.clientY,
+                                        });
+                                      }}
+                                    >
+                                      <Stack spacing={0.25}>
                                         <Stack
                                           direction="row"
-                                          spacing={1}
+                                          spacing={1.5}
                                           alignItems="center"
-                                          sx={{ flex: 1, minWidth: 0 }}
+                                          justifyContent="space-between"
                                         >
-                                          <Checkbox
-                                            checked={Boolean(task.done)}
-                                            size="small"
-                                            onPointerDown={event => event.stopPropagation()}
-                                            onClick={event => event.stopPropagation()}
-                                            onChange={event =>
-                                              handleToggleTaskDone(task, event.target.checked)
-                                            }
-                                            sx={{ ml: 0.25 }}
-                                          />
+                                          <Stack
+                                            direction="row"
+                                            spacing={1}
+                                            alignItems="center"
+                                            sx={{ flex: 1, minWidth: 0 }}
+                                          >
+                                            <Checkbox
+                                              checked={Boolean(task.done)}
+                                              size="small"
+                                              onPointerDown={event => event.stopPropagation()}
+                                              onClick={event => event.stopPropagation()}
+                                              onChange={event =>
+                                                handleToggleTaskDone(
+                                                  task,
+                                                  event.target.checked
+                                                )
+                                              }
+                                              sx={{ ml: 0.25 }}
+                                            />
+                                            <Typography
+                                              variant="subtitle2"
+                                              sx={{
+                                                fontWeight: 600,
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                                flex: 1,
+                                                minWidth: 0,
+                                                textDecoration: task.done
+                                                  ? "line-through"
+                                                  : "none",
+                                                color: task.done
+                                                  ? "text.secondary"
+                                                  : "text.primary",
+                                              }}
+                                            >
+                                              {task.name}
+                                            </Typography>
+                                          </Stack>
                                           <Typography
-                                            variant="subtitle2"
+                                            variant="caption"
                                             sx={{
-                                              fontWeight: 600,
+                                              color: "text.secondary",
+                                              whiteSpace: "nowrap",
+                                              flexShrink: 0,
+                                              maxWidth: 160,
                                               overflow: "hidden",
                                               textOverflow: "ellipsis",
-                                              whiteSpace: "nowrap",
-                                              flex: 1,
-                                              minWidth: 0,
-                                              textDecoration: task.done
-                                                ? "line-through"
-                                                : "none",
-                                              color: task.done
-                                                ? "text.secondary"
-                                                : "text.primary",
                                             }}
                                           >
-                                            {task.name}
+                                            {taskCategory ? taskCategory.name : ""}
                                           </Typography>
                                         </Stack>
-                                        <Typography
-                                          variant="caption"
-                                          sx={{
-                                            color: "text.secondary",
-                                            whiteSpace: "nowrap",
-                                            flexShrink: 0,
-                                            maxWidth: 160,
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                          }}
-                                        >
-                                          {taskCategory ? taskCategory.name : ""}
-                                        </Typography>
-                                      </Stack>
 
-                                      {subtaskCount > 0 ? (
-                                        <Typography
-                                          variant="caption"
-                                          sx={{
-                                            color: "text.secondary",
-                                            pl: 4.5,
-                                            lineHeight: 1.2,
-                                          }}
-                                        >
-                                          {subtaskCount} subtarefas
-                                        </Typography>
-                                      ) : null}
-                                    </Stack>
-                                  </DraggableTaskCard>
-                                );
-                              })}
+                                        {subtaskCount > 0 ? (
+                                          <Typography
+                                            variant="caption"
+                                            sx={{
+                                              color: "text.secondary",
+                                              pl: 4.5,
+                                              lineHeight: 1.2,
+                                            }}
+                                          >
+                                            {subtaskCount} subtarefas
+                                          </Typography>
+                                        ) : null}
+                                      </Stack>
+                                    </DraggableTaskCard>
+                                  );
+                                })}
+                              </Stack>
                             </SortableContext>
-                          </DndContext>
+                          </AgendaDayDropZone>
 
                           <InlineAddTaskRow
                             dateKey={section.dateKey}
@@ -2556,8 +2648,9 @@ export default function Calendar() {
                           />
                         </Stack>
                       </Stack>
-                    ))}
-                  </Stack>
+                      ))}
+                    </Stack>
+                  </DndContext>
                 </AppCard>
               )}
             </Stack>
