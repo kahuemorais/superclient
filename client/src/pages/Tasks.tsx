@@ -2432,15 +2432,17 @@ export default function Tasks() {
                       )
                     }
                     sx={theme => ({
-                      display: "flex",
+                      display: "inline-flex",
                       alignItems: "center",
-                      justifyContent: "space-between",
+                      justifyContent: "flex-start",
                       px: 1,
                       py: 0.75,
                       mb: 1,
                       cursor: "pointer",
                       borderRadius: "var(--radius-button)",
                       border: 0,
+                      width: "fit-content",
+                      maxWidth: "100%",
                       backgroundColor: miniCalendarAnchorEl
                         ? theme.palette.action.selected
                         : "transparent",
@@ -2456,20 +2458,22 @@ export default function Tasks() {
                   >
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <CalendarTodayRoundedIcon fontSize="small" />
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {monthLabels[miniCalendarMonth.getMonth()]}{" "}
-                        {miniCalendarMonth.getFullYear()}
-                      </Typography>
+                      <Stack direction="row" spacing={0.75} alignItems="center">
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {monthLabels[miniCalendarMonth.getMonth()]}{" "}
+                          {miniCalendarMonth.getFullYear()}
+                        </Typography>
+                        <ChevronRightRoundedIcon
+                          fontSize="small"
+                          sx={{
+                            transform: miniCalendarAnchorEl
+                              ? "rotate(-90deg)"
+                              : "rotate(90deg)",
+                            transition: "transform 120ms ease",
+                          }}
+                        />
+                      </Stack>
                     </Stack>
-                    <ChevronRightRoundedIcon
-                      fontSize="small"
-                      sx={{
-                        transform: miniCalendarAnchorEl
-                          ? "rotate(-90deg)"
-                          : "rotate(90deg)",
-                        transition: "transform 120ms ease",
-                      }}
-                    />
                   </Box>
 
                   <Popover
