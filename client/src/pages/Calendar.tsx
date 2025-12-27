@@ -1748,8 +1748,8 @@ export default function Calendar() {
     }
   };
 
-  const saveDraftTask = () => {
-    if (!draftTask) {
+  useEffect(() => {
+    if (!editOpen || !draftTask) {
       return;
     }
     setTasks(prev => {
@@ -1759,8 +1759,7 @@ export default function Calendar() {
       }
       return [draftTask, ...prev];
     });
-    handleCloseEdit();
-  };
+  }, [editOpen, draftTask]);
 
   const removeDraftTask = () => {
     if (!draftTask) {
@@ -3431,9 +3430,6 @@ export default function Calendar() {
               </Button>
               <Button variant="outlined" onClick={handleBackToViewFromEdit}>
                 Voltar
-              </Button>
-              <Button variant="contained" onClick={saveDraftTask}>
-                {t("common.save")}
               </Button>
             </Stack>
           </Stack>
