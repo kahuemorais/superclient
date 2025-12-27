@@ -1366,6 +1366,32 @@ export default function Notes() {
     );
   }, []);
 
+  const duplicateNote = useCallback(
+    (source: Note) => {
+      const now = new Date().toISOString();
+      const nextId = `note-${Date.now()}`;
+      const next: Note = {
+        ...source,
+        id: nextId,
+        createdAt: now,
+        updatedAt: now,
+        isDraft: false,
+        // Duplicar nota da lixeira cria uma nota normal
+        trashed: source.trashed ? false : source.trashed,
+        archived: source.trashed ? false : source.archived,
+        // Evita compartilhar referências mutáveis
+        links: [...(source.links || [])].map(item => ({ ...item, id: `link-${Date.now()}-${Math.random()}` })),
+        attachments: [...(source.attachments || [])].map(item => ({ ...item, id: `att-${Date.now()}-${Math.random()}` })),
+      };
+
+      setNotes(prev => [next, ...prev]);
+      setSelectedNoteId(nextId);
+      setEditorAutoFocusNoteId(nextId);
+      setLocation(getNoteHref(next));
+    },
+    [getNoteHref, setLocation]
+  );
+
   const toggleFavorite = (noteId: string) => {
     setNotes(prev =>
       prev.map(note =>
@@ -2446,6 +2472,17 @@ export default function Notes() {
                           }
                         />
                       </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          setNoteMenuAnchorEl(null);
+                          duplicateNote(selectedNote);
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <ContentCopyRoundedIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="Duplicar" />
+                      </MenuItem>
                       {selectedNote.parentId ? (
                         <MenuItem
                           onClick={() => {
@@ -2982,6 +3019,34 @@ export default function Notes() {
 
         {(sidebarItemMenuNote?.favorite || sidebarItemMenuNote?.parentId || sidebarItemMenuNote) ? (
           <Divider />
+        ) : null}
+
+        {sidebarItemMenuNote ? (
+          <>
+            <MenuItem
+              onClick={() => {
+                duplicateNote(sidebarItemMenuNote);
+                closeSidebarItemMenu();
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                <ContentCopyRoundedIcon fontSize="small" />
+              </ListItemIcon>
+              Duplicar
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                requestNoteAction(sidebarItemMenuNote, "trash");
+                closeSidebarItemMenu();
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                <DeleteRoundedIcon fontSize="small" />
+              </ListItemIcon>
+              Remover nota
+            </MenuItem>
+            <Divider />
+          </>
         ) : null}
 
         <MenuItem
