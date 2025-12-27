@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Autocomplete,
   Alert,
@@ -12,6 +12,9 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  InputBase,
+  ListItemIcon,
+  Menu,
   MenuItem,
   Pagination,
   Popover,
@@ -23,10 +26,11 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useTheme, type Theme } from "@mui/material/styles";
+import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
-  DragEndEvent,
+  type DragEndEvent,
   DndContext,
   PointerSensor,
   useDraggable,
@@ -43,6 +47,9 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import api from "../api";
 import ToggleCheckbox from "../components/ToggleCheckbox";
 import RichTextEditor from "../components/RichTextEditor";
@@ -201,6 +208,24 @@ const defaultCalendarSettings = {
   showMeetingLink: true,
   showVisibility: true,
   showNotifications: true,
+  showAgendaTaskCount: false,
+};
+
+const agendaMonthFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+});
+
+const agendaWeekdayFormatter = new Intl.DateTimeFormat("en-US", {
+  weekday: "long",
+});
+
+const formatAgendaDayTitle = (day: Date, includeTodayLabel: boolean) => {
+  const dayNumber = day.getDate();
+  const month = agendaMonthFormatter.format(day);
+  const weekday = agendaWeekdayFormatter.format(day);
+  return includeTodayLabel
+    ? `${dayNumber} ${month} ‧ Today ‧ ${weekday}`
+    : `${dayNumber} ${month} ‧ ${weekday}`;
 };
 
 const formatDateKey = (date: Date) => {
@@ -415,7 +440,10 @@ const createSeedTasks = (base: Date): CalendarTask[] => {
   now.setHours(0, 0, 0, 0);
   const inTwoWeeks = new Date(now);
   inTwoWeeks.setDate(inTwoWeeks.getDate() + 14);
-  return [...getSampleTasks(now), ...getSampleTasks(inTwoWeeks)];
+  return [...getSampleTasks(now), ...getSampleTasks(inTwoWeeks)].map(task => ({
+    ...task,
+    categoryIds: task.categoryIds ? task.categoryIds.slice(0, 1) : [],
+  }));
 };
 
 const shouldReplaceWithSeed = (value: CalendarTask[]) => {
@@ -428,6 +456,110 @@ const shouldReplaceWithSeed = (value: CalendarTask[]) => {
   }
   return false;
 };
+
+const InlineAddTaskRow = memo(function InlineAddTaskRow({
+  dateKey,
+  placeholder,
+  onAdd,
+  onFocusChange,
+}: {
+  dateKey: string;
+  placeholder: string;
+  onAdd: (dateKey: string, title: string) => boolean;
+  onFocusChange: (focused: boolean) => void;
+}) {
+  const [draftTitle, setDraftTitle] = useState("");
+  return (
+    <AppCard
+      elevation={0}
+      data-inline-task-row={dateKey}
+      sx={theme => ({
+        p: 1.5,
+        border: 0,
+        borderColor: "transparent",
+        backgroundColor: "transparent",
+        borderRadius: getInteractiveItemRadiusPx(theme),
+        "&:hover": {
+          backgroundColor: "transparent",
+        },
+        "&:active": {
+          backgroundColor: "transparent",
+        },
+      })}
+    >
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={0.75}
+        alignItems={{ xs: "stretch", sm: "center" }}
+        sx={{ width: "100%" }}
+      >
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          sx={{ flex: 1, minWidth: 0 }}
+        >
+          <Checkbox size="small" disabled sx={{ visibility: "hidden", ml: 0.25 }} />
+          <TextField
+            value={draftTitle}
+            onFocus={() => onFocusChange(true)}
+            onBlur={() => onFocusChange(false)}
+            onPointerDownCapture={event => event.stopPropagation()}
+            onChange={event => setDraftTitle(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                const added = onAdd(dateKey, draftTitle);
+                if (added) {
+                  setDraftTitle("");
+                }
+              }
+            }}
+            fullWidth
+            size="small"
+            variant="standard"
+            InputProps={{ disableUnderline: true }}
+            placeholder={placeholder}
+            sx={theme => ({
+              "& .MuiInputBase-input": {
+                ...theme.typography.subtitle2,
+                padding: 0,
+              },
+              "& .MuiInputBase-input::placeholder": {
+                opacity: 1,
+                color: theme.palette.text.secondary,
+              },
+            })}
+          />
+        </Stack>
+        <IconButton
+          onMouseDown={event => {
+            // Keep focus in the input when clicking the + button.
+            event.preventDefault();
+          }}
+          onPointerDownCapture={event => event.stopPropagation()}
+          onClick={() => {
+            const added = onAdd(dateKey, draftTitle);
+            if (added) {
+              setDraftTitle("");
+            }
+          }}
+          size="small"
+          sx={{
+            p: 0.5,
+            alignSelf: {
+              xs: "flex-end",
+              sm: "center",
+            },
+          }}
+          aria-label={placeholder}
+        >
+          <AddRoundedIcon fontSize="small" />
+        </IconButton>
+      </Stack>
+    </AppCard>
+  );
+});
 
 export default function Calendar() {
   const { t } = useTranslation();
@@ -442,7 +574,7 @@ export default function Calendar() {
     typeof Notification !== "undefined" ? Notification.permission : "default"
   );
   const [configAccordion, setConfigAccordion] = useState<
-    "fields" | "categories" | "notifications" | false
+    "fields" | "agenda" | "categories" | "notifications" | false
   >(false);
   const [calendarSettings, setCalendarSettings] = useState({
     ...defaultCalendarSettings,
@@ -465,7 +597,7 @@ export default function Calendar() {
   });
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [agendaPage, setAgendaPage] = useState(1);
-  const [agendaPerPage, setAgendaPerPage] = useState(3);
+  const [agendaPerPage, setAgendaPerPage] = useState(10);
   const [draftTask, setDraftTask] = useState<CalendarTask | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [viewingTask, setViewingTask] = useState<CalendarTask | null>(null);
@@ -501,6 +633,14 @@ export default function Calendar() {
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } })
   );
 
+  const [inlineAddTaskFocused, setInlineAddTaskFocused] = useState(false);
+
+  const [taskContextMenu, setTaskContextMenu] = useState<{
+    task: CalendarTask;
+    mouseX: number;
+    mouseY: number;
+  } | null>(null);
+
   const theme = useTheme();
   const isSmDown = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -532,7 +672,12 @@ export default function Calendar() {
             void saveUserStorage(STORAGE_TASKS, seeded);
             return;
           }
-          setTasks(fromDb);
+          setTasks(
+            fromDb.map(task => ({
+              ...task,
+              categoryIds: task.categoryIds ? task.categoryIds.slice(0, 1) : [],
+            }))
+          );
           window.localStorage.setItem(STORAGE_TASKS, JSON.stringify(fromDb));
           return;
         }
@@ -551,7 +696,12 @@ export default function Calendar() {
       try {
         const parsed = JSON.parse(stored) as CalendarTask[];
         if (Array.isArray(parsed) && parsed.length && !shouldReplaceWithSeed(parsed)) {
-          setTasks(parsed);
+          setTasks(
+            parsed.map(task => ({
+              ...task,
+              categoryIds: task.categoryIds ? task.categoryIds.slice(0, 1) : [],
+            }))
+          );
           void saveUserStorage(STORAGE_TASKS, parsed);
           return;
         }
@@ -811,6 +961,10 @@ export default function Calendar() {
           parsed.showNotifications !== undefined
             ? Boolean(parsed.showNotifications)
             : true,
+        showAgendaTaskCount:
+          parsed.showAgendaTaskCount !== undefined
+            ? Boolean(parsed.showAgendaTaskCount)
+            : false,
       });
     };
 
@@ -1112,10 +1266,12 @@ export default function Calendar() {
   const DraggableTaskCard = ({
     taskId,
     onClick,
+    onContextMenu,
     children,
   }: {
     taskId: string;
     onClick: () => void;
+    onContextMenu?: (event: React.MouseEvent) => void;
     children: ReactNode;
   }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -1133,12 +1289,15 @@ export default function Calendar() {
         ref={setNodeRef}
         elevation={0}
         onClick={onClick}
+        onContextMenu={onContextMenu}
         {...attributes}
         {...listeners}
         sx={theme => ({
-          ...clickableCardSx(theme),
+          ...staticCardSx(theme),
           p: 1.5,
-          borderColor: "divider",
+          border: 0,
+          borderColor: "transparent",
+          borderRadius: getInteractiveItemRadiusPx(theme),
           cursor: isDragging ? "grabbing" : "grab",
           opacity: isDragging ? 0.7 : 1,
           width: "100%",
@@ -1146,6 +1305,12 @@ export default function Calendar() {
           transform: CSS.Transform.toString(stableTransform),
           touchAction: "none",
           userSelect: "none",
+          "&:hover": {
+            backgroundColor: theme.palette.background.paper,
+          },
+          "&:active": {
+            backgroundColor: theme.palette.background.paper,
+          },
           
         })}
       >
@@ -1166,22 +1331,82 @@ export default function Calendar() {
       data: { dateKey },
     });
     return (
-      <AppCard
+      <Box
         ref={setNodeRef}
-        elevation={0}
         sx={theme => ({
-          ...staticCardSx(theme),
-          p: 2,
-          borderColor: isOver ? "primary.main" : "divider",
-          backgroundColor: isOver ? "action.hover" : "background.paper",
-          transition: "border-color 0.2s ease, background-color 0.2s ease",
-          
+          p: 0,
+          borderRadius: "var(--radius-card)",
+          backgroundColor: isOver
+            ? alpha(theme.palette.text.primary, 0.08)
+            : "transparent",
+          transition: "background-color 0.2s ease",
         })}
       >
         {children}
-      </AppCard>
+      </Box>
     );
   };
+
+  const handleAddInlineTask = (dateKey: string, titleRaw: string) => {
+    const title = titleRaw.trim();
+    if (!title) {
+      return false;
+    }
+
+    const defaultCalendar =
+      calendarSources.find(item => item.enabled) || calendarSources[0];
+
+    const newTask: CalendarTask = {
+      id: `cal-${Date.now()}`,
+      name: title,
+      link: "",
+      location: "",
+      responsibleIds: [],
+      workerIds: [],
+      descriptionHtml: "",
+      subtasks: [],
+      categoryIds: [],
+      calendarId: defaultCalendar?.id,
+      date: dateKey,
+      startTime: "",
+      endTime: "",
+      reminder: "none",
+      repeat: "none",
+      visibility: "private",
+      notification: "app",
+      allDay: false,
+      done: false,
+    };
+
+    setTasks(prev => [...prev, newTask]);
+    return true;
+  };
+
+  const handleOpenEditForTask = (task: CalendarTask) => {
+    setDraftTask({ ...task });
+    setEditCameFromView(false);
+    setEditSourceTaskId(null);
+    setEditOpen(true);
+  };
+
+  const handleDuplicateTask = (task: CalendarTask) => {
+    const cloned: CalendarTask = {
+      ...task,
+      id: `cal-${Date.now()}`,
+      done: false,
+    };
+    setTasks(prev => [...prev, cloned]);
+    handleViewTask(cloned);
+  };
+
+  const handleRemoveTaskById = (taskId: string) => {
+    setTasks(prev => prev.filter(task => task.id !== taskId));
+    setViewingTask(prev => (prev?.id === taskId ? null : prev));
+    setDraftTask(prev => (prev?.id === taskId ? null : prev));
+  };
+
+  // Inline add-task uses the same pattern as subtasks (Enter/Add button). We'll
+  // consider click-outside-to-save later if needed.
 
   const handleCreateTask = (date?: Date) => {
     const targetDate = date || selectedDate;
@@ -1506,11 +1731,13 @@ export default function Calendar() {
   };
 
   const handleToggleTaskDone = (task: CalendarTask, nextDone: boolean) => {
-    setTasks(prev =>
-      prev.map(item =>
+    setTasks(prev => {
+      const next = prev.map(item =>
         item.id === task.id ? { ...item, done: nextDone } : item
-      )
-    );
+      );
+      window.localStorage.setItem(STORAGE_TASKS, JSON.stringify(next));
+      return next;
+    });
     if (viewingTask?.id === task.id) {
       setViewingTask(prev => (prev ? { ...prev, done: nextDone } : prev));
     }
@@ -2001,7 +2228,7 @@ export default function Calendar() {
                   }}
                   sx={{ width: 180 }}
                 >
-                  {[3, 5, 7, 10].map(value => (
+                  {[7, 10, 15, 20].map(value => (
                     <MenuItem key={value} value={value}>
                       {value} dias
                     </MenuItem>
@@ -2029,155 +2256,176 @@ export default function Calendar() {
               {agendaDays.length === 0 ? (
                 renderCreateReminderCard(selectedDate)
               ) : (
-                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                  <Stack spacing={2}>
-                    {pagedAgendaDays.map(day => {
-                      const dateKey = formatDateKey(day);
-                      const dayTasks = tasksByDate.get(dateKey) || [];
-                      return (
-                        <DroppableDay key={dateKey} dateKey={dateKey}>
-                          <Stack spacing={1.5}>
-                            <Stack
-                              direction="row"
-                              alignItems="center"
-                              justifyContent="space-between"
-                            >
-                              <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+                <DndContext
+                  sensors={sensors}
+                  onDragEnd={handleDragEnd}
+                >
+                  <AppCard
+                    elevation={0}
+                    sx={theme => ({
+                      ...staticCardSx(theme),
+                      p: 2,
+                    })}
+                  >
+                    <Stack spacing={1.5}>
+                      {pagedAgendaDays.map((day, index) => {
+                        const todayKey = formatDateKey(new Date());
+                        const dateKey = formatDateKey(day);
+                        const dayTasks = tasksByDate.get(dateKey) || [];
+                        const includeTodayLabel =
+                          index === 0 && dateKey === todayKey;
+
+                        return (
+                          <DroppableDay key={dateKey} dateKey={dateKey}>
+                            <Stack spacing={1}>
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                sx={{ minWidth: 0 }}
+                              >
                                 <Typography
                                   variant="subtitle2"
                                   sx={{ fontWeight: 700, whiteSpace: "nowrap" }}
                                 >
-                                  {day.toLocaleDateString("pt-BR", {
-                                    weekday: "short",
-                                    day: "2-digit",
-                                    month: "short",
-                                  })}
+                                  {formatAgendaDayTitle(day, includeTodayLabel)}
                                 </Typography>
-                                <Typography
-                                  variant="caption"
-                                  sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
-                                >
-                                  {dayTasks.length} tarefas
-                                </Typography>
-                              </Stack>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleCreateTask(day)}
-                              >
-                                <AddRoundedIcon fontSize="small" />
-                              </IconButton>
-                            </Stack>
-                            {dayTasks.length === 0 ? (
-                              renderCreateReminderCard(day)
-                            ) : (
-                              <Stack spacing={1.5}>
-                                {dayTasks.map(task => (
-                                  <DraggableTaskCard
-                                    key={task.id}
-                                    taskId={task.id}
-                                    onClick={() => handleViewTask(task)}
+                                {calendarSettings.showAgendaTaskCount ? (
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      color: "text.secondary",
+                                      whiteSpace: "nowrap",
+                                    }}
                                   >
-                                    <Stack spacing={1}>
-                                      <Stack
-                                        direction="row"
-                                        spacing={1.5}
-                                        alignItems="center"
-                                        justifyContent="space-between"
-                                      >
-                                        <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
-                                          <Checkbox
-                                            checked={Boolean(task.done)}
-                                            size="small"
-                                            onClick={event => event.stopPropagation()}
-                                            onChange={event => handleToggleTaskDone(task, event.target.checked)}
-                                            sx={{ ml: 0.25 }}
-                                          />
-                                          <Typography
-                                            variant="subtitle2"
-                                            sx={{
-                                              fontWeight: 600,
-                                              overflow: "hidden",
-                                              textOverflow: "ellipsis",
-                                              whiteSpace: "nowrap",
-                                              flex: 1,
-                                              minWidth: 0,
-                                              textDecoration: task.done ? "line-through" : "none",
-                                              color: task.done ? "text.secondary" : "text.primary",
-                                            }}
-                                          >
-                                            {task.name}
-                                          </Typography>
-                                        </Stack>
-                                        <Typography
-                                          variant="caption"
-                                          sx={{
-                                            color: "text.secondary",
-                                            whiteSpace: "nowrap",
-                                            flexShrink: 0,
-                                          }}
-                                        >
-                                          {formatTaskDateTimeLabel(task)}
-                                        </Typography>
-                                      </Stack>
+                                    {dayTasks.length} tarefas
+                                  </Typography>
+                                ) : null}
+                              </Stack>
 
-                                      {task.subtasks && task.subtasks.length ? (
-                                        <Stack spacing={0.75}>
-                                          {task.subtasks.map(subtask => (
-                                            <Box
-                                              key={subtask.id}
-                                              onClick={event => {
-                                                event.stopPropagation();
-                                                handleViewTask(task);
-                                              }}
-                                              sx={theme => ({
-                                                ...clickableCardSx(theme),
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
-                                                p: 1,
-                                              })}
+                              {dayTasks.length === 0 ? (
+                                renderCreateReminderCard(day)
+                              ) : (
+                                <Stack spacing={1}>
+                                  {dayTasks.map(task => {
+                                    const subtaskCount = task.subtasks?.length ?? 0;
+                                    const taskCategoryId = task.categoryIds?.[0];
+                                    const taskCategory = taskCategoryId
+                                      ? categories.find(cat => cat.id === taskCategoryId)
+                                      : null;
+
+                                    return (
+                                      <DraggableTaskCard
+                                        key={task.id}
+                                        taskId={task.id}
+                                        onClick={() => handleViewTask(task)}
+                                        onContextMenu={event => {
+                                          event.preventDefault();
+                                          setTaskContextMenu({
+                                            task,
+                                            mouseX: event.clientX,
+                                            mouseY: event.clientY,
+                                          });
+                                        }}
+                                      >
+                                        <Stack spacing={0.5}>
+                                          <Stack
+                                            direction="row"
+                                            spacing={1.5}
+                                            alignItems="center"
+                                            justifyContent="space-between"
+                                          >
+                                            <Stack
+                                              direction="row"
+                                              spacing={1}
+                                              alignItems="center"
+                                              sx={{ flex: 1, minWidth: 0 }}
                                             >
                                               <Checkbox
-                                                checked={subtask.done}
+                                                checked={Boolean(task.done)}
                                                 size="small"
-                                                onClick={event => event.stopPropagation()}
+                                                onPointerDown={event => event.stopPropagation()}
+                                                onClick={event =>
+                                                  event.stopPropagation()
+                                                }
                                                 onChange={event =>
-                                                  handleToggleViewingSubtaskDone(
+                                                  handleToggleTaskDone(
                                                     task,
-                                                    subtask.id,
                                                     event.target.checked
                                                   )
                                                 }
+                                                sx={{ ml: 0.25 }}
                                               />
                                               <Typography
-                                                variant="body2"
+                                                variant="subtitle2"
                                                 sx={{
-                                                  flex: 1,
-                                                  minWidth: 0,
+                                                  fontWeight: 600,
                                                   overflow: "hidden",
                                                   textOverflow: "ellipsis",
                                                   whiteSpace: "nowrap",
-                                                  textDecoration: subtask.done ? "line-through" : "none",
-                                                  color: subtask.done ? "text.secondary" : "text.primary",
+                                                  flex: 1,
+                                                  minWidth: 0,
+                                                  textDecoration: task.done
+                                                    ? "line-through"
+                                                    : "none",
+                                                  color: task.done
+                                                    ? "text.secondary"
+                                                    : "text.primary",
                                                 }}
                                               >
-                                                {subtask.title}
+                                                {task.name}
                                               </Typography>
-                                            </Box>
-                                          ))}
+                                            </Stack>
+                                            <Typography
+                                              variant="caption"
+                                              sx={{
+                                                color: "text.secondary",
+                                                whiteSpace: "nowrap",
+                                                flexShrink: 0,
+                                              }}
+                                            >
+                                              {taskCategory ? (
+                                                <CategoryChip
+                                                  label={taskCategory.name}
+                                                  categoryColor={taskCategory.color}
+                                                  maxWidth={140}
+                                                />
+                                              ) : null}
+                                            </Typography>
+                                          </Stack>
+
+                                          {subtaskCount > 0 ? (
+                                            <Typography
+                                              variant="caption"
+                                              sx={{
+                                                color: "text.secondary",
+                                                pl: 4.5,
+                                                lineHeight: 1.2,
+                                              }}
+                                            >
+                                              {subtaskCount} subtarefas
+                                            </Typography>
+                                          ) : null}
                                         </Stack>
-                                      ) : null}
-                                    </Stack>
-                                  </DraggableTaskCard>
-                                ))}
-                                {renderCreateReminderCard(day)}
-                              </Stack>
-                            )}
-                          </Stack>
-                        </DroppableDay>
-                      );
-                    })}
-                  </Stack>
+                                      </DraggableTaskCard>
+                                    );
+                                  })}
+                                  {renderCreateReminderCard(day)}
+                                </Stack>
+                              )}
+
+                              <InlineAddTaskRow
+                                dateKey={dateKey}
+                                placeholder={t("Adicionar tarefa")}
+                                onAdd={handleAddInlineTask}
+                                onFocusChange={setInlineAddTaskFocused}
+                              />
+                            </Stack>
+                          </DroppableDay>
+                        );
+                      })}
+                    </Stack>
+                  </AppCard>
                 </DndContext>
               )}
 
@@ -2196,7 +2444,7 @@ export default function Calendar() {
                   }}
                   fullWidth
                 >
-                  {[3, 5, 7, 10].map(value => (
+                  {[7, 10, 15, 20].map(value => (
                     <MenuItem key={value} value={value}>
                       {value} dias
                     </MenuItem>
@@ -2515,7 +2763,7 @@ export default function Calendar() {
                           size="small"
                           variant="standard"
                           InputProps={{ disableUnderline: true }}
-                          placeholder="Escreva uma subtarefa e aperte Enter"
+                          placeholder="Adicionar sub tarefa"
                         />
                       </Stack>
                       <IconButton
@@ -2525,7 +2773,7 @@ export default function Calendar() {
                           p: 0.5,
                           alignSelf: { xs: "flex-end", sm: "center" },
                         }}
-                        aria-label="Adicionar subtarefa"
+                        aria-label="Adicionar sub tarefa"
                       >
                         <AddRoundedIcon fontSize="small" />
                       </IconButton>
@@ -2960,39 +3208,24 @@ export default function Calendar() {
             ) : null}
             {calendarSettings.showCategories ? (
               <Autocomplete
-                multiple
                 options={categories}
-                value={categories.filter(cat =>
-                  (draftTask?.categoryIds || []).includes(cat.id)
-                )}
+                value={
+                  draftTask?.categoryIds?.[0]
+                    ? categories.find(cat => cat.id === draftTask.categoryIds?.[0]) ??
+                      null
+                    : null
+                }
                 onChange={(_, value) =>
                   setDraftTask(prev =>
                     prev
-                      ? { ...prev, categoryIds: value.map(cat => cat.id) }
+                      ? { ...prev, categoryIds: value ? [value.id] : [] }
                       : prev
                   )
                 }
                 getOptionLabel={option => option.name}
-                disableCloseOnSelect
-                renderOption={(props, option, { selected }) => (
-                  <li {...props}>
-                    <Checkbox checked={selected} size="small" sx={{ mr: 1 }} />
-                    {option.name}
-                  </li>
-                )}
                 renderInput={params => (
                   <TextField {...params} label="Categorias" fullWidth />
                 )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <CategoryChip
-                      {...getTagProps({ index })}
-                      key={option.id}
-                      label={option.name}
-                      categoryColor={option.color}
-                    />
-                  ))
-                }
               />
             ) : null}
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -3379,6 +3612,46 @@ export default function Calendar() {
             ),
           },
           {
+            key: "agenda",
+            title: "Agenda",
+            content: (
+              <Stack spacing={1.5}>
+                <Box
+                  sx={theme => ({
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 1.5,
+                    borderColor: "divider",
+                    cursor: "pointer",
+                    borderRadius: getInteractiveItemRadiusPx(theme),
+                    ...interactiveItemSx(theme),
+                  })}
+                  onClick={() =>
+                    setCalendarSettings(prev => ({
+                      ...prev,
+                      showAgendaTaskCount: !prev.showAgendaTaskCount,
+                    }))
+                  }
+                >
+                  <Typography variant="subtitle2">
+                    Mostrar quantidade de tarefas por dia
+                  </Typography>
+                  <ToggleCheckbox
+                    checked={Boolean(calendarSettings.showAgendaTaskCount)}
+                    onChange={event =>
+                      setCalendarSettings(prev => ({
+                        ...prev,
+                        showAgendaTaskCount: event.target.checked,
+                      }))
+                    }
+                    onClick={event => event.stopPropagation()}
+                  />
+                </Box>
+              </Stack>
+            ),
+          },
+          {
             key: "notifications",
             title: "Notificações do navegador",
             content: (
@@ -3628,6 +3901,67 @@ export default function Calendar() {
           Configurações restauradas.
         </Alert>
       </Snackbar>
+
+      <Menu
+        open={Boolean(taskContextMenu)}
+        onClose={() => setTaskContextMenu(null)}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          taskContextMenu
+            ? { top: taskContextMenu.mouseY, left: taskContextMenu.mouseX }
+            : undefined
+        }
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: "var(--radius-card)",
+            },
+          },
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (!taskContextMenu) {
+              return;
+            }
+            handleOpenEditForTask(taskContextMenu.task);
+            setTaskContextMenu(null);
+          }}
+        >
+          <ListItemIcon>
+            <EditRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          Editar
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (!taskContextMenu) {
+              return;
+            }
+            handleDuplicateTask(taskContextMenu.task);
+            setTaskContextMenu(null);
+          }}
+        >
+          <ListItemIcon>
+            <ContentCopyRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          Duplicar
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (!taskContextMenu) {
+              return;
+            }
+            handleRemoveTaskById(taskContextMenu.task.id);
+            setTaskContextMenu(null);
+          }}
+        >
+          <ListItemIcon>
+            <DeleteRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          Remover
+        </MenuItem>
+      </Menu>
     </PageContainer>
   );
 }
