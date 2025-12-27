@@ -2018,17 +2018,8 @@ export default function Calendar() {
           >
             <CardSection size="xs">
               <Stack spacing={2}>
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                    Categorias
-                  </Typography>
-                  <Button
-                    size="small"
-                    variant="text"
+                <Stack spacing={0.5}>
+                  <Box
                     onClick={() => {
                       const next = !showTaskSearch;
                       setShowTaskSearch(next);
@@ -2036,11 +2027,25 @@ export default function Calendar() {
                         setTaskQuery("");
                       }
                     }}
-                    startIcon={<SearchRoundedIcon fontSize="small" />}
-                    sx={{ textTransform: "none", fontWeight: 600, minWidth: 0 }}
+                    sx={theme => ({
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      px: 1,
+                      py: 0.75,
+                      cursor: "pointer",
+                      borderRadius: getInteractiveItemRadiusPx(theme),
+                      ...interactiveItemSx(theme),
+                      backgroundColor: showTaskSearch
+                        ? theme.palette.action.selected
+                        : undefined,
+                    })}
                   >
-                    Busca
-                  </Button>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <SearchRoundedIcon fontSize="small" />
+                      <Typography variant="body2">Busca</Typography>
+                    </Stack>
+                  </Box>
                 </Stack>
 
                 <Stack spacing={0.5}>
