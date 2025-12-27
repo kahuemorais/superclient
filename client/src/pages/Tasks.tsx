@@ -2147,6 +2147,8 @@ export default function Tasks() {
                       cursor: "pointer",
                       borderRadius: "var(--radius-button)",
                       ...interactiveItemSx(theme),
+                      border: 0,
+                      borderColor: "transparent",
                       backgroundColor:
                         selectedCategoryId === "" ? theme.palette.action.selected : undefined,
                     })}
@@ -2158,6 +2160,8 @@ export default function Tasks() {
                           height: 12,
                           borderRadius: "50%",
                           backgroundColor: resolveThemeColor(theme, "mui.grey.900"),
+                          border: 1,
+                          borderColor: "divider",
                         })}
                       />
                       <Typography variant="body2">Todas</Typography>
@@ -2176,6 +2180,8 @@ export default function Tasks() {
                         cursor: "pointer",
                         borderRadius: "var(--radius-button)",
                         ...interactiveItemSx(theme),
+                        border: 0,
+                        borderColor: "transparent",
                         backgroundColor:
                           selectedCategoryId === cat.id
                             ? theme.palette.action.selected
@@ -2189,6 +2195,8 @@ export default function Tasks() {
                             height: 12,
                             borderRadius: "50%",
                             backgroundColor: resolveThemeColor(theme, cat.color),
+                            border: 1,
+                            borderColor: "divider",
                           })}
                         />
                         <Typography variant="body2">{cat.name}</Typography>
@@ -3172,6 +3180,8 @@ export default function Tasks() {
                       cursor: "pointer",
                       borderRadius: "var(--radius-button)",
                       ...interactiveItemSx(theme),
+                      border: 0,
+                      borderColor: "transparent",
                       backgroundColor:
                         selectedCategoryId === "" ? theme.palette.action.selected : undefined,
                     })}
@@ -3183,6 +3193,8 @@ export default function Tasks() {
                           height: 12,
                           borderRadius: "50%",
                           backgroundColor: resolveThemeColor(theme, "mui.grey.900"),
+                          border: 1,
+                          borderColor: "divider",
                         })}
                       />
                       <Typography variant="body2">Todas</Typography>
@@ -3204,6 +3216,8 @@ export default function Tasks() {
                         cursor: "pointer",
                         borderRadius: "var(--radius-button)",
                         ...interactiveItemSx(theme),
+                        border: 0,
+                        borderColor: "transparent",
                         backgroundColor:
                           selectedCategoryId === cat.id
                             ? theme.palette.action.selected
@@ -3217,6 +3231,8 @@ export default function Tasks() {
                             height: 12,
                             borderRadius: "50%",
                             backgroundColor: resolveThemeColor(theme, cat.color),
+                            border: 1,
+                            borderColor: "divider",
                           })}
                         />
                         <Typography variant="body2">{cat.name}</Typography>
