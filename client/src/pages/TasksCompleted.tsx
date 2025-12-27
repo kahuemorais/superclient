@@ -86,7 +86,7 @@ const darkenColor = (value: string, factor: number) => {
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 };
 
-export default function CalendarCompleted() {
+export default function TasksCompleted() {
   const [tasks, setTasks] = useState<CalendarTask[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [calendarSources, setCalendarSources] = useState<CalendarSource[]>([]);

@@ -36,8 +36,8 @@ import Financas from "./pages/Financas";
 import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
 import Notifications from "./pages/Notifications";
-import Calendar from "./pages/Calendar";
-import CalendarCompleted from "./pages/CalendarCompleted";
+import Tasks from "./pages/Tasks";
+import TasksCompleted from "./pages/TasksCompleted";
 import Notes from "./pages/Notes";
 import { TextFieldDiagnostic } from "./pages/TextFieldDiagnostic";
 import { SearchFieldDiagnostic } from "./pages/SearchFieldDiagnostic";
@@ -47,7 +47,7 @@ import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 // Keys para tradução - os labels serão traduzidos no render
 const navItems = [
   { labelKey: "nav.home", href: "/home" },
-  { labelKey: "nav.calendar", href: "/tarefas" },
+  { labelKey: "nav.tasks", href: "/tarefas" },
   { labelKey: "nav.notes", href: "/notas" },
   { labelKey: "nav.finances", href: "/financas" },
   { labelKey: "nav.contacts", href: "/contatos" },
@@ -67,7 +67,7 @@ function App() {
     pipeline: true,
     finance: true,
     contacts: true,
-    calendar: true,
+    tasks: true,
     notes: true,
   });
   const [language, setLanguage] = useState("pt-BR");
@@ -119,7 +119,7 @@ function App() {
               pipeline: nextPrefs.modulePipeline,
               finance: nextPrefs.moduleFinance,
               contacts: nextPrefs.moduleContacts,
-              calendar: nextPrefs.moduleCalendar,
+              tasks: nextPrefs.moduleCalendar,
               notes: nextPrefs.moduleNotes,
             });
             setLanguage(nextPrefs.language);
@@ -145,7 +145,7 @@ function App() {
           pipeline: true,
           finance: true,
           contacts: true,
-          calendar: true,
+          tasks: true,
           notes: true,
         });
       }
@@ -172,7 +172,7 @@ function App() {
           pipeline: Boolean(parsed.modulePipeline ?? true),
           finance: Boolean(parsed.moduleFinance ?? true),
           contacts: Boolean(parsed.moduleContacts ?? true),
-          calendar: Boolean(parsed.moduleCalendar ?? true),
+          tasks: Boolean(parsed.moduleCalendar ?? true),
           notes: Boolean(parsed.moduleNotes ?? true),
         });
         const nextLanguage =
@@ -256,7 +256,7 @@ function App() {
       setLocation("/profile");
     }
     if (
-      !moduleAccess.calendar &&
+      !moduleAccess.tasks &&
       (location === "/tarefas" || location === "/tarefas/concluidas")
     ) {
       setLocation("/profile");
@@ -299,7 +299,7 @@ function App() {
           return moduleAccess.contacts;
         }
         if (item.href === "/tarefas") {
-          return moduleAccess.calendar;
+          return moduleAccess.tasks;
         }
         if (item.href === "/notas") {
           return moduleAccess.notes;
@@ -319,8 +319,8 @@ function App() {
     "/pipeline/dados": t("common.details"),
     "/financas": t("nav.finances"),
     "/contatos": t("nav.contacts"),
-    "/tarefas": t("nav.calendar"),
-    "/tarefas/concluidas": t("calendar.completedTasks"),
+    "/tarefas": t("nav.tasks"),
+    "/tarefas/concluidas": t("tasks.completedTasks"),
     "/notas": t("nav.notes"),
     "/notas/arquivo": t("notes.archive"),
     "/notifications": t("nav.notifications"),
@@ -737,9 +737,9 @@ function App() {
                   <Route path="/contatos" component={Contacts} />
                   <Route
                     path="/tarefas/concluidas"
-                    component={CalendarCompleted}
+                    component={TasksCompleted}
                   />
-                  <Route path="/tarefas" component={Calendar} />
+                  <Route path="/tarefas" component={Tasks} />
                   <Route path="/notas/arquivo/:noteId" component={Notes} />
                   <Route path="/notas/arquivo" component={Notes} />
                   <Route path="/notas/:noteId" component={Notes} />

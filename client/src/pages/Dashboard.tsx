@@ -121,7 +121,7 @@ const dashboardQuickLinks = [
   { label: "Pipeline", href: "/pipeline", module: "pipeline" },
   { label: "Finanças", href: "/financas", module: "finance" },
   { label: "Contatos", href: "/contatos", module: "contacts" },
-  { label: "Tarefas", href: "/tarefas", module: "calendar" },
+  { label: "Tarefas", href: "/tarefas", module: "tasks" },
   { label: "Notas", href: "/notas", module: "notes" },
   { label: "Gestão", href: "/access", module: "access" },
 ] as const;
@@ -187,7 +187,7 @@ export default function Dashboard() {
     pipeline: true,
     finance: true,
     contacts: true,
-    calendar: true,
+    tasks: true,
     notes: true,
     access: true,
   });
@@ -249,7 +249,7 @@ export default function Dashboard() {
           pipeline: Boolean(parsed.modulePipeline ?? true),
           finance: Boolean(parsed.moduleFinance ?? true),
           contacts: Boolean(parsed.moduleContacts ?? true),
-          calendar: Boolean(parsed.moduleCalendar ?? true),
+          tasks: Boolean(parsed.moduleCalendar ?? true),
           notes: Boolean(parsed.moduleNotes ?? true),
           access: true,
         });
@@ -459,7 +459,7 @@ export default function Dashboard() {
         if (link.module === "pipeline") return moduleAccess.pipeline;
         if (link.module === "finance") return moduleAccess.finance;
         if (link.module === "contacts") return moduleAccess.contacts;
-        if (link.module === "calendar") return moduleAccess.calendar;
+        if (link.module === "tasks") return moduleAccess.tasks;
         if (link.module === "notes") return moduleAccess.notes;
         return true;
       })

@@ -143,7 +143,7 @@ const STORAGE_CATEGORIES = "calendar_categories_v1";
 const STORAGE_CATEGORY_FILTER = "sc_calendar_category_filter";
 const STORAGE_AGENDA_DAYS_COUNT = "sc_tasks_agenda_days_count";
 
-// NOTE: category/calendar colors accept MUI palette tokens (e.g. "primary", "primary.dark")
+// NOTE: category/task colors accept MUI palette tokens (e.g. "primary", "primary.dark")
 // and legacy hex values. Rendering is normalized via resolveThemeColor().
 
 const defaultCategories: Category[] = [
@@ -524,7 +524,7 @@ const InlineAddTaskRow = memo(function InlineAddTaskRow({
   );
 });
 
-export default function Calendar() {
+export default function Tasks() {
   const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
   const [tasks, setTasks] = useState<CalendarTask[]>([]);

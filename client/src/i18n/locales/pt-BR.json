@@ -104,6 +104,7 @@
     "home": "Início",
     "dashboard": "Dashboard",
     "calendar": "Tarefas",
+    "tasks": "Tarefas",
     "contacts": "Contatos",
     "pipeline": "Pipeline",
     "notes": "Notas",
@@ -203,6 +204,9 @@
     "billingInfo": "Informações de cobrança",
     "invoices": "Faturas",
     "paymentMethod": "Método de pagamento"
+  },
+  "tasks": {
+    "completedTasks": "Tarefas concluídas"
   },
   "calendar": {
     "title": "Tarefas",

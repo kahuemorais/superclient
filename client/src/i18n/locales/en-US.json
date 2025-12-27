@@ -104,6 +104,7 @@
     "home": "Home",
     "dashboard": "Dashboard",
     "calendar": "Calendar",
+    "tasks": "Tasks",
     "contacts": "Contacts",
     "pipeline": "Pipeline",
     "notes": "Notes",
@@ -203,6 +204,9 @@
     "billingInfo": "Billing information",
     "invoices": "Invoices",
     "paymentMethod": "Payment method"
+  },
+  "tasks": {
+    "completedTasks": "Completed tasks"
   },
   "calendar": {
     "title": "Calendar",

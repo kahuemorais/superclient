@@ -104,6 +104,7 @@
     "home": "Inicio",
     "dashboard": "Panel",
     "calendar": "Tareas",
+    "tasks": "Tareas",
     "contacts": "Contactos",
     "pipeline": "Pipeline",
     "notes": "Notas",
@@ -203,6 +204,9 @@
     "billingInfo": "Información de facturación",
     "invoices": "Facturas",
     "paymentMethod": "Método de pago"
+  },
+  "tasks": {
+    "completedTasks": "Tareas completadas"
   },
   "calendar": {
     "title": "Tareas",
