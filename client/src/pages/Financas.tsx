@@ -1014,7 +1014,11 @@ export default function Financas() {
                   itemStyle={{ color: "#e6edf3" }}
                   cursor={{ fill: "rgba(12, 18, 26, 0.45)" }}
                 />
-                <Bar dataKey="value" fill="#22c9a6" radius={[8, 8, 0, 0]} />
+                <Bar
+                  dataKey="value"
+                  fill={theme.palette.grey[600]}
+                  radius={[8, 8, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </Box>
