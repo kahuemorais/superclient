@@ -55,6 +55,7 @@ import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import CheckBoxOutlineBlankRoundedIcon from "@mui/icons-material/CheckBoxOutlineBlankRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
@@ -536,66 +537,53 @@ const InlineAddTaskRow = memo(function InlineAddTaskRow({
       })}
     >
       <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={0.75}
-        alignItems={{ xs: "stretch", sm: "center" }}
+        direction="row"
+        spacing={1}
+        alignItems="center"
         sx={{ width: "100%" }}
       >
-        <Stack
-          direction="row"
-          spacing={1}
-          alignItems="center"
-          sx={{ flex: 1, minWidth: 0 }}
-        >
-          <Checkbox size="small" disabled sx={{ visibility: "hidden", ml: 0.25 }} />
-          <TextField
-            value={draftTitle}
-            onFocus={() => onFocusChange(true)}
-            onBlur={() => onFocusChange(false)}
-            onPointerDownCapture={event => event.stopPropagation()}
-            onChange={event => setDraftTitle(event.target.value)}
-            onKeyDown={event => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                handleSubmit();
-              }
-            }}
-            fullWidth
-            size="small"
-            variant="standard"
-            InputProps={{ disableUnderline: true }}
-            placeholder={placeholder}
-            sx={theme => ({
-              "& .MuiInputBase-input": {
-                ...theme.typography.subtitle2,
-                padding: 0,
-              },
-              "& .MuiInputBase-input::placeholder": {
-                opacity: 1,
-                color: theme.palette.text.secondary,
-              },
-            })}
-          />
-        </Stack>
         <IconButton
           onMouseDown={event => {
-            // Keep focus in the input when clicking the + button.
+            // Keep focus in the input when clicking the checkbox icon.
             event.preventDefault();
           }}
           onPointerDownCapture={event => event.stopPropagation()}
           onClick={handleSubmit}
           size="small"
-          sx={{
-            p: 0.5,
-            alignSelf: {
-              xs: "flex-end",
-              sm: "center",
-            },
-          }}
+          sx={{ p: 0.5, color: "text.secondary" }}
           aria-label={placeholder}
         >
-          <AddRoundedIcon fontSize="small" />
+          <CheckBoxOutlineBlankRoundedIcon fontSize="small" />
         </IconButton>
+
+        <TextField
+          value={draftTitle}
+          onFocus={() => onFocusChange(true)}
+          onBlur={() => onFocusChange(false)}
+          onPointerDownCapture={event => event.stopPropagation()}
+          onChange={event => setDraftTitle(event.target.value)}
+          onKeyDown={event => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              handleSubmit();
+            }
+          }}
+          fullWidth
+          size="small"
+          variant="standard"
+          InputProps={{ disableUnderline: true }}
+          placeholder={placeholder}
+          sx={theme => ({
+            "& .MuiInputBase-input": {
+              ...theme.typography.subtitle2,
+              padding: 0,
+            },
+            "& .MuiInputBase-input::placeholder": {
+              opacity: 1,
+              color: theme.palette.text.secondary,
+            },
+          })}
+        />
       </Stack>
     </AppCard>
   );
