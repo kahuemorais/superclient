@@ -279,6 +279,9 @@ function App() {
     if (href === "/pipeline") {
       return location === "/pipeline" || location === "/pipeline/dados";
     }
+    if (href === "/tarefas") {
+      return location.startsWith("/tarefas");
+    }
     if (href === "/notas") {
       return location.startsWith("/notas");
     }
