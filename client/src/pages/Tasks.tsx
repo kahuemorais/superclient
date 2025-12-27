@@ -2173,7 +2173,16 @@ export default function Tasks() {
                     })}
                   >
                     <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Box sx={{ width: 12, height: 12 }} />
+                      <Box
+                        sx={theme => ({
+                          width: 12,
+                          height: 12,
+                          borderRadius: "50%",
+                          backgroundColor: resolveThemeColor(theme, "mui.grey.900"),
+                          border: 1,
+                          borderColor: "divider",
+                        })}
+                      />
                       <Typography variant="body2">Todas</Typography>
                     </Stack>
                   </Box>
@@ -3193,7 +3202,16 @@ export default function Tasks() {
                     })}
                   >
                     <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Box sx={{ width: 12, height: 12 }} />
+                      <Box
+                        sx={theme => ({
+                          width: 12,
+                          height: 12,
+                          borderRadius: "50%",
+                          backgroundColor: resolveThemeColor(theme, "mui.grey.900"),
+                          border: 1,
+                          borderColor: "divider",
+                        })}
+                      />
                       <Typography variant="body2">Todas</Typography>
                     </Stack>
                   </Box>
