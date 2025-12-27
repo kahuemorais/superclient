@@ -26,6 +26,10 @@ import { Link as RouterLink } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   type DragEndEvent,
+  type CollisionDetection,
+  getFirstCollision,
+  pointerWithin,
+  rectIntersection,
   useDroppable,
   DndContext,
   PointerSensor,
@@ -602,6 +606,15 @@ export default function Calendar() {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } })
   );
+
+  const agendaCollisionDetection: CollisionDetection = args => {
+    const pointerIntersections = pointerWithin(args);
+    const pointerCollision = getFirstCollision(pointerIntersections, "id");
+    if (pointerCollision) {
+      return pointerIntersections;
+    }
+    return rectIntersection(args);
+  };
 
   const handleInlineAddTaskFocusChange = () => undefined;
 
@@ -1219,6 +1232,7 @@ export default function Calendar() {
         ref={setNodeRef}
         sx={theme => ({
           borderRadius: getInteractiveItemRadiusPx(theme),
+          minHeight: 36,
           outline: isOver ? `1px solid ${theme.palette.primary.main}` : "1px solid transparent",
           outlineOffset: 2,
         })}
@@ -2505,7 +2519,11 @@ export default function Calendar() {
                     p: 2,
                   })}
                 >
-                  <DndContext sensors={sensors} onDragEnd={handleAgendaDragEnd}>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={agendaCollisionDetection}
+                    onDragEnd={handleAgendaDragEnd}
+                  >
                     <Stack spacing={1.25}>
                       {calendarDaySections.map(section => (
                         <Stack key={section.dateKey} spacing={0.75}>
@@ -2531,8 +2549,8 @@ export default function Calendar() {
                           ) : null}
                         </Stack>
 
-                        <Stack spacing={0.5}>
-                          <AgendaDayDropZone dateKey={section.dateKey}>
+                        <AgendaDayDropZone dateKey={section.dateKey}>
+                          <Stack spacing={0.5}>
                             <SortableContext
                               items={section.tasks.map(task => task.id)}
                               strategy={verticalListSortingStrategy}
@@ -2638,15 +2656,15 @@ export default function Calendar() {
                                 })}
                               </Stack>
                             </SortableContext>
-                          </AgendaDayDropZone>
 
-                          <InlineAddTaskRow
-                            dateKey={section.dateKey}
-                            placeholder={t("Adicionar tarefa")}
-                            onAdd={handleAddInlineTask}
-                            onFocusChange={handleInlineAddTaskFocusChange}
-                          />
-                        </Stack>
+                            <InlineAddTaskRow
+                              dateKey={section.dateKey}
+                              placeholder={t("Adicionar tarefa")}
+                              onAdd={handleAddInlineTask}
+                              onFocusChange={handleInlineAddTaskFocusChange}
+                            />
+                          </Stack>
+                        </AgendaDayDropZone>
                       </Stack>
                       ))}
                     </Stack>
